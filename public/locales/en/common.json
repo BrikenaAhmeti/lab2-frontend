@@ -1,0 +1,9 @@
+{
+  "appTitle": "Template Dashboard",
+  "load": "Load",
+  "create": "Create",
+  "delete": "Delete",
+  "loading": "Loading…",
+  "theme": "Theme",
+  "language": "Language"
+}

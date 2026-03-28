@@ -1,0 +1,5 @@
+{
+  "title": "Transactions",
+  "created": "Created",
+  "currency": "{{amount}} {{currency}}"
+}
