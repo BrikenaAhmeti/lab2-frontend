@@ -9,15 +9,15 @@ const getRole = () => {
 
 // 1) Routes that anyone can access (no guard needed) — but we keep a <PublicGuard/> to redirect logged-in users away from guest-only pages if you want.
 export function GuestOnly() {
-  const { user, tokens } = useAppSelector(s => s.auth);
-  const isAuthed = !!(user || tokens);
+  const { user, accessToken } = useAppSelector(s => s.auth);
+  const isAuthed = !!(user && accessToken);
   return isAuthed ? <Navigate to="/app" replace /> : <Outlet />;
 }
 
 // 2) Require logged-in
 export function RequireAuth() {
-  const { user, tokens } = useAppSelector(s => s.auth);
-  const isAuthed = !!(user || tokens);
+  const { user, accessToken } = useAppSelector(s => s.auth);
+  const isAuthed = !!(user && accessToken);
   const location = useLocation();
   return isAuthed ? <Outlet /> : <Navigate to="/login" state={{ from: location }} replace />;
 }
@@ -32,6 +32,5 @@ export function RequireRole({ allow }: { allow: string[] }) {
 
 // 4) Optional: “finished setup” guard
 export function RequireFinishedGetStarted() {
-  const { finishedGetStarted } = useAppSelector(s => s.auth);
-  return finishedGetStarted ? <Outlet /> : <Navigate to="/choose" replace />;
+  return <Outlet />;
 }

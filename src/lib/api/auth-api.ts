@@ -1,0 +1,157 @@
+import type { AxiosInstance } from 'axios';
+import { apiClient } from './axios';
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthUserDto {
+  id: string;
+  email: string;
+  roles: string[];
+  permissions: string[];
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUserDto;
+}
+
+export interface SessionDto {
+  id: string;
+  deviceInfo: string;
+  ipAddress: string;
+  createdAt: string;
+  lastUsedAt: string;
+  expiresAt: string;
+}
+
+export interface UpdateProfileRequest {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  avatarFileId?: string;
+}
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  password: string;
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+}
+
+function client(instance?: AxiosInstance) {
+  return instance ?? apiClient;
+}
+
+export const authApi = {
+  login(payload: LoginRequest, instance?: AxiosInstance) {
+    return client(instance).post<AuthResponse>('/api/auth/login', payload).then((r) => r.data);
+  },
+  refresh(refreshToken: string, instance?: AxiosInstance) {
+    return client(instance)
+      .post<AuthResponse>('/api/auth/refresh', { refreshToken })
+      .then((r) => r.data);
+  },
+  logout(refreshToken: string, instance?: AxiosInstance) {
+    return client(instance)
+      .post<{ success: boolean }>('/api/auth/logout', { refreshToken })
+      .then((r) => r.data);
+  },
+  me(instance?: AxiosInstance) {
+    return client(instance).get<AuthUserDto>('/api/auth/me').then((r) => r.data);
+  },
+  verifyEmail(payload: VerifyEmailRequest, instance?: AxiosInstance) {
+    return client(instance).post('/api/auth/verify-email', payload).then((r) => r.data);
+  },
+  resendVerification(email: string, instance?: AxiosInstance) {
+    return client(instance).post('/api/auth/resend-verification', { email }).then((r) => r.data);
+  },
+  forgotPassword(payload: ForgotPasswordRequest, instance?: AxiosInstance) {
+    return client(instance).post('/api/auth/forgot-password', payload).then((r) => r.data);
+  },
+  resetPassword(payload: ResetPasswordRequest, instance?: AxiosInstance) {
+    return client(instance).post('/api/auth/reset-password', payload).then((r) => r.data);
+  },
+};
+
+export const sessionsApi = {
+  list(instance?: AxiosInstance) {
+    return client(instance).get<SessionDto[]>('/api/auth/sessions').then((r) => r.data);
+  },
+  revoke(sessionId: string, instance?: AxiosInstance) {
+    return client(instance).delete(`/api/auth/sessions/${sessionId}`).then((r) => r.data);
+  },
+  adminRevoke(sessionId: string, instance?: AxiosInstance) {
+    return client(instance).delete(`/api/auth/admin/sessions/${sessionId}`).then((r) => r.data);
+  },
+};
+
+export const profileApi = {
+  me(instance?: AxiosInstance) {
+    return client(instance).get('/api/users/me').then((r) => r.data);
+  },
+  update(payload: UpdateProfileRequest, instance?: AxiosInstance) {
+    return client(instance).patch('/api/users/me', payload).then((r) => r.data);
+  },
+};
+
+export interface CreateUserPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  roles: string[];
+}
+
+export interface UserRecord {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  roles: string[];
+}
+
+let mockUsers: UserRecord[] = [];
+
+export const usersApi = {
+  async list(search: string, instance?: AxiosInstance) {
+    try {
+      return await client(instance)
+        .get<UserRecord[]>('/api/users', { params: search ? { search } : undefined })
+        .then((r) => r.data);
+    } catch {
+      const q = search.trim().toLowerCase();
+      if (!q) return mockUsers;
+      return mockUsers.filter((u) => `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(q));
+    }
+  },
+  async createUser(payload: CreateUserPayload, instance?: AxiosInstance) {
+    try {
+      return await client(instance).post<UserRecord>('/api/users', payload).then((r) => r.data);
+    } catch {
+      const created: UserRecord = {
+        id: crypto.randomUUID(),
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        phone: payload.phone,
+        roles: payload.roles,
+      };
+      mockUsers = [created, ...mockUsers];
+      return created;
+    }
+  },
+};

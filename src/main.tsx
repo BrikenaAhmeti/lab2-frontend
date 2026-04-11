@@ -7,9 +7,11 @@ import '@/config/i18n';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { applyTheme, getInitialTheme } from '@/config/theme';
+import { setupAxiosInterceptors } from '@/lib/api/axios';
 import App from './App';
 
 applyTheme(getInitialTheme());
+setupAxiosInterceptors(store);
 const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

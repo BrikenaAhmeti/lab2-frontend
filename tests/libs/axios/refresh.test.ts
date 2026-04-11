@@ -6,7 +6,12 @@ import { store } from '@/app/store';
 import { setSession, clearSession } from '@/domain/auth/authSlice';
 import type { AuthUser } from '@/domain/auth/types';
 
-const mockUser: AuthUser = { id: '1', email: 'a@b.com', name: 'A', role: 'admins' };
+const mockUser: AuthUser = {
+  id: '1',
+  email: 'a@b.com',
+  roles: ['Admin'],
+  permissions: ['users:read'],
+};
 
 function makeResponse<T>(cfg: any, status: number, data: T): AxiosResponse<T> {
   return {
