@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import Button from '@/ui/atoms/Button';
+import Input from '@/ui/atoms/Input';
+import Card from '@/ui/atoms/Card';
 import { useAppDispatch } from '@/app/hooks';
 import { setSession } from '@/domain/auth/authSlice';
 import { api } from '@/libs/axios/client';
@@ -20,12 +22,28 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen grid place-items-center">
-      <form onSubmit={onSubmit} className="w-full max-w-sm bg-white dark:bg-gray-950 p-6 rounded-xl shadow">
-        <h1 className="text-xl font-semibold mb-4">Login</h1>
-        <input className="w-full mb-3 rounded border px-3 py-2 bg-transparent" value={email} onChange={e => setEmail(e.target.value)} />
-        <input className="w-full mb-4 rounded border px-3 py-2 bg-transparent" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-        <Button type="submit" loading={loading}>Sign in</Button>
+    <div className="min-h-screen grid place-items-center px-4">
+      <form onSubmit={onSubmit} className="w-full max-w-sm">
+        <Card title="Login" subtitle="Sign in to MedSphere">
+          <div className="space-y-4">
+            <Input
+              id="email"
+              label="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+            />
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+            />
+            <Button type="submit" loading={loading} className="w-full">
+              Sign in
+            </Button>
+          </div>
+        </Card>
       </form>
     </div>
   );

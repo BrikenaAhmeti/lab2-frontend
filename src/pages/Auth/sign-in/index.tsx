@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AuthLayout from '@/ui/organisms/auth/AuthLayout';
 import AuthChatCard from '@/ui/organisms/auth/AuthChatCard';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { startSignInChat } from '@/domain/authChat/authChat.slice';
+import { startSignInChat } from '@/domain/auth/authChat.slice';
 
 export default function SignInPage() {
   const dispatch = useAppDispatch();
