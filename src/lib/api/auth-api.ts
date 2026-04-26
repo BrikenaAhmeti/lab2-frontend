@@ -43,11 +43,24 @@ export interface ForgotPasswordRequest {
 
 export interface ResetPasswordRequest {
   token: string;
-  password: string;
+  newPassword: string;
 }
 
 export interface VerifyEmailRequest {
   token: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface AuthActionResponse {
+  success: boolean;
+  message: string;
+  resetToken?: string;
+  resetExpiresAt?: string;
+  verificationToken?: string;
+  verificationExpiresAt?: string;
 }
 
 function client(instance?: AxiosInstance) {
@@ -72,16 +85,16 @@ export const authApi = {
     return client(instance).get<AuthUserDto>('/api/auth/me').then((r) => r.data);
   },
   verifyEmail(payload: VerifyEmailRequest, instance?: AxiosInstance) {
-    return client(instance).post('/api/auth/verify-email', payload).then((r) => r.data);
+    return client(instance).post<AuthActionResponse>('/api/auth/verify-email', payload).then((r) => r.data);
   },
-  resendVerification(email: string, instance?: AxiosInstance) {
-    return client(instance).post('/api/auth/resend-verification', { email }).then((r) => r.data);
+  resendVerification(payload: ResendVerificationRequest, instance?: AxiosInstance) {
+    return client(instance).post<AuthActionResponse>('/api/auth/resend-verification', payload).then((r) => r.data);
   },
   forgotPassword(payload: ForgotPasswordRequest, instance?: AxiosInstance) {
-    return client(instance).post('/api/auth/forgot-password', payload).then((r) => r.data);
+    return client(instance).post<AuthActionResponse>('/api/auth/forgot-password', payload).then((r) => r.data);
   },
   resetPassword(payload: ResetPasswordRequest, instance?: AxiosInstance) {
-    return client(instance).post('/api/auth/reset-password', payload).then((r) => r.data);
+    return client(instance).post<AuthActionResponse>('/api/auth/reset-password', payload).then((r) => r.data);
   },
 };
 

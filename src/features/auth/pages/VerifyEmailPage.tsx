@@ -1,40 +1,61 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
 import Card from '@/ui/atoms/Card';
-import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import { authApi } from '@/lib/api/auth-api';
 
 export default function VerifyEmailPage() {
   const { t } = useTranslation('common');
   const [params] = useSearchParams();
-  const [token, setToken] = useState(params.get('token') ?? '');
-  const [email, setEmail] = useState('');
+  const token = params.get('token') ?? '';
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const verifiedRef = useRef(false);
 
-  const onVerify = async () => {
-    setLoading(true);
-    setStatus('');
-    try {
-      await authApi.verifyEmail({ token });
-      setStatus('auth.verifySuccess');
-    } catch {
-      setStatus('auth.operationFailed');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (verifiedRef.current) return;
+    verifiedRef.current = true;
+
+    if (!token) {
+      setError(t('auth.tokenRequired'));
+      return;
     }
-  };
 
-  const onResend = async () => {
+    const verify = async () => {
+      setLoading(true);
+      setMessage('');
+      setError('');
+
+      try {
+        const data = await authApi.verifyEmail({ token });
+        setMessage(data.message || t('auth.verifySuccess'));
+      } catch {
+        setError(t('auth.operationFailed'));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void verify();
+  }, [t, token]);
+
+  const retry = async () => {
+    if (!token) {
+      setError(t('auth.tokenRequired'));
+      return;
+    }
+
     setLoading(true);
-    setStatus('');
+    setMessage('');
+    setError('');
+
     try {
-      await authApi.resendVerification(email);
-      setStatus('auth.resendSuccess');
+      const data = await authApi.verifyEmail({ token });
+      setMessage(data.message || t('auth.verifySuccess'));
     } catch {
-      setStatus('auth.operationFailed');
+      setError(t('auth.operationFailed'));
     } finally {
       setLoading(false);
     }
@@ -45,11 +66,15 @@ export default function VerifyEmailPage() {
       <div className="w-full max-w-md">
         <Card title={t('auth.verifyTitle')} subtitle={t('auth.verifySubtitle')}>
           <div className="space-y-4">
-            <Input id="verify-token" label={t('auth.token')} value={token} onChange={(e) => setToken(e.target.value)} />
-            <Button onClick={onVerify} loading={loading} className="w-full">{t('auth.verifyEmail')}</Button>
-            <Input id="verify-email" type="email" label={t('auth.email')} value={email} onChange={(e) => setEmail(e.target.value)} />
-            <Button onClick={onResend} variant="secondary" loading={loading} className="w-full">{t('auth.resendVerification')}</Button>
-            {status && <p className="text-sm text-muted">{t(status)}</p>}
+            {loading && <p className="text-sm text-muted">{t('auth.verifyingEmail')}</p>}
+            {message && <p className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success">{message}</p>}
+            {error && <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
+            {error && token && (
+              <Button type="button" onClick={retry} loading={loading} className="w-full">
+                {t('auth.tryAgain')}
+              </Button>
+            )}
+            <Link to="/resend-verification" className="block text-sm text-muted hover:text-foreground">{t('auth.resendVerification')}</Link>
             <Link to="/login" className="text-sm text-muted hover:text-foreground">{t('auth.backToLogin')}</Link>
           </div>
         </Card>

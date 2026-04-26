@@ -103,7 +103,7 @@ export default function LoginPage() {
             </Button>
             <div className="flex items-center justify-between text-sm text-muted">
               <Link to="/forgot-password" className="hover:text-foreground">{t('auth.forgotPassword')}</Link>
-              <Link to="/verify-email" className="hover:text-foreground">{t('auth.verifyEmail')}</Link>
+              <Link to="/resend-verification" className="hover:text-foreground">{t('auth.verifyEmail')}</Link>
             </div>
           </div>
         </Card>
