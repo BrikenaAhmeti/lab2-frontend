@@ -8,6 +8,7 @@ import { authApi } from './auth-api';
 import { clearSession, setSession } from '@/features/auth/authSlice';
 
 const baseURL = import.meta.env.VITE_API_CORE || 'http://localhost:3005';
+const coreBaseURL = import.meta.env.VITE_API_CORE_SERVICE || 'http://localhost:3007';
 
 const AUTH_STORAGE_KEY = 'medsphere.auth';
 
@@ -21,6 +22,11 @@ let authStore: AppStore | null = null;
 
 export const apiClient = axios.create({
   baseURL,
+  timeout: 20000,
+});
+
+export const coreApiClient = axios.create({
+  baseURL: coreBaseURL,
   timeout: 20000,
 });
 
@@ -70,66 +76,73 @@ async function refreshTokenFlow(store: AppStore, refreshToken: string) {
   return refreshed.accessToken;
 }
 
-apiClient.interceptors.request.use((config) => {
-  if (!authStore) return config;
-  const token = authStore.getState().auth.accessToken;
-  if (token) {
-    setAuthHeader(config, token);
-  }
-  return config;
-});
-
-apiClient.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError) => {
+function applyAuthInterceptors(client: typeof apiClient) {
+  client.interceptors.request.use((config) => {
     if (!authStore) {
-      return Promise.reject(error);
+      return config;
     }
-
-    const status = error.response?.status;
-    const originalRequest = error.config as RetryableConfig | undefined;
-
-    if (!originalRequest || status !== 401 || originalRequest._retry) {
-      return Promise.reject(error);
+    const token = authStore.getState().auth.accessToken;
+    if (token) {
+      setAuthHeader(config, token);
     }
+    return config;
+  });
 
-    originalRequest._retry = true;
-    const refreshToken = authStore.getState().auth.refreshToken;
+  client.interceptors.response.use(
+    (response) => response,
+    async (error: AxiosError) => {
+      if (!authStore) {
+        return Promise.reject(error);
+      }
 
-    if (!refreshToken) {
-      authStore.dispatch(clearSession());
-      safePersistClear();
-      fallbackToLogin();
-      return Promise.reject(error);
-    }
+      const status = error.response?.status;
+      const originalRequest = error.config as RetryableConfig | undefined;
 
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        queueSubscriber((nextToken) => {
-          setAuthHeader(originalRequest, nextToken);
-          apiClient(originalRequest).then(resolve).catch(reject);
+      if (!originalRequest || status !== 401 || originalRequest._retry) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+      const refreshToken = authStore.getState().auth.refreshToken;
+
+      if (!refreshToken) {
+        authStore.dispatch(clearSession());
+        safePersistClear();
+        fallbackToLogin();
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          queueSubscriber((nextToken) => {
+            setAuthHeader(originalRequest, nextToken);
+            client(originalRequest).then(resolve).catch(reject);
+          });
         });
-      });
-    }
+      }
 
-    isRefreshing = true;
+      isRefreshing = true;
 
-    try {
-      const nextToken = await refreshTokenFlow(authStore, refreshToken);
-      isRefreshing = false;
-      notifySubscribers(nextToken);
-      setAuthHeader(originalRequest, nextToken);
-      return apiClient(originalRequest);
-    } catch (refreshError) {
-      isRefreshing = false;
-      subscribers = [];
-      authStore.dispatch(clearSession());
-      safePersistClear();
-      fallbackToLogin();
-      return Promise.reject(refreshError);
+      try {
+        const nextToken = await refreshTokenFlow(authStore, refreshToken);
+        isRefreshing = false;
+        notifySubscribers(nextToken);
+        setAuthHeader(originalRequest, nextToken);
+        return client(originalRequest);
+      } catch (refreshError) {
+        isRefreshing = false;
+        subscribers = [];
+        authStore.dispatch(clearSession());
+        safePersistClear();
+        fallbackToLogin();
+        return Promise.reject(refreshError);
+      }
     }
-  }
-);
+  );
+}
+
+applyAuthInterceptors(apiClient);
+applyAuthInterceptors(coreApiClient);
 
 export function setupAxiosInterceptors(store: AppStore) {
   authStore = store;

@@ -12,6 +12,7 @@ const navItems = [
   { to: '/dashboard', labelKey: 'auth.navDashboard' },
   { to: '/dashboard/profile', labelKey: 'auth.navProfile' },
   { to: '/dashboard/sessions', labelKey: 'auth.navSessions' },
+  { to: '/dashboard/departments', labelKey: 'auth.navDepartments' },
   { to: '/dashboard/users', labelKey: 'auth.navUsers' },
   { to: '/dashboard/doctor', labelKey: 'auth.navDoctor' },
   { to: '/dashboard/nurse', labelKey: 'auth.navNurse' },

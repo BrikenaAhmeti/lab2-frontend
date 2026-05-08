@@ -81,6 +81,7 @@
   "auth.navDashboard": "Overview",
   "auth.navProfile": "Profile",
   "auth.navSessions": "Sessions",
+  "auth.navDepartments": "Departments",
   "auth.navUsers": "Users",
   "auth.navDoctor": "Doctor",
   "auth.navNurse": "Nurse",
