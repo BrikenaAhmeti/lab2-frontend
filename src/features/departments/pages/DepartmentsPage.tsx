@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
@@ -244,6 +245,9 @@ export default function DepartmentsPage() {
                     <td className="px-4 py-3">{department.sortOrder}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
+                        <Link to={`/dashboard/departments/${department.id}/services`}>
+                          <Button size="sm" variant="secondary">Services</Button>
+                        </Link>
                         <Button size="sm" variant="secondary" onClick={() => openEdit(department)}>Edit</Button>
                         <Button
                           size="sm"

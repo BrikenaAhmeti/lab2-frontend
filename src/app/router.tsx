@@ -12,6 +12,7 @@ import ResendVerificationPage from '@/features/auth/pages/ResendVerificationPage
 import ProfilePage from '@/features/profile/pages/ProfilePage';
 import SessionsPage from '@/features/sessions/pages/SessionsPage';
 import DepartmentsPage from '@/features/departments/pages/DepartmentsPage';
+import ServicesPage from '@/features/services/pages/ServicesPage';
 import { DashboardHome, ErrorBoundaryPage, RolePage, ScopedDoctorPage, UsersAccessGuard } from '@/app/DashboardFallbackPages';
 
 export const router = createBrowserRouter([
@@ -56,6 +57,7 @@ export const router = createBrowserRouter([
           { path: 'profile', element: <ProfilePage /> },
           { path: 'sessions', element: <SessionsPage /> },
           { path: 'departments', element: <DepartmentsPage /> },
+          { path: 'departments/:departmentId/services', element: <ServicesPage /> },
           {
             path: 'users',
             element: <UsersAccessGuard />,
