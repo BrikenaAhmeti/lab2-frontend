@@ -6,14 +6,7 @@ import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import { authApi } from '@/lib/api/auth-api';
-
-const passwordSchema = z
-  .string()
-  .min(12, 'auth.passwordTooShort')
-  .regex(/[A-Z]/, 'auth.passwordNeedsUppercase')
-  .regex(/[a-z]/, 'auth.passwordNeedsLowercase')
-  .regex(/[0-9]/, 'auth.passwordNeedsNumber')
-  .regex(/[^A-Za-z0-9]/, 'auth.passwordNeedsSpecial');
+import { passwordRequirementKeys, passwordSchema } from '@/features/auth/utils/password';
 
 const resetPasswordSchema = z
   .object({
@@ -94,6 +87,11 @@ export default function ResetPasswordPage() {
               onChange={(e) => setConfirmPassword(e.target.value)}
               error={fieldError('confirmPassword')}
             />
+            <ul className="rounded-xl border border-border bg-surface/60 px-4 py-3 text-xs text-muted">
+              {passwordRequirementKeys.map((key) => (
+                <li key={key}>{t(key)}</li>
+              ))}
+            </ul>
             {error && <p className="text-sm text-danger">{error}</p>}
             {message && <p className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success">{message}</p>}
             <Button type="submit" loading={loading} className="w-full">{t('auth.resetPassword')}</Button>

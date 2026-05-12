@@ -1,6 +1,6 @@
 import Forbidden from '@/components/common/Forbidden';
 import { useAppSelector } from '@/app/hooks';
-import { hasAnyPermission } from '@/features/auth/utils/permission';
+import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import UsersPage from '@/features/users/pages/UsersPage';
 import { Link } from 'react-router-dom';
 import Card from '@/ui/atoms/Card';
@@ -218,7 +218,7 @@ export function UsersAccessGuard() {
   const user = useAppSelector((state) => state.auth.user);
   const roles = user?.roles ?? [];
   const permissions = user?.permissions ?? [];
-  const allowedByRole = roles.includes('Admin') || roles.includes('Super Admin');
+  const allowedByRole = hasAnyRole(roles, ['Admin', 'Super Admin']);
   const allowedByPermission = hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
 
   if (!allowedByRole && !allowedByPermission) {

@@ -68,3 +68,7 @@ export function hasAnyPermission(
     return hasPermission(userPermissions, parsed.resourceAction, parsed.scope);
   });
 }
+
+export function hasAnyRole(userRoles: string[], allowedRoles: string[]) {
+  return userRoles.some((role) => allowedRoles.includes(role));
+}

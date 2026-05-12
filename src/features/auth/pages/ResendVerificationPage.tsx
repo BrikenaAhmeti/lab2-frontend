@@ -17,7 +17,6 @@ export default function ResendVerificationPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [verificationToken, setVerificationToken] = useState('');
 
   const validation = useMemo(() => resendSchema.safeParse({ email }), [email]);
 
@@ -25,7 +24,6 @@ export default function ResendVerificationPage() {
     event.preventDefault();
     setMessage('');
     setError('');
-    setVerificationToken('');
 
     if (!validation.success) {
       setError(t('auth.emailValidationError'));
@@ -36,18 +34,11 @@ export default function ResendVerificationPage() {
 
     try {
       const data = await authApi.resendVerification({ email });
-      setMessage(data.message || t('auth.resendSuccess'));
-      setVerificationToken(import.meta.env.DEV ? data.verificationToken ?? '' : '');
+      setMessage(data.message || t('auth.checkEmailVerification'));
     } catch {
       setError(t('auth.operationFailed'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const copyToken = () => {
-    if (verificationToken) {
-      void navigator.clipboard.writeText(verificationToken);
     }
   };
 
@@ -66,15 +57,6 @@ export default function ResendVerificationPage() {
               error={error}
             />
             {message && <p className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success">{message}</p>}
-            {verificationToken && (
-              <div className="space-y-2 rounded-lg border border-border bg-surface p-3">
-                <p className="text-xs font-semibold uppercase text-muted">{t('auth.developerToken')}</p>
-                <Input id="verification-token" value={verificationToken} readOnly />
-                <Button type="button" variant="secondary" size="sm" onClick={copyToken}>
-                  {t('auth.copyToken')}
-                </Button>
-              </div>
-            )}
             <Button type="submit" loading={loading} className="w-full">
               {t('auth.resendVerification')}
             </Button>

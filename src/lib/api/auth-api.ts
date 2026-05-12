@@ -37,6 +37,11 @@ export interface UpdateProfileRequest {
   avatarFileId?: string;
 }
 
+export interface ProfileDto extends UpdateProfileRequest {
+  id: string;
+  email: string;
+}
+
 export interface ForgotPasswordRequest {
   email: string;
 }
@@ -57,10 +62,11 @@ export interface ResendVerificationRequest {
 export interface AuthActionResponse {
   success: boolean;
   message: string;
-  resetToken?: string;
-  resetExpiresAt?: string;
-  verificationToken?: string;
-  verificationExpiresAt?: string;
+}
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 function client(instance?: AxiosInstance) {
@@ -96,6 +102,9 @@ export const authApi = {
   resetPassword(payload: ResetPasswordRequest, instance?: AxiosInstance) {
     return client(instance).post<AuthActionResponse>('/api/auth/reset-password', payload).then((r) => r.data);
   },
+  changePassword(payload: ChangePasswordRequest, instance?: AxiosInstance) {
+    return client(instance).post<AuthActionResponse>('/api/auth/change-password', payload).then((r) => r.data);
+  },
 };
 
 export const sessionsApi = {
@@ -112,10 +121,10 @@ export const sessionsApi = {
 
 export const profileApi = {
   me(instance?: AxiosInstance) {
-    return client(instance).get('/api/users/me').then((r) => r.data);
+    return client(instance).get<ProfileDto>('/api/users/me').then((r) => r.data);
   },
   update(payload: UpdateProfileRequest, instance?: AxiosInstance) {
-    return client(instance).patch('/api/users/me', payload).then((r) => r.data);
+    return client(instance).patch<ProfileDto>('/api/users/me', payload).then((r) => r.data);
   },
 };
 
@@ -124,8 +133,11 @@ export interface CreateUserPayload {
   lastName: string;
   email: string;
   password: string;
-  phone?: string;
   roles: string[];
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  personalNumber?: string;
 }
 
 export interface UserRecord {
@@ -153,7 +165,7 @@ export const usersApi = {
   },
   async createUser(payload: CreateUserPayload, instance?: AxiosInstance) {
     try {
-      return await client(instance).post<UserRecord>('/api/users', payload).then((r) => r.data);
+      return await client(instance).post<UserRecord>('/api/auth/admin/users', payload).then((r) => r.data);
     } catch {
       const created: UserRecord = {
         id: crypto.randomUUID(),

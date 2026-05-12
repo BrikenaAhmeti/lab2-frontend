@@ -1,6 +1,6 @@
 import { type FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { z } from 'zod';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
@@ -13,12 +13,10 @@ const forgotPasswordSchema = z.object({
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation('common');
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [resetToken, setResetToken] = useState('');
 
   const validation = useMemo(() => forgotPasswordSchema.safeParse({ email }), [email]);
 
@@ -26,7 +24,6 @@ export default function ForgotPasswordPage() {
     event.preventDefault();
     setMessage('');
     setError('');
-    setResetToken('');
 
     if (!validation.success) {
       setError(t('auth.emailValidationError'));
@@ -37,24 +34,11 @@ export default function ForgotPasswordPage() {
 
     try {
       const data = await authApi.forgotPassword({ email });
-      setMessage(data.message || t('auth.forgotSuccess'));
-      setResetToken(import.meta.env.DEV ? data.resetToken ?? '' : '');
+      setMessage(data.message || t('auth.checkEmailReset'));
     } catch {
       setError(t('auth.operationFailed'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  const copyToken = () => {
-    if (resetToken) {
-      void navigator.clipboard.writeText(resetToken);
-    }
-  };
-
-  const openResetPage = () => {
-    if (resetToken) {
-      navigate(`/reset-password?token=${encodeURIComponent(resetToken)}`);
     }
   };
 
@@ -73,18 +57,6 @@ export default function ForgotPasswordPage() {
               error={error}
             />
             {message && <p className="rounded-lg bg-success/10 px-3 py-2 text-sm text-success">{message}</p>}
-            {resetToken && (
-              <div className="space-y-2 rounded-lg border border-border bg-surface p-3">
-                <p className="text-xs font-semibold uppercase text-muted">{t('auth.developerToken')}</p>
-                <Input id="reset-dev-token" value={resetToken} readOnly />
-                <Button type="button" variant="secondary" size="sm" onClick={copyToken}>
-                  {t('auth.copyToken')}
-                </Button>
-                <Button type="button" variant="secondary" size="sm" onClick={openResetPage}>
-                  Open reset page
-                </Button>
-              </div>
-            )}
             <Button type="submit" loading={loading} className="w-full">{t('auth.sendResetLink')}</Button>
             <Link to="/login" className="text-sm text-muted hover:text-foreground">{t('auth.backToLogin')}</Link>
           </div>

@@ -7,13 +7,14 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { authApi } from '@/lib/api/auth-api';
 import { clearSession } from '@/features/auth/authSlice';
 import { clearPersistedSession } from '@/features/auth/useAuthBootstrap';
+import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 
 const navItems = [
   { to: '/dashboard', labelKey: 'auth.navDashboard' },
   { to: '/dashboard/profile', labelKey: 'auth.navProfile' },
   { to: '/dashboard/sessions', labelKey: 'auth.navSessions' },
   { to: '/dashboard/departments', labelKey: 'auth.navDepartments' },
-  { to: '/dashboard/users', labelKey: 'auth.navUsers' },
+  { to: '/dashboard/users', labelKey: 'auth.navUsers', requiresUserAdmin: true },
   { to: '/dashboard/doctor', labelKey: 'auth.navDoctor' },
   { to: '/dashboard/nurse', labelKey: 'auth.navNurse' },
   { to: '/dashboard/lab', labelKey: 'auth.navLab' },
@@ -28,6 +29,12 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const refreshToken = useAppSelector((state) => state.auth.refreshToken);
+  const roles = user?.roles ?? [];
+  const permissions = user?.permissions ?? [];
+  const canManageUsers =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
+    hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
+  const visibleNavItems = navItems.filter((item) => !item.requiresUserAdmin || canManageUsers);
 
   const onLogout = async () => {
     try {
@@ -54,7 +61,7 @@ export default function AppLayout() {
           </Link>
 
           <nav className="space-y-1">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
