@@ -57,6 +57,7 @@ export const router = createBrowserRouter([
           { path: 'profile', element: <ProfilePage /> },
           { path: 'sessions', element: <SessionsPage /> },
           { path: 'departments', element: <DepartmentsPage /> },
+          { path: 'admin/organization/services', element: <ServicesPage /> },
           { path: 'departments/:departmentId/services', element: <ServicesPage /> },
           {
             path: 'users',

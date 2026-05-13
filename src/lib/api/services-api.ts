@@ -4,6 +4,11 @@ import { coreApiClient } from './axios';
 export interface ServiceRecord {
   id: string;
   departmentId: string;
+  department?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
   name: string;
   description: string | null;
   defaultDurationMinutes: number;
@@ -61,9 +66,12 @@ export const servicesApi = {
     return client(instance).post<ServiceRecord>('/api/services', payload).then((r) => r.data);
   },
   update(id: string, payload: Partial<ServicePayload>, instance?: AxiosInstance) {
-    return client(instance).patch<ServiceRecord>(`/api/services/${id}`, payload).then((r) => r.data);
+    return client(instance).put<ServiceRecord>(`/api/services/${id}`, payload).then((r) => r.data);
+  },
+  remove(id: string, instance?: AxiosInstance) {
+    return client(instance).delete<ServiceRecord>(`/api/services/${id}`).then((r) => r.data);
   },
   deactivate(id: string, instance?: AxiosInstance) {
-    return client(instance).delete<ServiceRecord>(`/api/services/${id}`).then((r) => r.data);
+    return servicesApi.remove(id, instance);
   },
 };
