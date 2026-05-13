@@ -107,6 +107,8 @@
   "auth.navProfile": "Profil",
   "auth.navSessions": "Sitzungen",
   "auth.navDepartments": "Abteilungen",
+  "auth.navServices": "Leistungen",
+  "auth.navStaffPositionTypes": "Stellenarten",
   "auth.navUsers": "Benutzer",
   "auth.navDoctor": "Arzt",
   "auth.navNurse": "Pflege",

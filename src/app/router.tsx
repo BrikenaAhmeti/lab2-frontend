@@ -13,6 +13,7 @@ import ProfilePage from '@/features/profile/pages/ProfilePage';
 import SessionsPage from '@/features/sessions/pages/SessionsPage';
 import DepartmentsPage from '@/features/departments/pages/DepartmentsPage';
 import ServicesPage from '@/features/services/pages/ServicesPage';
+import StaffPositionTypesPage from '@/pages/admin/organization/StaffPositionTypesPage';
 import { DashboardHome, ErrorBoundaryPage, RolePage, ScopedDoctorPage, UsersAccessGuard } from '@/app/DashboardFallbackPages';
 
 export const router = createBrowserRouter([
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
           { path: 'sessions', element: <SessionsPage /> },
           { path: 'departments', element: <DepartmentsPage /> },
           { path: 'admin/organization/services', element: <ServicesPage /> },
+          { path: 'admin/organization/staff-position-types', element: <StaffPositionTypesPage /> },
           { path: 'departments/:departmentId/services', element: <ServicesPage /> },
           {
             path: 'users',

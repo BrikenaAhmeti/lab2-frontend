@@ -14,6 +14,12 @@ const navItems = [
   { to: '/dashboard/profile', labelKey: 'auth.navProfile' },
   { to: '/dashboard/sessions', labelKey: 'auth.navSessions' },
   { to: '/dashboard/departments', labelKey: 'auth.navDepartments' },
+  { to: '/dashboard/admin/organization/services', labelKey: 'auth.navServices', requiresOrganizationAdmin: true },
+  {
+    to: '/dashboard/admin/organization/staff-position-types',
+    labelKey: 'auth.navStaffPositionTypes',
+    requiresOrganizationAdmin: true,
+  },
   { to: '/dashboard/users', labelKey: 'auth.navUsers', requiresUserAdmin: true },
   { to: '/dashboard/doctor', labelKey: 'auth.navDoctor' },
   { to: '/dashboard/nurse', labelKey: 'auth.navNurse' },
@@ -34,7 +40,31 @@ export default function AppLayout() {
   const canManageUsers =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
-  const visibleNavItems = navItems.filter((item) => !item.requiresUserAdmin || canManageUsers);
+  const canAccessOrganizationSetup =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
+    hasAnyPermission(
+      permissions,
+      [
+        'services:read',
+        'services:manage',
+        'services:manage:all',
+        'staff-position-types:read',
+        'staff-position-types:manage',
+        'staff-position-types:manage:all',
+      ],
+      'any'
+    );
+  const visibleNavItems = navItems.filter((item) => {
+    if (item.requiresUserAdmin) {
+      return canManageUsers;
+    }
+
+    if (item.requiresOrganizationAdmin) {
+      return canAccessOrganizationSetup;
+    }
+
+    return true;
+  });
 
   const onLogout = async () => {
     try {

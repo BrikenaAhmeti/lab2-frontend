@@ -107,6 +107,8 @@
   "auth.navProfile": "Profile",
   "auth.navSessions": "Sessions",
   "auth.navDepartments": "Departments",
+  "auth.navServices": "Services",
+  "auth.navStaffPositionTypes": "Staff Position Types",
   "auth.navUsers": "Users",
   "auth.navDoctor": "Doctor",
   "auth.navNurse": "Nurse",
