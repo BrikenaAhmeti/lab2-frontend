@@ -41,7 +41,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
                   <NavLink
                     key={item.to}
                     to={item.to}
-                    end={item.to === portal.homePath}
+                    end={item.end ?? item.to === portal.homePath}
                     onClick={() => dispatch(closeSidebar())}
                     className={({ isActive }) =>
                       clsx(

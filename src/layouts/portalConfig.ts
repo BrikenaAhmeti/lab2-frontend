@@ -11,6 +11,7 @@ export interface PortalNavItem {
   to: string;
   label: string;
   requiredPermissions?: string[];
+  end?: boolean;
 }
 
 export interface PortalNavGroup {
@@ -51,6 +52,13 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
             requiredPermissions: ['staff-position-types:read', 'staff_types:manage'],
           },
           { to: '/admin/organization/settings', label: 'Settings', requiredPermissions: ['settings:manage'] },
+        ],
+      },
+      {
+        label: 'Staff Management',
+        items: [
+          { to: '/admin/staff', label: 'Staff Directory', requiredPermissions: ['staff:read', 'staff:manage'], end: true },
+          { to: '/admin/staff/schedules', label: 'Schedule Overview', requiredPermissions: ['staff:read', 'staff:manage'] },
         ],
       },
       {

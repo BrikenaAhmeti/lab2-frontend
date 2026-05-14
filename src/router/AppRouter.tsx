@@ -19,6 +19,7 @@ import ReceptionistLayout from '@/layouts/ReceptionistLayout';
 import RoleRedirect from './RoleRedirect';
 
 const PublicHomePage = lazy(() => import('@/pages/public/PublicHomePage'));
+const PublicDoctorsPage = lazy(() => import('@/pages/public/PublicDoctorsPage'));
 const AdminDashboardPage = lazy(() => import('@/pages/portals/AdminDashboardPage'));
 const PatientDashboardPage = lazy(() => import('@/pages/portals/PatientDashboardPage'));
 const DoctorDashboardPage = lazy(() => import('@/pages/portals/DoctorDashboardPage'));
@@ -33,6 +34,9 @@ const ServicesPage = lazy(() => import('@/features/services/pages/ServicesPage')
 const StaffPositionTypesPage = lazy(() => import('@/pages/admin/organization/StaffPositionTypesPage'));
 const SettingsPage = lazy(() => import('@/pages/admin/organization/SettingsPage'));
 const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
+const StaffDirectoryPage = lazy(() => import('@/features/staff/pages/StaffDirectoryPage'));
+const StaffProfilePage = lazy(() => import('@/features/staff/pages/StaffProfilePage'));
+const StaffScheduleOverviewPage = lazy(() => import('@/features/staff/pages/StaffScheduleOverviewPage'));
 
 function RouteSkeleton() {
   return (
@@ -64,6 +68,10 @@ export const router = createBrowserRouter([
   {
     path: '/public',
     element: lazyRoute(<PublicHomePage />),
+  },
+  {
+    path: '/doctors',
+    element: lazyRoute(<PublicDoctorsPage />),
   },
   {
     path: '/login',
@@ -110,6 +118,9 @@ export const router = createBrowserRouter([
         children: [
           ...portalRoutes(<AdminDashboardPage />),
           { path: 'departments', element: lazyRoute(<DepartmentsPage />) },
+          { path: 'staff', element: lazyRoute(<StaffDirectoryPage />) },
+          { path: 'staff/schedules', element: lazyRoute(<StaffScheduleOverviewPage />) },
+          { path: 'staff/:id', element: lazyRoute(<StaffProfilePage />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
           { path: 'organization/services', element: lazyRoute(<ServicesPage />) },
           { path: 'organization/service-catalog', element: <Navigate to="/admin/organization/services" replace /> },
@@ -175,6 +186,8 @@ export const router = createBrowserRouter([
       { path: '/dashboard/profile', element: <Navigate to="/admin/profile" replace /> },
       { path: '/dashboard/sessions', element: <Navigate to="/admin/sessions" replace /> },
       { path: '/dashboard/departments', element: <Navigate to="/admin/departments" replace /> },
+      { path: '/dashboard/staff', element: <Navigate to="/admin/staff" replace /> },
+      { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
       {
         path: '/dashboard/admin/organization/services',

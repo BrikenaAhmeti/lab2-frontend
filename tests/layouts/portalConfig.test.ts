@@ -11,4 +11,13 @@ describe('portalConfigs', () => {
       expect.objectContaining({ label: 'Settings', to: '/admin/organization/settings' }),
     ]);
   });
+
+  it('wires the admin staff management links required by MS-10', () => {
+    const staffManagement = portalConfigs.admin.navGroups.find((group) => group.label === 'Staff Management');
+
+    expect(staffManagement?.items).toEqual([
+      expect.objectContaining({ label: 'Staff Directory', to: '/admin/staff' }),
+      expect.objectContaining({ label: 'Schedule Overview', to: '/admin/staff/schedules' }),
+    ]);
+  });
 });
