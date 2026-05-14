@@ -20,7 +20,9 @@ import { hasAnyPermission } from '@/features/auth/utils/permission';
 import type { ServiceRecord } from '@/lib/api/services-api';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
+import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import { organizationBreadcrumbs } from '@/pages/admin/organization/organizationBreadcrumbs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
@@ -138,106 +140,110 @@ export default function ServicesPage() {
   };
 
   return (
-    <Card
-      title="Service Catalog"
-      subtitle="Manage department services and procedures"
-      actions={
-        canManage ? (
-          <Button onClick={openCreateModal}>
-            Add Service
-          </Button>
-        ) : null
-      }
-    >
-      <div className="space-y-4">
-        <ServiceCatalogFilters
-          search={search}
-          departmentId={departmentId}
-          isActive={activeFilter}
-          departments={departments}
-          onSearchChange={setSearch}
-          onDepartmentChange={setDepartmentId}
-          onStatusChange={setActiveFilter}
-        />
+    <div className="space-y-4">
+      <Breadcrumbs items={organizationBreadcrumbs('Service Catalog')} />
 
-        {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
+      <Card
+        title="Service Catalog"
+        subtitle="Manage department services and procedures"
+        actions={
+          canManage ? (
+            <Button onClick={openCreateModal}>
+              Add Service
+            </Button>
+          ) : null
+        }
+      >
+        <div className="space-y-4">
+          <ServiceCatalogFilters
+            search={search}
+            departmentId={departmentId}
+            isActive={activeFilter}
+            departments={departments}
+            onSearchChange={setSearch}
+            onDepartmentChange={setDepartmentId}
+            onStatusChange={setActiveFilter}
+          />
 
-        {servicesQuery.isLoading ? (
-          <div className="rounded-xl border border-border p-4">
-            <div className="animate-pulse space-y-3">
-              <div className="h-10 rounded-lg bg-surface" />
-              <div className="h-12 rounded-lg bg-surface" />
-              <div className="h-12 rounded-lg bg-surface" />
-              <div className="h-12 rounded-lg bg-surface" />
-            </div>
-          </div>
-        ) : null}
+          {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
 
-        {servicesQuery.isError ? <FeedbackMessage type="error" message={servicesErrorMessage} /> : null}
-
-        {!servicesQuery.isLoading && !servicesQuery.isError && rows.length === 0 ? (
-          <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
-            <p className="font-medium text-foreground">No services found</p>
-            <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new service.</p>
-          </div>
-        ) : null}
-
-        {!servicesQuery.isLoading && !servicesQuery.isError && rows.length > 0 ? (
-          <>
-            <ServiceCatalogTable
-              rows={rows}
-              departments={departments}
-              canManage={canManage}
-              mutationPending={mutationPending}
-              onEdit={openEditModal}
-              onDelete={setServiceToDelete}
-            />
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-              <div className="flex gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={currentPage <= 1 || servicesQuery.isFetching}
-                  onClick={() => setPage((currentValue) => Math.max(1, currentValue - 1))}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  disabled={currentPage >= totalPages || servicesQuery.isFetching}
-                  onClick={() => setPage((currentValue) => currentValue + 1)}
-                >
-                  Next
-                </Button>
+          {servicesQuery.isLoading ? (
+            <div className="rounded-xl border border-border p-4">
+              <div className="animate-pulse space-y-3">
+                <div className="h-10 rounded-lg bg-surface" />
+                <div className="h-12 rounded-lg bg-surface" />
+                <div className="h-12 rounded-lg bg-surface" />
+                <div className="h-12 rounded-lg bg-surface" />
               </div>
             </div>
-          </>
-        ) : null}
-      </div>
+          ) : null}
 
-      <ServiceCatalogFormModal
-        open={showFormModal}
-        departments={departments}
-        service={editingService}
-        defaultDepartmentId={departmentId}
-        loading={createMutation.isPending || updateMutation.isPending}
-        submitError={formError}
-        onClose={closeFormModal}
-        onSubmit={submitForm}
-      />
+          {servicesQuery.isError ? <FeedbackMessage type="error" message={servicesErrorMessage} /> : null}
 
-      <DeleteServiceDialog
-        service={serviceToDelete}
-        errorMessage={deleteError}
-        loading={deleteMutation.isPending}
-        onClose={() => {
-          setDeleteError('');
-          setServiceToDelete(null);
-        }}
-        onConfirm={confirmDelete}
-      />
-    </Card>
+          {!servicesQuery.isLoading && !servicesQuery.isError && rows.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
+              <p className="font-medium text-foreground">No services found</p>
+              <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new service.</p>
+            </div>
+          ) : null}
+
+          {!servicesQuery.isLoading && !servicesQuery.isError && rows.length > 0 ? (
+            <>
+              <ServiceCatalogTable
+                rows={rows}
+                departments={departments}
+                canManage={canManage}
+                mutationPending={mutationPending}
+                onEdit={openEditModal}
+                onDelete={setServiceToDelete}
+              />
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={currentPage <= 1 || servicesQuery.isFetching}
+                    onClick={() => setPage((currentValue) => Math.max(1, currentValue - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={currentPage >= totalPages || servicesQuery.isFetching}
+                    onClick={() => setPage((currentValue) => currentValue + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : null}
+        </div>
+
+        <ServiceCatalogFormModal
+          open={showFormModal}
+          departments={departments}
+          service={editingService}
+          defaultDepartmentId={departmentId}
+          loading={createMutation.isPending || updateMutation.isPending}
+          submitError={formError}
+          onClose={closeFormModal}
+          onSubmit={submitForm}
+        />
+
+        <DeleteServiceDialog
+          service={serviceToDelete}
+          errorMessage={deleteError}
+          loading={deleteMutation.isPending}
+          onClose={() => {
+            setDeleteError('');
+            setServiceToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+        />
+      </Card>
+    </div>
   );
 }

@@ -112,6 +112,7 @@ export const router = createBrowserRouter([
           { path: 'departments', element: lazyRoute(<DepartmentsPage />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
           { path: 'organization/services', element: lazyRoute(<ServicesPage />) },
+          { path: 'organization/service-catalog', element: <Navigate to="/admin/organization/services" replace /> },
           { path: 'organization/staff-position-types', element: lazyRoute(<StaffPositionTypesPage />) },
           { path: 'organization/settings', element: lazyRoute(<SettingsPage />) },
         ],
@@ -182,6 +183,10 @@ export const router = createBrowserRouter([
       {
         path: '/dashboard/admin/organization/staff-position-types',
         element: <Navigate to="/admin/organization/staff-position-types" replace />,
+      },
+      {
+        path: '/dashboard/admin/organization/settings',
+        element: <Navigate to="/admin/organization/settings" replace />,
       },
       { path: '/dashboard/doctor', element: <Navigate to="/doctor" replace /> },
       { path: '/dashboard/nurse', element: <Navigate to="/nurse" replace /> },

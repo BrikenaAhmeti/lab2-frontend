@@ -18,7 +18,9 @@ import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import type { StaffPositionTypeRecord } from '@/lib/api/staff-position-types-api';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
+import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import { organizationBreadcrumbs } from './organizationBreadcrumbs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
@@ -30,8 +32,14 @@ export default function StaffPositionTypesPage() {
   const isAdmin = hasAnyRole(roles, ['Admin', 'Super Admin']);
   const canRead =
     isAdmin ||
-    hasAnyPermission(permissions, ['staff-position-types:read', 'staff-position-types:manage', 'staff-position-types:manage:all'], 'any');
-  const canManage = isAdmin || hasAnyPermission(permissions, ['staff-position-types:manage', 'staff-position-types:manage:all'], 'any');
+    hasAnyPermission(
+      permissions,
+      ['staff-position-types:read', 'staff-position-types:manage', 'staff-position-types:manage:all', 'staff_types:manage'],
+      'any'
+    );
+  const canManage =
+    isAdmin ||
+    hasAnyPermission(permissions, ['staff-position-types:manage', 'staff-position-types:manage:all', 'staff_types:manage'], 'any');
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [feedback, setFeedback] = useState<FeedbackState>(null);
@@ -121,108 +129,112 @@ export default function StaffPositionTypesPage() {
   };
 
   return (
-    <Card
-      title="Staff Position Types"
-      subtitle="Manage configurable clinical and operational staff position types"
-      actions={
-        canManage ? (
-          <Button onClick={openCreateModal}>
-            Add Staff Position Type
-          </Button>
-        ) : null
-      }
-    >
-      <div className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-[180px] md:justify-start">
-          <label htmlFor="staff-position-type-status-filter" className="block space-y-1.5">
-            <span className="text-sm font-medium text-foreground">Status</span>
-            <select
-              id="staff-position-type-status-filter"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-            >
-              <option value="all">All statuses</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </label>
+    <div className="space-y-4">
+      <Breadcrumbs items={organizationBreadcrumbs('Staff Position Types')} />
+
+      <Card
+        title="Staff Position Types"
+        subtitle="Manage configurable clinical and operational staff position types"
+        actions={
+          canManage ? (
+            <Button onClick={openCreateModal}>
+              Add Staff Position Type
+            </Button>
+          ) : null
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-[180px] md:justify-start">
+            <label htmlFor="staff-position-type-status-filter" className="block space-y-1.5">
+              <span className="text-sm font-medium text-foreground">Status</span>
+              <select
+                id="staff-position-type-status-filter"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
+                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+          </div>
+
+          {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
+
+          {staffPositionTypesQuery.isLoading || departmentsQuery.isLoading ? (
+            <div className="rounded-xl border border-border p-4">
+              <div className="animate-pulse space-y-3">
+                <div className="h-10 rounded-lg bg-surface" />
+                <div className="h-12 rounded-lg bg-surface" />
+                <div className="h-12 rounded-lg bg-surface" />
+                <div className="h-12 rounded-lg bg-surface" />
+              </div>
+            </div>
+          ) : null}
+
+          {staffPositionTypesQuery.isError ? (
+            <FeedbackMessage
+              type="error"
+              message={getApiErrorMessage(staffPositionTypesQuery.error, 'Staff position types could not be loaded')}
+            />
+          ) : null}
+
+          {departmentsQuery.isError ? (
+            <FeedbackMessage
+              type="error"
+              message={getApiErrorMessage(departmentsQuery.error, 'Departments could not be loaded')}
+            />
+          ) : null}
+
+          {!staffPositionTypesQuery.isLoading &&
+          !departmentsQuery.isLoading &&
+          !staffPositionTypesQuery.isError &&
+          !departmentsQuery.isError &&
+          rows.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
+              <p className="font-medium text-foreground">No staff position types found</p>
+              <p className="mt-1 text-sm text-muted">Create the first staff position type to align staffing workflows with the backend catalog.</p>
+            </div>
+          ) : null}
+
+          {!staffPositionTypesQuery.isLoading &&
+          !departmentsQuery.isLoading &&
+          !staffPositionTypesQuery.isError &&
+          !departmentsQuery.isError &&
+          rows.length > 0 ? (
+            <StaffPositionTypesTable
+              rows={rows}
+              departments={departments}
+              canManage={canManage}
+              mutationPending={mutationPending}
+              onEdit={openEditModal}
+              onDelete={setRecordToDelete}
+            />
+          ) : null}
         </div>
 
-        {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
+        <StaffPositionTypeFormModal
+          open={showFormModal}
+          departments={departments}
+          record={editingRecord}
+          loading={createMutation.isPending || updateMutation.isPending}
+          submitError={formError}
+          onClose={closeFormModal}
+          onSubmit={submitForm}
+        />
 
-        {staffPositionTypesQuery.isLoading || departmentsQuery.isLoading ? (
-          <div className="rounded-xl border border-border p-4">
-            <div className="animate-pulse space-y-3">
-              <div className="h-10 rounded-lg bg-surface" />
-              <div className="h-12 rounded-lg bg-surface" />
-              <div className="h-12 rounded-lg bg-surface" />
-              <div className="h-12 rounded-lg bg-surface" />
-            </div>
-          </div>
-        ) : null}
-
-        {staffPositionTypesQuery.isError ? (
-          <FeedbackMessage
-            type="error"
-            message={getApiErrorMessage(staffPositionTypesQuery.error, 'Staff position types could not be loaded')}
-          />
-        ) : null}
-
-        {departmentsQuery.isError ? (
-          <FeedbackMessage
-            type="error"
-            message={getApiErrorMessage(departmentsQuery.error, 'Departments could not be loaded')}
-          />
-        ) : null}
-
-        {!staffPositionTypesQuery.isLoading &&
-        !departmentsQuery.isLoading &&
-        !staffPositionTypesQuery.isError &&
-        !departmentsQuery.isError &&
-        rows.length === 0 ? (
-          <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
-            <p className="font-medium text-foreground">No staff position types found</p>
-            <p className="mt-1 text-sm text-muted">Create the first staff position type to align staffing workflows with the backend catalog.</p>
-          </div>
-        ) : null}
-
-        {!staffPositionTypesQuery.isLoading &&
-        !departmentsQuery.isLoading &&
-        !staffPositionTypesQuery.isError &&
-        !departmentsQuery.isError &&
-        rows.length > 0 ? (
-          <StaffPositionTypesTable
-            rows={rows}
-            departments={departments}
-            canManage={canManage}
-            mutationPending={mutationPending}
-            onEdit={openEditModal}
-            onDelete={setRecordToDelete}
-          />
-        ) : null}
-      </div>
-
-      <StaffPositionTypeFormModal
-        open={showFormModal}
-        departments={departments}
-        record={editingRecord}
-        loading={createMutation.isPending || updateMutation.isPending}
-        submitError={formError}
-        onClose={closeFormModal}
-        onSubmit={submitForm}
-      />
-
-      <DeleteStaffPositionTypeDialog
-        record={recordToDelete}
-        errorMessage={deleteError}
-        loading={deleteMutation.isPending}
-        onClose={() => {
-          setDeleteError('');
-          setRecordToDelete(null);
-        }}
-        onConfirm={confirmDelete}
-      />
-    </Card>
+        <DeleteStaffPositionTypeDialog
+          record={recordToDelete}
+          errorMessage={deleteError}
+          loading={deleteMutation.isPending}
+          onClose={() => {
+            setDeleteError('');
+            setRecordToDelete(null);
+          }}
+          onConfirm={confirmDelete}
+        />
+      </Card>
+    </div>
   );
 }

@@ -48,7 +48,7 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           {
             to: '/admin/organization/staff-position-types',
             label: 'Staff Position Types',
-            requiredPermissions: ['staff-position-types:read'],
+            requiredPermissions: ['staff-position-types:read', 'staff_types:manage'],
           },
           { to: '/admin/organization/settings', label: 'Settings', requiredPermissions: ['settings:manage'] },
         ],
