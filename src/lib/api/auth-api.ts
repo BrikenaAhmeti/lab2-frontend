@@ -15,7 +15,7 @@ export interface AuthUserDto {
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   user: AuthUserDto;
 }
 
@@ -77,14 +77,14 @@ export const authApi = {
   login(payload: LoginRequest, instance?: AxiosInstance) {
     return client(instance).post<AuthResponse>('/api/auth/login', payload).then((r) => r.data);
   },
-  refresh(refreshToken: string, instance?: AxiosInstance) {
+  refresh(refreshToken?: string, instance?: AxiosInstance) {
     return client(instance)
-      .post<AuthResponse>('/api/auth/refresh', { refreshToken })
+      .post<AuthResponse>('/api/auth/refresh', refreshToken ? { refreshToken } : {})
       .then((r) => r.data);
   },
-  logout(refreshToken: string, instance?: AxiosInstance) {
+  logout(refreshToken?: string, instance?: AxiosInstance) {
     return client(instance)
-      .post<{ success: boolean }>('/api/auth/logout', { refreshToken })
+      .post<{ success: boolean }>('/api/auth/logout', refreshToken ? { refreshToken } : {})
       .then((r) => r.data);
   },
   me(instance?: AxiosInstance) {

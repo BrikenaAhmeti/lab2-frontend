@@ -5,20 +5,17 @@ import { z } from 'zod';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
-import { authApi } from '@/lib/api/auth-api';
-import { useAppDispatch } from '@/app/hooks';
-import { setSession } from '@/features/auth/authSlice';
-import { persistSession } from '@/features/auth/useAuthBootstrap';
+import { useAuth } from '@/contexts/AuthContext';
 
 const roleRedirectPriority = [
-  { role: 'Super Admin', to: '/dashboard/users' },
-  { role: 'Admin', to: '/dashboard/users' },
-  { role: 'Doctor', to: '/dashboard/doctor' },
-  { role: 'Nurse', to: '/dashboard/nurse' },
-  { role: 'Lab Technician', to: '/dashboard/lab' },
-  { role: 'Pharmacist', to: '/dashboard/pharmacy' },
-  { role: 'Receptionist', to: '/dashboard/reception' },
-  { role: 'Patient', to: '/dashboard/patient' },
+  { role: 'Super Admin', to: '/admin' },
+  { role: 'Admin', to: '/admin' },
+  { role: 'Doctor', to: '/doctor' },
+  { role: 'Nurse', to: '/nurse' },
+  { role: 'Lab Technician', to: '/lab' },
+  { role: 'Pharmacist', to: '/pharmacy' },
+  { role: 'Receptionist', to: '/receptionist' },
+  { role: 'Patient', to: '/patient' },
 ] as const;
 
 const loginSchema = z.object({
@@ -28,12 +25,12 @@ const loginSchema = z.object({
 
 function resolveRedirect(roles: string[]) {
   const hit = roleRedirectPriority.find((item) => roles.includes(item.role));
-  return hit?.to ?? '/dashboard';
+  return hit?.to ?? '/admin';
 }
 
 export default function LoginPage() {
   const { t } = useTranslation('common');
-  const dispatch = useAppDispatch();
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const redirectFromState = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
@@ -56,17 +53,11 @@ export default function LoginPage() {
     setErrorKey('');
 
     try {
-      const data = await authApi.login({ email, password });
-      dispatch(setSession(data));
-      persistSession({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        user: data.user,
-      });
+      const user = await login({ email, password });
 
-      const destination = redirectFromState && redirectFromState.startsWith('/dashboard')
+      const destination = redirectFromState && redirectFromState !== '/login'
         ? redirectFromState
-        : resolveRedirect(data.user.roles);
+        : resolveRedirect(user.roles);
 
       navigate(destination, { replace: true });
     } catch {

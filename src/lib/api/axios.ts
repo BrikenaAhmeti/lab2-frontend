@@ -9,8 +9,7 @@ import { clearSession, setSession } from '@/features/auth/authSlice';
 
 const baseURL = import.meta.env.VITE_API_CORE || 'http://localhost:3005';
 const coreBaseURL = import.meta.env.VITE_API_CORE_SERVICE || 'http://localhost:3007';
-
-const AUTH_STORAGE_KEY = 'medsphere.auth';
+const LEGACY_AUTH_STORAGE_KEY = 'medsphere.auth';
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -23,16 +22,19 @@ let authStore: AppStore | null = null;
 export const apiClient = axios.create({
   baseURL,
   timeout: 20000,
+  withCredentials: true,
 });
 
 export const coreApiClient = axios.create({
   baseURL: coreBaseURL,
   timeout: 20000,
+  withCredentials: true,
 });
 
 export const rawClient = axios.create({
   baseURL,
   timeout: 20000,
+  withCredentials: true,
 });
 
 function notifySubscribers(token: string) {
@@ -52,27 +54,19 @@ function setAuthHeader(config: InternalAxiosRequestConfig, token: string) {
   config.headers = headers;
 }
 
-function safePersistClear() {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
-}
-
 function fallbackToLogin() {
   if (window.location.pathname !== '/login') {
     window.location.href = '/login';
   }
 }
 
-async function refreshTokenFlow(store: AppStore, refreshToken: string) {
-  const refreshed = await authApi.refresh(refreshToken, rawClient);
+function clearLegacyStoredAuth() {
+  localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+}
+
+async function refreshTokenFlow(store: AppStore) {
+  const refreshed = await authApi.refresh(undefined, rawClient);
   store.dispatch(setSession(refreshed));
-  localStorage.setItem(
-    AUTH_STORAGE_KEY,
-    JSON.stringify({
-      accessToken: refreshed.accessToken,
-      refreshToken: refreshed.refreshToken,
-      user: refreshed.user,
-    })
-  );
   return refreshed.accessToken;
 }
 
@@ -103,14 +97,6 @@ function applyAuthInterceptors(client: typeof apiClient) {
       }
 
       originalRequest._retry = true;
-      const refreshToken = authStore.getState().auth.refreshToken;
-
-      if (!refreshToken) {
-        authStore.dispatch(clearSession());
-        safePersistClear();
-        fallbackToLogin();
-        return Promise.reject(error);
-      }
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -124,7 +110,7 @@ function applyAuthInterceptors(client: typeof apiClient) {
       isRefreshing = true;
 
       try {
-        const nextToken = await refreshTokenFlow(authStore, refreshToken);
+        const nextToken = await refreshTokenFlow(authStore);
         isRefreshing = false;
         notifySubscribers(nextToken);
         setAuthHeader(originalRequest, nextToken);
@@ -133,7 +119,7 @@ function applyAuthInterceptors(client: typeof apiClient) {
         isRefreshing = false;
         subscribers = [];
         authStore.dispatch(clearSession());
-        safePersistClear();
+        clearLegacyStoredAuth();
         fallbackToLogin();
         return Promise.reject(refreshError);
       }

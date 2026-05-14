@@ -21,26 +21,24 @@ export interface AuthUser {
 
 export interface AuthState {
   accessToken: string | null;
-  refreshToken: string | null;
   user: AuthUser | null;
   status: 'idle' | 'loading' | 'authenticated' | 'unauthenticated';
-  tokens: { accessToken: string; refreshToken: string } | null;
+  tokens: { accessToken: string } | null;
 }
 
 interface AuthPayload {
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   user: AuthUser;
 }
 
 interface LegacyAuthPayload {
   user: AuthUser;
-  tokens: { accessToken: string; refreshToken: string };
+  tokens: { accessToken: string; refreshToken?: string };
 }
 
 const initialState: AuthState = {
   accessToken: null,
-  refreshToken: null,
   user: null,
   status: 'idle',
   tokens: null,
@@ -74,11 +72,9 @@ const authSlice = createSlice({
     setSession: (state, action: PayloadAction<AuthPayload | LegacyAuthPayload>) => {
       const payload = normalizePayload(action.payload);
       state.accessToken = payload.accessToken;
-      state.refreshToken = payload.refreshToken;
       state.user = withLegacyRole(payload.user);
       state.tokens = {
         accessToken: payload.accessToken,
-        refreshToken: payload.refreshToken,
       };
       state.status = 'authenticated';
     },
@@ -88,17 +84,12 @@ const authSlice = createSlice({
     },
     hydrateSession: (state, action: PayloadAction<Partial<AuthState>>) => {
       state.accessToken = action.payload.accessToken ?? null;
-      state.refreshToken = action.payload.refreshToken ?? null;
       state.user = action.payload.user ? withLegacyRole(action.payload.user) : null;
-      state.tokens =
-        state.accessToken && state.refreshToken
-          ? { accessToken: state.accessToken, refreshToken: state.refreshToken }
-          : null;
-      state.status = state.accessToken || state.refreshToken ? 'loading' : 'unauthenticated';
+      state.tokens = state.accessToken ? { accessToken: state.accessToken } : null;
+      state.status = state.accessToken ? 'loading' : 'unauthenticated';
     },
     clearSession: (state) => {
       state.accessToken = null;
-      state.refreshToken = null;
       state.user = null;
       state.tokens = null;
       state.status = 'unauthenticated';

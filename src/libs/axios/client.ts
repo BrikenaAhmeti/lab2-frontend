@@ -9,7 +9,7 @@ type ApiKey = 'core' | 'deviceInfo';
 const base: Record<ApiKey, string> = { core: env.API_CORE, deviceInfo: env.API_DEVICE_INFO };
 
 function build(key: ApiKey): AxiosInstance {
-  const instance = axios.create({ baseURL: base[key], timeout: 20000 });
+  const instance = axios.create({ baseURL: base[key], timeout: 20000, withCredentials: true });
 
   instance.interceptors.request.use(cfg => {
     const token = store.getState().auth.tokens?.accessToken;
@@ -29,15 +29,13 @@ function build(key: ApiKey): AxiosInstance {
         if (!getRefreshing()) {
           setRefreshing(true);
           try {
-            const refreshToken = store.getState().auth.tokens?.refreshToken;
-            if (!refreshToken) throw new Error('No refresh token');
-
-            const { data } = await axios.post(`${base.core}/auth/refresh`, { refreshToken });
-            store.dispatch(setSession({ user: data.user, tokens: data.tokens }));
+            const { data } = await axios.post(`${base.core}/auth/refresh`, {}, { withCredentials: true });
+            const accessToken = data.accessToken ?? data.tokens?.accessToken;
+            store.dispatch(setSession({ user: data.user, accessToken }));
             setRefreshing(false);
-            flushSubscribers(data.tokens.accessToken);
+            flushSubscribers(accessToken);
             orig.headers = orig.headers ?? {};
-            (orig.headers as any).Authorization = `Bearer ${data.tokens.accessToken}`;
+            (orig.headers as any).Authorization = `Bearer ${accessToken}`;
             return instance(orig);
           } catch (e) {
             setRefreshing(false);

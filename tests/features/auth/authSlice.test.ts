@@ -19,7 +19,7 @@ describe('authSlice', () => {
     );
 
     expect(state.accessToken).toBe('a1');
-    expect(state.refreshToken).toBe('r1');
+    expect(state.tokens).toEqual({ accessToken: 'a1' });
     expect(state.status).toBe('authenticated');
     expect(state.user?.role).toBe('Admin');
   });
@@ -29,7 +29,6 @@ describe('authSlice', () => {
       undefined,
       hydrateSession({
         accessToken: 'a2',
-        refreshToken: 'r2',
         user: { id: 'u2', email: 'doctor@medsphere.com', roles: ['Doctor'], permissions: ['patients:read:own'] },
       })
     );

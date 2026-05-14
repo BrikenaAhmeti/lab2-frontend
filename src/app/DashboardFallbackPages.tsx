@@ -13,18 +13,18 @@ export function DashboardHome() {
   const title = user?.email ? `Welcome back, ${user.email}` : 'MedSphere Dashboard';
 
   const stats = [
-    { label: 'Today\u2019s Appointments', value: '128', trend: '+14', variant: 'info' as const, to: '/dashboard/reception' },
-    { label: 'Checked-in Patients', value: '46', trend: '72% on time', variant: 'success' as const, to: '/dashboard/patient' },
-    { label: 'Pending Lab Orders', value: '19', trend: '-5 since noon', variant: 'warning' as const, to: '/dashboard/lab' },
-    { label: 'Low Stock Alerts', value: '7', trend: '3 critical', variant: 'danger' as const, to: '/dashboard/pharmacy' },
-    { label: 'Revenue Today', value: '$18,420', trend: '+8.4%', variant: 'success' as const, to: '/dashboard' },
+    { label: 'Today\u2019s Appointments', value: '128', trend: '+14', variant: 'info' as const, to: '/receptionist' },
+    { label: 'Checked-in Patients', value: '46', trend: '72% on time', variant: 'success' as const, to: '/patient' },
+    { label: 'Pending Lab Orders', value: '19', trend: '-5 since noon', variant: 'warning' as const, to: '/lab' },
+    { label: 'Low Stock Alerts', value: '7', trend: '3 critical', variant: 'danger' as const, to: '/pharmacy' },
+    { label: 'Revenue Today', value: '$18,420', trend: '+8.4%', variant: 'success' as const, to: '/admin' },
   ];
 
   const quickActions = [
-    { label: 'Register Patient', description: 'Create a new patient profile', to: '/dashboard/patient' },
-    { label: 'Book Appointment', description: 'Schedule a consultation', to: '/dashboard/reception' },
-    { label: 'View Lab Queue', description: 'Review pending lab work', to: '/dashboard/lab' },
-    { label: 'Manage Staff', description: 'Coordinate shifts and roles', to: '/dashboard/users', disabled: !canManageStaff },
+    { label: 'Register Patient', description: 'Create a new patient profile', to: '/patient' },
+    { label: 'Book Appointment', description: 'Schedule a consultation', to: '/receptionist' },
+    { label: 'View Lab Queue', description: 'Review pending lab work', to: '/lab' },
+    { label: 'Manage Staff', description: 'Coordinate shifts and roles', to: '/admin/users', disabled: !canManageStaff },
   ];
 
   const activity = [

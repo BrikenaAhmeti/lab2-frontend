@@ -3,11 +3,10 @@ import { useTranslation } from 'react-i18next';
 import Button from '@/ui/atoms/Button';
 import ThemeToggle from '@/ui/molecules/ThemeToggle';
 import LanguageSwitch from '@/ui/molecules/LanguageSwitch';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { authApi } from '@/lib/api/auth-api';
-import { clearSession } from '@/features/auth/authSlice';
+import { useAppSelector } from '@/app/hooks';
 import { clearPersistedSession } from '@/features/auth/useAuthBootstrap';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { to: '/dashboard', labelKey: 'auth.navDashboard' },
@@ -31,10 +30,9 @@ const navItems = [
 
 export default function AppLayout() {
   const { t } = useTranslation('common');
-  const dispatch = useAppDispatch();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  const refreshToken = useAppSelector((state) => state.auth.refreshToken);
   const roles = user?.roles ?? [];
   const permissions = user?.permissions ?? [];
   const canManageUsers =
@@ -68,11 +66,8 @@ export default function AppLayout() {
 
   const onLogout = async () => {
     try {
-      if (refreshToken) {
-        await authApi.logout(refreshToken);
-      }
+      await logout();
     } finally {
-      dispatch(clearSession());
       clearPersistedSession();
       navigate('/login', { replace: true });
     }

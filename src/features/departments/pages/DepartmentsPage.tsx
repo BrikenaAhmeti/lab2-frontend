@@ -245,7 +245,7 @@ export default function DepartmentsPage() {
                     <td className="px-4 py-3">{department.sortOrder}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-2">
-                        <Link to={`/dashboard/admin/organization/services?departmentId=${department.id}`}>
+                        <Link to={`/admin/organization/services?departmentId=${department.id}`}>
                           <Button size="sm" variant="secondary">Services</Button>
                         </Link>
                         <Button size="sm" variant="secondary" onClick={() => openEdit(department)}>Edit</Button>
