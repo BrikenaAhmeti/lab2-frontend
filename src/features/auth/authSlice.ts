@@ -17,6 +17,9 @@ export interface AuthUser {
   roles: string[];
   permissions: string[];
   role?: string;
+  patientId?: string;
+  patientProfileId?: string;
+  profileId?: string;
 }
 
 export interface AuthState {

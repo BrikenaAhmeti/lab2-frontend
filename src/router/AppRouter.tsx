@@ -37,6 +37,9 @@ const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const StaffDirectoryPage = lazy(() => import('@/features/staff/pages/StaffDirectoryPage'));
 const StaffProfilePage = lazy(() => import('@/features/staff/pages/StaffProfilePage'));
 const StaffScheduleOverviewPage = lazy(() => import('@/features/staff/pages/StaffScheduleOverviewPage'));
+const PatientsPage = lazy(() => import('@/features/patients/pages/PatientsPage'));
+const PatientProfilePage = lazy(() => import('@/features/patients/pages/PatientProfilePage'));
+const PatientSelfProfilePage = lazy(() => import('@/features/patients/pages/PatientSelfProfilePage'));
 
 function RouteSkeleton() {
   return (
@@ -121,6 +124,8 @@ export const router = createBrowserRouter([
           { path: 'staff', element: lazyRoute(<StaffDirectoryPage />) },
           { path: 'staff/schedules', element: lazyRoute(<StaffScheduleOverviewPage />) },
           { path: 'staff/:id', element: lazyRoute(<StaffProfilePage />) },
+          { path: 'patients', element: lazyRoute(<PatientsPage />) },
+          { path: 'patients/:id', element: lazyRoute(<PatientProfilePage />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
           { path: 'organization/services', element: lazyRoute(<ServicesPage />) },
           { path: 'organization/service-catalog', element: <Navigate to="/admin/organization/services" replace /> },
@@ -135,7 +140,11 @@ export const router = createBrowserRouter([
             <PatientLayout />
           </RoleGuard>
         ),
-        children: portalRoutes(<PatientDashboardPage />),
+        children: [
+          { index: true, element: lazyRoute(<PatientDashboardPage />) },
+          { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
+          { path: 'sessions', element: lazyRoute(<SessionsPage />) },
+        ],
       },
       {
         path: '/doctor',
@@ -180,7 +189,11 @@ export const router = createBrowserRouter([
             <ReceptionistLayout />
           </RoleGuard>
         ),
-        children: portalRoutes(<ReceptionistDashboardPage />),
+        children: [
+          ...portalRoutes(<ReceptionistDashboardPage />),
+          { path: 'patients', element: lazyRoute(<PatientsPage basePath="/receptionist/patients" />) },
+          { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/receptionist" />) },
+        ],
       },
       { path: '/dashboard', element: <RoleRedirect /> },
       { path: '/dashboard/profile', element: <Navigate to="/admin/profile" replace /> },
@@ -188,6 +201,7 @@ export const router = createBrowserRouter([
       { path: '/dashboard/departments', element: <Navigate to="/admin/departments" replace /> },
       { path: '/dashboard/staff', element: <Navigate to="/admin/staff" replace /> },
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
+      { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
       { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
       {
         path: '/dashboard/admin/organization/services',
