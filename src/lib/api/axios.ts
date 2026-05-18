@@ -6,6 +6,7 @@ import axios, {
 import type { AppStore } from '@/app/store';
 import { authApi } from './auth-api';
 import { clearSession, setSession } from '@/features/auth/authSlice';
+import { env } from '@/config/env';
 
 const baseURL = import.meta.env.VITE_API_CORE || 'http://localhost:3005';
 const coreBaseURL = import.meta.env.VITE_API_CORE_SERVICE || 'http://localhost:3007';
@@ -27,6 +28,12 @@ export const apiClient = axios.create({
 
 export const coreApiClient = axios.create({
   baseURL: coreBaseURL,
+  timeout: 20000,
+  withCredentials: true,
+});
+
+export const notificationApiClient = axios.create({
+  baseURL: env.NOTIFICATION_API_URL,
   timeout: 20000,
   withCredentials: true,
 });
@@ -129,6 +136,7 @@ function applyAuthInterceptors(client: typeof apiClient) {
 
 applyAuthInterceptors(apiClient);
 applyAuthInterceptors(coreApiClient);
+applyAuthInterceptors(notificationApiClient);
 
 export function setupAxiosInterceptors(store: AppStore) {
   authStore = store;
