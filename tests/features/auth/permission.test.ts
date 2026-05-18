@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasAnyPermission, hasPermission } from '@/features/auth/utils/permission';
+import { hasAnyPermission, hasAnyRole, hasPermission } from '@/features/auth/utils/permission';
 
 describe('permission utility', () => {
   const permissions = [
@@ -20,5 +20,11 @@ describe('permission utility', () => {
     expect(hasAnyPermission(permissions, ['patients:read:department', 'departments:manage:all'], 'all')).toBe(true);
     expect(hasAnyPermission(permissions, ['users:create', 'appointments:read:own'], 'any')).toBe(true);
     expect(hasAnyPermission(permissions, ['users:create', 'billing:write:all'], 'any')).toBe(false);
+  });
+
+  it('matches role names across common backend formats', () => {
+    expect(hasAnyRole(['lab_technician'], ['Lab Technician'])).toBe(true);
+    expect(hasAnyRole(['super admin'], ['Super Admin'])).toBe(true);
+    expect(hasAnyRole(['Patient'], ['Doctor'])).toBe(false);
   });
 });

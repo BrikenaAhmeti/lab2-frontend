@@ -19,8 +19,11 @@ export default function PublicHomePage() {
             <Link to="/login">
               <Button>Sign in</Button>
             </Link>
+            <Link to="/register">
+              <Button variant="secondary">Register as patient</Button>
+            </Link>
             <Link to="/public">
-              <Button variant="secondary">Public website</Button>
+              <Button variant="ghost">Public website</Button>
             </Link>
           </div>
         </div>

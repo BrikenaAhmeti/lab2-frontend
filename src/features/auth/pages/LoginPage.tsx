@@ -6,27 +6,13 @@ import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import { useAuth } from '@/contexts/AuthContext';
-
-const roleRedirectPriority = [
-  { role: 'Super Admin', to: '/admin' },
-  { role: 'Admin', to: '/admin' },
-  { role: 'Doctor', to: '/doctor' },
-  { role: 'Nurse', to: '/nurse' },
-  { role: 'Lab Technician', to: '/lab' },
-  { role: 'Pharmacist', to: '/pharmacy' },
-  { role: 'Receptionist', to: '/receptionist' },
-  { role: 'Patient', to: '/patient' },
-] as const;
+import { getAuthApiErrorMessage, isEmailVerificationRequiredError } from '@/features/auth/utils/errors';
+import { resolvePortalPath } from '@/features/auth/utils/roles';
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
 });
-
-function resolveRedirect(roles: string[]) {
-  const hit = roleRedirectPriority.find((item) => roles.includes(item.role));
-  return hit?.to ?? '/admin';
-}
 
 export default function LoginPage() {
   const { t } = useTranslation('common');
@@ -38,30 +24,39 @@ export default function LoginPage() {
   const [email, setEmail] = useState('admin@example.com');
   const [password, setPassword] = useState('UserPassword123!');
   const [submitting, setSubmitting] = useState(false);
-  const [errorKey, setErrorKey] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showVerificationLink, setShowVerificationLink] = useState(false);
 
   const validation = useMemo(() => loginSchema.safeParse({ email, password }), [email, password]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!validation.success) {
-      setErrorKey('auth.validationError');
+      setErrorMessage(t('auth.validationError'));
+      setShowVerificationLink(false);
       return;
     }
 
     setSubmitting(true);
-    setErrorKey('');
+    setErrorMessage('');
+    setShowVerificationLink(false);
 
     try {
       const user = await login({ email, password });
+      const roles = user.roles ?? (user.role ? [user.role] : []);
 
       const destination = redirectFromState && redirectFromState !== '/login'
         ? redirectFromState
-        : resolveRedirect(user.roles);
+        : resolvePortalPath(roles);
 
       navigate(destination, { replace: true });
-    } catch {
-      setErrorKey('auth.loginFailed');
+    } catch (error) {
+      if (isEmailVerificationRequiredError(error)) {
+        setErrorMessage(t('auth.verifyEmailBeforeLogin'));
+        setShowVerificationLink(true);
+      } else {
+        setErrorMessage(getAuthApiErrorMessage(error, t('auth.loginFailed')));
+      }
     } finally {
       setSubmitting(false);
     }
@@ -88,7 +83,15 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
             />
-            {errorKey && <p className="text-sm text-danger">{t(errorKey)}</p>}
+            {errorMessage ? <p className="text-sm text-danger">{errorMessage}</p> : null}
+            {showVerificationLink ? (
+              <Link
+                to={`/resend-verification?email=${encodeURIComponent(email)}`}
+                className="inline-flex text-sm font-medium text-primary hover:text-primary/80"
+              >
+                {t('auth.resendVerification')}
+              </Link>
+            ) : null}
             <Button type="submit" loading={submitting} className="w-full">
               {t('auth.signIn')}
             </Button>

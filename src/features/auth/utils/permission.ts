@@ -1,3 +1,5 @@
+import { hasRole } from './roles';
+
 export type PermissionScope = 'own' | 'department' | 'all';
 
 interface ParsedPermission {
@@ -70,5 +72,5 @@ export function hasAnyPermission(
 }
 
 export function hasAnyRole(userRoles: string[], allowedRoles: string[]) {
-  return userRoles.some((role) => allowedRoles.includes(role));
+  return allowedRoles.some((role) => hasRole(userRoles, role));
 }

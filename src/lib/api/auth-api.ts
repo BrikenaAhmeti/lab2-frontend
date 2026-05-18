@@ -6,6 +6,17 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface PatientRegisterRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  personalNumber?: string;
+}
+
 export interface AuthUserDto {
   id: string;
   email: string;
@@ -74,6 +85,9 @@ function client(instance?: AxiosInstance) {
 }
 
 export const authApi = {
+  register(payload: PatientRegisterRequest, instance?: AxiosInstance) {
+    return client(instance).post<AuthActionResponse>('/api/auth/register', payload).then((r) => r.data);
+  },
   login(payload: LoginRequest, instance?: AxiosInstance) {
     return client(instance).post<AuthResponse>('/api/auth/login', payload).then((r) => r.data);
   },

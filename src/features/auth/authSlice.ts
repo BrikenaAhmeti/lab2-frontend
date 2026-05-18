@@ -1,4 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { normalizeRoleName } from '@/features/auth/utils/roles';
 
 export type Role =
   | 'Super Admin'
@@ -48,9 +49,14 @@ const initialState: AuthState = {
 };
 
 function withLegacyRole(user: AuthUser): AuthUser {
+  const roles = (user.roles ?? []).map(normalizeRoleName);
+  const legacyRole = user.role ? normalizeRoleName(user.role) : undefined;
+  const normalizedRoles = roles.length > 0 ? roles : legacyRole ? [legacyRole] : [];
+
   return {
     ...user,
-    role: user.roles?.[0] ?? user.role,
+    roles: normalizedRoles,
+    role: normalizedRoles[0] ?? legacyRole,
   };
 }
 

@@ -5,6 +5,7 @@ import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
 import RoleGuard from '@/features/auth/guards/RoleGuard';
 import LoginPage from '@/features/auth/pages/LoginPage';
+import PatientRegistrationPage from '@/features/auth/pages/PatientRegistrationPage';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 import VerifyEmailPage from '@/features/auth/pages/VerifyEmailPage';
@@ -79,6 +80,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+  },
+  {
+    path: '/register',
+    element: <PatientRegistrationPage />,
   },
   {
     path: '/forgot-password',
