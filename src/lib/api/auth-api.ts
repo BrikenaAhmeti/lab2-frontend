@@ -1,10 +1,15 @@
 import type { AxiosInstance } from 'axios';
 import { apiClient } from './axios';
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
+export type LoginRequest =
+  | {
+      email: string;
+      password: string;
+    }
+  | {
+      username: string;
+      password: string;
+    };
 
 export interface PatientRegisterRequest {
   firstName: string;

@@ -6,13 +6,23 @@ import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import { useAuth } from '@/contexts/AuthContext';
+import type { LoginRequest } from '@/lib/api/auth-api';
 import { getAuthApiErrorMessage, isEmailVerificationRequiredError } from '@/features/auth/utils/errors';
 import { resolvePortalPath } from '@/features/auth/utils/roles';
 
+const emailIdentifierSchema = z.string().trim().email();
+
 const loginSchema = z.object({
-  email: z.string().email(),
+  identifier: z.string().trim().min(1),
   password: z.string().min(8),
 });
+
+function createLoginRequest(identifier: string, password: string): LoginRequest {
+  const credential = identifier.trim();
+  return emailIdentifierSchema.safeParse(credential).success
+    ? { email: credential, password }
+    : { username: credential, password };
+}
 
 export default function LoginPage() {
   const { t } = useTranslation('common');
@@ -21,13 +31,19 @@ export default function LoginPage() {
   const location = useLocation();
   const redirectFromState = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
 
-  const [email, setEmail] = useState('admin@example.com');
+  const [identifier, setIdentifier] = useState('admin@example.com');
   const [password, setPassword] = useState('UserPassword123!');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showVerificationLink, setShowVerificationLink] = useState(false);
 
-  const validation = useMemo(() => loginSchema.safeParse({ email, password }), [email, password]);
+  const validation = useMemo(
+    () => loginSchema.safeParse({ identifier, password }),
+    [identifier, password]
+  );
+  const verificationLink = emailIdentifierSchema.safeParse(identifier).success
+    ? `/resend-verification?email=${encodeURIComponent(identifier.trim())}`
+    : '/resend-verification';
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -42,7 +58,7 @@ export default function LoginPage() {
     setShowVerificationLink(false);
 
     try {
-      const user = await login({ email, password });
+      const user = await login(createLoginRequest(identifier, password));
       const roles = user.roles ?? (user.role ? [user.role] : []);
 
       const destination = redirectFromState && redirectFromState !== '/login'
@@ -69,11 +85,12 @@ export default function LoginPage() {
           <div className="space-y-4">
             <Input
               id="email"
-              type="email"
-              label={t('auth.email')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="user@example.com"
+              type="text"
+              label={t('auth.loginIdentifier')}
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              placeholder="user@example.com or username"
+              autoComplete="username"
             />
             <Input
               id="password"
@@ -86,7 +103,7 @@ export default function LoginPage() {
             {errorMessage ? <p className="text-sm text-danger">{errorMessage}</p> : null}
             {showVerificationLink ? (
               <Link
-                to={`/resend-verification?email=${encodeURIComponent(email)}`}
+                to={verificationLink}
                 className="inline-flex text-sm font-medium text-primary hover:text-primary/80"
               >
                 {t('auth.resendVerification')}

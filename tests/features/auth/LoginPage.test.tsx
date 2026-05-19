@@ -97,4 +97,25 @@ describe('LoginPage', () => {
       '/resend-verification?email=admin%40example.com'
     );
   });
+
+  it('submits a username when the credential is not an email address', async () => {
+    mocks.login.mockResolvedValue({
+      id: 'user-1',
+      email: 'doctor@example.com',
+      roles: ['Doctor'],
+      permissions: [],
+    });
+
+    renderLogin();
+    fireEvent.change(screen.getByLabelText('auth.loginIdentifier'), {
+      target: { value: 'doctor01' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
+
+    await waitFor(() => expect(mocks.login).toHaveBeenCalledWith({
+      username: 'doctor01',
+      password: 'UserPassword123!',
+    }));
+    expect(await screen.findByText('doctor-portal')).toBeInTheDocument();
+  });
 });
