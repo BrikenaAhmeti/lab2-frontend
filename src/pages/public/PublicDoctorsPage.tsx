@@ -58,7 +58,9 @@ export default function PublicDoctorsPage() {
                   <p className="mt-1 text-sm text-muted">{staff.positionType?.name ?? staff.specialization ?? 'Doctor'}</p>
                   {staff.bio ? <p className="mt-3 text-sm text-muted">{staff.bio}</p> : null}
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {staff.departments?.map((department) => <Badge key={department.id}>{department.name}</Badge>)}
+                    {staff.departments?.map((department) => (
+                      <Badge key={department.id}>{department.name ?? department.department?.name ?? 'Department'}</Badge>
+                    ))}
                   </div>
                 </section>
               ))}

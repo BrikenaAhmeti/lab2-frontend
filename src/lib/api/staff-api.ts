@@ -7,8 +7,14 @@ function client(instance?: AxiosInstance) {
 
 export interface StaffDepartment {
   id: string;
-  name: string;
+  name?: string;
+  departmentId?: string;
   isPrimary?: boolean;
+  department?: {
+    id: string;
+    name: string;
+    isActive: boolean;
+  };
 }
 
 export interface StaffPositionType {
@@ -92,7 +98,7 @@ export const staffApi = {
   list(params: StaffListParams, instance?: AxiosInstance) {
     return client(instance).get<StaffListResponse>('/api/staff', { params }).then((response) => response.data);
   },
-  publicList(params: Pick<StaffListParams, 'departmentId' | 'search'> & { staffId?: string }, instance?: AxiosInstance) {
+  publicList(params: StaffListParams & { staffId?: string }, instance?: AxiosInstance) {
     return client(instance).get<StaffListResponse>('/api/staff/public', { params }).then((response) => response.data);
   },
   get(id: string, instance?: AxiosInstance) {

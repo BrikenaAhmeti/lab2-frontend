@@ -81,6 +81,8 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Care',
         items: [
           { to: '/patient', label: 'Dashboard' },
+          { to: '/patient/book-appointment', label: 'Book Appointment', requiredPermissions: ['appointments:create'] },
+          { to: '/patient/appointments', label: 'My Appointments', requiredPermissions: ['appointments:read'] },
           { to: '/patient/profile', label: 'Profile' },
           { to: '/patient/sessions', label: 'Sessions' },
         ],
@@ -161,6 +163,8 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Reception',
         items: [
           { to: '/receptionist', label: 'Dashboard' },
+          { to: '/receptionist/book-appointment', label: 'Book Appointment', requiredPermissions: ['appointments:create'] },
+          { to: '/receptionist/appointments', label: 'Appointments', requiredPermissions: ['appointments:read'] },
           { to: '/receptionist/patients', label: 'Patients', requiredPermissions: ['patients:read', 'patients:create'] },
           { to: '/receptionist/profile', label: 'Profile' },
           { to: '/receptionist/sessions', label: 'Sessions' },

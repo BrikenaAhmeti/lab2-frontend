@@ -41,6 +41,8 @@ const StaffScheduleOverviewPage = lazy(() => import('@/features/staff/pages/Staf
 const PatientsPage = lazy(() => import('@/features/patients/pages/PatientsPage'));
 const PatientProfilePage = lazy(() => import('@/features/patients/pages/PatientProfilePage'));
 const PatientSelfProfilePage = lazy(() => import('@/features/patients/pages/PatientSelfProfilePage'));
+const BookAppointmentPage = lazy(() => import('@/features/appointments/pages/BookAppointmentPage'));
+const AppointmentsPage = lazy(() => import('@/features/appointments/pages/AppointmentsPage'));
 
 function RouteSkeleton() {
   return (
@@ -147,6 +149,8 @@ export const router = createBrowserRouter([
         ),
         children: [
           { index: true, element: lazyRoute(<PatientDashboardPage />) },
+          { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="patient" />) },
+          { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="patient" />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
           { path: 'sessions', element: lazyRoute(<SessionsPage />) },
         ],
@@ -196,6 +200,8 @@ export const router = createBrowserRouter([
         ),
         children: [
           ...portalRoutes(<ReceptionistDashboardPage />),
+          { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="receptionist" />) },
+          { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="receptionist" />) },
           { path: 'patients', element: lazyRoute(<PatientsPage basePath="/receptionist/patients" />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/receptionist" />) },
         ],

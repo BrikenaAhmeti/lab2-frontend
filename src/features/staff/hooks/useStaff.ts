@@ -7,7 +7,7 @@ import { staffApi, type ScheduleExceptionPayload, type StaffListParams, type Sta
 export const staffQueryKey = {
   all: ['staff'] as const,
   list: (params: StaffListParams) => [...staffQueryKey.all, 'list', params] as const,
-  publicList: (params: Pick<StaffListParams, 'departmentId' | 'search'> & { staffId?: string }) =>
+  publicList: (params: StaffListParams & { staffId?: string }) =>
     [...staffQueryKey.all, 'public', params] as const,
   detail: (id: string) => [...staffQueryKey.all, 'detail', id] as const,
   schedules: (id: string) => [...staffQueryKey.detail(id), 'schedules'] as const,
@@ -23,7 +23,7 @@ export function useStaffList(params: StaffListParams) {
   });
 }
 
-export function usePublicStaffList(params: Pick<StaffListParams, 'departmentId' | 'search'> & { staffId?: string }) {
+export function usePublicStaffList(params: StaffListParams & { staffId?: string }) {
   return useQuery({
     queryKey: staffQueryKey.publicList(params),
     queryFn: () => staffApi.publicList(params),
