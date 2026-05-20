@@ -6,8 +6,10 @@ import { staffApi } from '@/lib/api/staff-api';
 import {
   appointmentsApi,
   type AppointmentListParams,
+  type AppointmentType,
   type BookAppointmentPayload,
   type RescheduleAppointmentPayload,
+  type UpdateAppointmentStatusPayload,
 } from '@/lib/api/appointments-api';
 import type { AuthUser } from '@/features/auth/authSlice';
 
@@ -21,6 +23,7 @@ export const appointmentQueryKey = {
   slots: (staffId: string, serviceId: string, date: string) =>
     ['appointments', 'slots', staffId, serviceId, date] as const,
   list: (params: AppointmentListParams) => [...appointmentQueryKey.all, 'list', params] as const,
+  today: ['appointments', 'today'] as const,
   detail: (id: string) => [...appointmentQueryKey.all, 'detail', id] as const,
 };
 
@@ -79,6 +82,15 @@ export function useAppointmentList(params: AppointmentListParams, enabled = true
   });
 }
 
+export function useTodayAppointments() {
+  return useQuery({
+    queryKey: appointmentQueryKey.today,
+    queryFn: () => appointmentsApi.today(),
+    refetchInterval: 30000,
+    retry: false,
+  });
+}
+
 export function useAppointmentDetail(id: string) {
   return useQuery({
     queryKey: appointmentQueryKey.detail(id),
@@ -115,6 +127,20 @@ export function useRescheduleAppointment() {
   });
 }
 
+export function useUpdateAppointmentStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateAppointmentStatusPayload }) =>
+      appointmentsApi.updateStatus(id, payload),
+    onSuccess: async (appointment) => {
+      await queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
+      queryClient.setQueryData(appointmentQueryKey.detail(appointment.id), appointment);
+    },
+    retry: false,
+  });
+}
+
 export function useCancelAppointment() {
   const queryClient = useQueryClient();
 
@@ -138,6 +164,7 @@ export function buildAppointmentPayload(input: {
   serviceCatalogId: string;
   staffProfileId: string;
   scheduledAt: string;
+  appointmentType?: AppointmentType;
   notes?: string;
 }): BookAppointmentPayload {
   const notes = input.notes?.trim();
@@ -147,6 +174,7 @@ export function buildAppointmentPayload(input: {
     serviceCatalogId: input.serviceCatalogId,
     staffProfileId: input.staffProfileId,
     scheduledAt: input.scheduledAt,
+    ...(input.appointmentType ? { appointmentType: input.appointmentType } : {}),
     ...(notes ? { notes } : {}),
   };
 }

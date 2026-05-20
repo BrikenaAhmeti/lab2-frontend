@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { ServiceRecord } from '@/lib/api/services-api';
 import type { StaffRecord } from '@/lib/api/staff-api';
-import type { AvailableSlot, AppointmentView } from '@/lib/api/appointments-api';
+import type { AppointmentType, AvailableSlot, AppointmentView } from '@/lib/api/appointments-api';
 import type { PatientRecord } from '@/lib/api/patients-api';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
@@ -31,13 +31,15 @@ const steps = ['Department', 'Service', 'Staff', 'Slot', 'Confirm'] as const;
 interface BookingWizardProps {
   mode: BookingMode;
   patientId?: string;
+  appointmentType?: AppointmentType;
+  initialPatient?: PatientRecord | null;
 }
 
 function getStepTitle(index: number) {
   return steps[index];
 }
 
-export default function BookingWizard({ mode, patientId }: BookingWizardProps) {
+export default function BookingWizard({ mode, patientId, appointmentType, initialPatient = null }: BookingWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [department, setDepartment] = useState<DepartmentRecord | null>(null);
   const [service, setService] = useState<ServiceRecord | null>(null);
@@ -45,7 +47,7 @@ export default function BookingWizard({ mode, patientId }: BookingWizardProps) {
   const [date, setDate] = useState(getTodayInputValue());
   const [slot, setSlot] = useState<AvailableSlot | null>(null);
   const [slotSelectedAt, setSlotSelectedAt] = useState<number | null>(null);
-  const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(initialPatient);
   const [notes, setNotes] = useState('');
   const [now, setNow] = useState(Date.now());
   const [bookedAppointment, setBookedAppointment] = useState<AppointmentView | null>(null);
@@ -119,6 +121,7 @@ export default function BookingWizard({ mode, patientId }: BookingWizardProps) {
           serviceCatalogId: service.id,
           staffProfileId: staff.id,
           scheduledAt: slot.start,
+          appointmentType,
           notes,
         })
       );

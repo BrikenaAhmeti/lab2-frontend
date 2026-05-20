@@ -105,6 +105,7 @@ export interface BookAppointmentPayload {
   serviceCatalogId: string;
   staffProfileId: string;
   scheduledAt: string;
+  appointmentType?: AppointmentType;
   notes?: string | null;
 }
 
@@ -112,6 +113,7 @@ export interface RescheduleAppointmentPayload {
   scheduledAt: string;
   serviceCatalogId?: string;
   staffProfileId?: string;
+  appointmentType?: AppointmentType;
   notes?: string | null;
 }
 
@@ -129,6 +131,9 @@ export const appointmentsApi = {
     return client(instance)
       .get<AppointmentListResponse>('/api/appointments', { params })
       .then((response) => response.data);
+  },
+  today(instance?: AxiosInstance) {
+    return client(instance).get<AppointmentView[]>('/api/appointments/today').then((response) => response.data);
   },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<AppointmentView>(`/api/appointments/${id}`).then((response) => response.data);

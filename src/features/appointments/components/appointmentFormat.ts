@@ -43,3 +43,14 @@ export function isFinalAppointment(status: AppointmentStatus) {
 export function isPastAppointment(appointment: AppointmentView) {
   return new Date(appointment.scheduledAt).getTime() < Date.now() || isFinalAppointment(appointment.status);
 }
+
+export function canCheckInAppointment(status: AppointmentStatus) {
+  return status === 'SCHEDULED' || status === 'CONFIRMED';
+}
+
+export function canMarkNoShowAppointment(appointment: AppointmentView, graceMinutes = 15) {
+  const canTransition = appointment.status === 'SCHEDULED' || appointment.status === 'CONFIRMED';
+  const readyAt = new Date(appointment.scheduledAt).getTime() + graceMinutes * 60 * 1000;
+
+  return canTransition && Date.now() >= readyAt;
+}
