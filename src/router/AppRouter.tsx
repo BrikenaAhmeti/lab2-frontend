@@ -43,6 +43,7 @@ const PatientProfilePage = lazy(() => import('@/features/patients/pages/PatientP
 const PatientSelfProfilePage = lazy(() => import('@/features/patients/pages/PatientSelfProfilePage'));
 const BookAppointmentPage = lazy(() => import('@/features/appointments/pages/BookAppointmentPage'));
 const AppointmentsPage = lazy(() => import('@/features/appointments/pages/AppointmentsPage'));
+const ConsultationPage = lazy(() => import('@/features/consultation/pages/ConsultationPage'));
 
 function RouteSkeleton() {
   return (
@@ -162,7 +163,10 @@ export const router = createBrowserRouter([
             <DoctorLayout />
           </RoleGuard>
         ),
-        children: portalRoutes(<DoctorDashboardPage />),
+        children: [
+          ...portalRoutes(<DoctorDashboardPage />),
+          { path: 'consultations/:appointmentId', element: lazyRoute(<ConsultationPage />) },
+        ],
       },
       {
         path: '/nurse',
