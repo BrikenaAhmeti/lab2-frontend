@@ -1,11 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import DoctorDashboardPage from '@/pages/portals/DoctorDashboardPage';
 import { appointmentsApi, type AppointmentView } from '@/lib/api/appointments-api';
+import { labApi, type LabOrderView } from '@/lib/api/lab-api';
 import authReducer from '@/features/auth/authSlice';
 
 vi.mock('@/lib/api/appointments-api', async () => {
@@ -21,6 +22,23 @@ vi.mock('@/lib/api/appointments-api', async () => {
       reschedule: vi.fn(),
       updateStatus: vi.fn(),
       availableSlots: vi.fn(),
+    },
+  };
+});
+
+vi.mock('@/lib/api/lab-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/lab-api')>('@/lib/api/lab-api');
+
+  return {
+    ...actual,
+    labApi: {
+      listOrders: vi.fn(),
+      pendingOrders: vi.fn(),
+      getOrder: vi.fn(),
+      updateOrderStatus: vi.fn(),
+      enterResults: vi.fn(),
+      reviewOrder: vi.fn(),
+      triggerAi: vi.fn(),
     },
   };
 });
@@ -72,6 +90,91 @@ function makeAppointment(overrides: Partial<AppointmentView> = {}): AppointmentV
       isActive: true,
     },
     ...overrides,
+  };
+}
+
+function makeLabOrder(overrides: Partial<LabOrderView> = {}): LabOrderView {
+  return {
+    id: 'lab-order-1',
+    patientId: 'patient-1',
+    appointmentId: 'appointment-1',
+    medicalRecordId: 'record-1',
+    orderedByStaffId: '55555555-5555-4555-8555-555555555555',
+    departmentId: 'department-1',
+    status: 'COMPLETED',
+    priority: 'urgent',
+    notes: null,
+    orderedAt: '2030-01-02T08:10:00.000Z',
+    collectedAt: '2030-01-02T08:40:00.000Z',
+    completedAt: '2030-01-02T09:30:00.000Z',
+    reviewedAt: null,
+    createdAt: '2030-01-02T08:10:00.000Z',
+    updatedAt: '2030-01-02T09:30:00.000Z',
+    patient: {
+      id: 'patient-1',
+      userId: 'patient-user',
+      firstName: 'Mira',
+      lastName: 'Deda',
+      email: 'mira@example.com',
+      phone: null,
+      name: 'Mira Deda',
+    },
+    appointment: {
+      id: 'appointment-1',
+      status: 'IN_PROGRESS',
+      scheduledAt: '2030-01-02T09:00:00.000Z',
+      endAt: '2030-01-02T09:30:00.000Z',
+    },
+    medicalRecord: {
+      id: 'record-1',
+      diagnosis: 'Anemia check',
+      isFinalized: true,
+      createdAt: '2030-01-02T09:10:00.000Z',
+    },
+    orderedByStaff: {
+      id: '55555555-5555-4555-8555-555555555555',
+      userId: 'doctor-user',
+      employeeCode: 'DR-1',
+      specialization: 'Cardiologist',
+      displayName: 'DR-1 - Cardiologist',
+    },
+    department: {
+      id: 'department-1',
+      name: 'Cardiology',
+      isActive: true,
+    },
+    items: [
+      {
+        id: 'item-1',
+        labTestId: 'test-1',
+        resultValue: '6.1',
+        resultUnit: 'g/dL',
+        resultNotes: null,
+        resultStatus: 'CRITICAL',
+        isCritical: true,
+        completedAt: '2030-01-02T09:30:00.000Z',
+        flag: 'critical',
+        labTest: {
+          id: 'test-1',
+          code: 'HGB',
+          name: 'Hemoglobin',
+          description: null,
+          category: 'Hematology',
+          sampleType: 'Blood',
+          defaultPrice: '12.00',
+          referenceRange: '12-16 g/dL',
+          isActive: true,
+        },
+      },
+    ],
+    ...overrides,
+  };
+}
+
+function labListResponse(items: LabOrderView[]) {
+  return {
+    items,
+    meta: { page: 1, limit: 100, total: items.length, totalPages: items.length ? 1 : 0 },
   };
 }
 
@@ -140,6 +243,7 @@ describe('DoctorDashboardPage', () => {
       }),
     ]);
     vi.mocked(appointmentsApi.updateStatus).mockResolvedValue(makeAppointment({ status: 'IN_PROGRESS' }));
+    vi.mocked(labApi.listOrders).mockResolvedValue(labListResponse([]));
   });
 
   it('shows the doctor schedule and starts a checked-in consultation through the backend action', async () => {
@@ -156,5 +260,25 @@ describe('DoctorDashboardPage', () => {
       );
     });
     expect(await screen.findByText('consultation-opened')).toBeInTheDocument();
+  });
+
+  it('shows pending lab reviews from completed backend lab orders', async () => {
+    vi.mocked(labApi.listOrders).mockResolvedValue(labListResponse([makeLabOrder()]));
+
+    renderPage();
+
+    const reviewCard = await screen.findByText('Pending Lab Reviews');
+    await waitFor(() => {
+      expect(within(reviewCard.closest('section')!).getByText('1')).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pending Reviews' }));
+
+    expect(await screen.findByText('Mira Deda')).toBeInTheDocument();
+    expect(screen.getByText('Hemoglobin')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Review Results' })).toHaveAttribute(
+      'href',
+      '/doctor/lab-reviews/lab-order-1'
+    );
   });
 });

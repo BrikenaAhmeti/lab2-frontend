@@ -111,6 +111,16 @@ export interface EnterLabResultsPayload {
   }>;
 }
 
+export interface ReviewLabOrderPayload {
+  notes?: string | null;
+}
+
+export interface TriggerLabOrderAiResponse {
+  labOrderId: string;
+  status: string;
+  message: string;
+}
+
 function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
@@ -134,5 +144,13 @@ export const labApi = {
   },
   enterResults(id: string, payload: EnterLabResultsPayload, instance?: AxiosInstance) {
     return client(instance).put<LabOrderView>(`/api/lab-orders/${id}/results`, payload).then((response) => response.data);
+  },
+  reviewOrder(id: string, payload: ReviewLabOrderPayload, instance?: AxiosInstance) {
+    return client(instance).post<LabOrderView>(`/api/lab-orders/${id}/review`, payload).then((response) => response.data);
+  },
+  triggerAi(id: string, instance?: AxiosInstance) {
+    return client(instance)
+      .post<TriggerLabOrderAiResponse>(`/api/lab-orders/${id}/trigger-ai`)
+      .then((response) => response.data);
   },
 };

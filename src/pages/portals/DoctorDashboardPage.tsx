@@ -18,6 +18,9 @@ import {
   useTodayAppointments,
   useUpdateAppointmentStatus,
 } from '@/features/appointments/hooks/useAppointments';
+import PendingLabReviewsCard from '@/features/lab/components/PendingLabReviewsCard';
+import { belongsToOrderingDoctor, isPendingLabReview, sortLabOrders } from '@/features/lab/components/labFormat';
+import { useLabOrders } from '@/features/lab/hooks/useLabOrders';
 
 function belongsToDoctor(appointment: AppointmentView, userId?: string, profileId?: string) {
   if (!userId && !profileId) return true;
@@ -36,14 +39,24 @@ export default function DoctorDashboardPage() {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
   const todayQuery = useTodayAppointments();
+  const labReviewsQuery = useLabOrders({ page: 1, limit: 100, status: 'completed' });
   const updateStatusMutation = useUpdateAppointmentStatus();
   const [actionError, setActionError] = useState('');
+  const [activePanel, setActivePanel] = useState<'appointments' | 'lab-reviews'>('appointments');
   const appointments = useMemo(
     () => (todayQuery.data ?? []).filter((appointment) => belongsToDoctor(appointment, user?.id, user?.profileId)),
     [todayQuery.data, user?.id, user?.profileId]
   );
+  const pendingLabReviews = useMemo(
+    () =>
+      sortLabOrders(
+        (labReviewsQuery.data?.items ?? []).filter(
+          (order) => isPendingLabReview(order) && belongsToOrderingDoctor(order, user?.id, user?.profileId)
+        )
+      ),
+    [labReviewsQuery.data?.items, user?.id, user?.profileId]
+  );
   const readyCount = appointments.filter(canStartConsultation).length;
-  const pendingLabReviewsCount = 0;
   const unreadMessagesCount = 0;
 
   const startConsultation = async (appointment: AppointmentView) => {
@@ -77,7 +90,7 @@ export default function DoctorDashboardPage() {
         </Card>
         <Card>
           <p className="text-sm text-muted">Pending Lab Reviews</p>
-          <p className="mt-2 text-2xl font-semibold text-foreground">{pendingLabReviewsCount}</p>
+          <p className="mt-2 text-2xl font-semibold text-foreground">{pendingLabReviews.length}</p>
         </Card>
         <Card>
           <p className="text-sm text-muted">Unread Messages</p>
@@ -87,67 +100,92 @@ export default function DoctorDashboardPage() {
 
       {actionError ? <FeedbackMessage type="error" message={actionError} /> : null}
 
-      <Card title="Today's Appointments" subtitle="Sorted by time">
-        {todayQuery.isLoading ? (
-          <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading schedule...</div>
-        ) : null}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant={activePanel === 'appointments' ? 'primary' : 'secondary'}
+          onClick={() => setActivePanel('appointments')}
+        >
+          Today's Appointments
+        </Button>
+        <Button
+          type="button"
+          variant={activePanel === 'lab-reviews' ? 'primary' : 'secondary'}
+          onClick={() => setActivePanel('lab-reviews')}
+        >
+          Pending Reviews
+        </Button>
+      </div>
 
-        {todayQuery.isError ? (
-          <FeedbackMessage
-            type="error"
-            message={getApiErrorMessage(todayQuery.error, "Today's appointments could not be loaded")}
-          />
-        ) : null}
+      {activePanel === 'appointments' ? (
+        <Card title="Today's Appointments" subtitle="Sorted by time">
+          {todayQuery.isLoading ? (
+            <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading schedule...</div>
+          ) : null}
 
-        {!todayQuery.isLoading && !todayQuery.isError && appointments.length === 0 ? (
-          <div className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
-            No appointments today.
-          </div>
-        ) : null}
+          {todayQuery.isError ? (
+            <FeedbackMessage
+              type="error"
+              message={getApiErrorMessage(todayQuery.error, "Today's appointments could not be loaded")}
+            />
+          ) : null}
 
-        <ol className="space-y-3">
-          {appointments.map((appointment) => (
-            <li key={appointment.id} className="rounded-xl border border-border bg-background p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <AppointmentStatusBadge status={appointment.status} />
-                    <Badge>{appointment.appointmentType.replaceAll('_', ' ')}</Badge>
+          {!todayQuery.isLoading && !todayQuery.isError && appointments.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
+              No appointments today.
+            </div>
+          ) : null}
+
+          <ol className="space-y-3">
+            {appointments.map((appointment) => (
+              <li key={appointment.id} className="rounded-xl border border-border bg-background p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AppointmentStatusBadge status={appointment.status} />
+                      <Badge>{appointment.appointmentType.replaceAll('_', ' ')}</Badge>
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{appointment.patient.name}</p>
+                      <p className="mt-1 text-sm text-muted">
+                        {`${appointment.service.name} - ${appointment.department.name}`}
+                      </p>
+                      <p className="mt-1 text-sm text-muted">{formatAppointmentDate(appointment.scheduledAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-foreground">{appointment.patient.name}</p>
-                    <p className="mt-1 text-sm text-muted">
-                      {`${appointment.service.name} - ${appointment.department.name}`}
-                    </p>
-                    <p className="mt-1 text-sm text-muted">{formatAppointmentDate(appointment.scheduledAt)}</p>
-                  </div>
-                </div>
 
-                <div className="flex flex-col items-end gap-2">
-                  <p className="text-sm font-medium text-foreground">{formatAppointmentTimeRange(appointment)}</p>
-                  {canOpenConsultation(appointment) ? (
-                    <Link to={`/doctor/consultations/${appointment.id}`}>
-                      <Button type="button" size="sm">
-                        Open Consultation
+                  <div className="flex flex-col items-end gap-2">
+                    <p className="text-sm font-medium text-foreground">{formatAppointmentTimeRange(appointment)}</p>
+                    {canOpenConsultation(appointment) ? (
+                      <Link to={`/doctor/consultations/${appointment.id}`}>
+                        <Button type="button" size="sm">
+                          Open Consultation
+                        </Button>
+                      </Link>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!canStartConsultation(appointment) || isFinalAppointment(appointment.status)}
+                        loading={updateStatusMutation.isPending}
+                        onClick={() => startConsultation(appointment)}
+                      >
+                        Start Consultation
                       </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={!canStartConsultation(appointment) || isFinalAppointment(appointment.status)}
-                      loading={updateStatusMutation.isPending}
-                      onClick={() => startConsultation(appointment)}
-                    >
-                      Start Consultation
-                    </Button>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </Card>
+              </li>
+            ))}
+          </ol>
+        </Card>
+      ) : (
+        <PendingLabReviewsCard
+          orders={pendingLabReviews}
+          loading={labReviewsQuery.isLoading}
+          error={labReviewsQuery.isError}
+        />
+      )}
     </div>
   );
 }

@@ -16,6 +16,8 @@ vi.mock('@/lib/api/lab-api', async () => {
       getOrder: vi.fn(),
       updateOrderStatus: vi.fn(),
       enterResults: vi.fn(),
+      reviewOrder: vi.fn(),
+      triggerAi: vi.fn(),
     },
   };
 });

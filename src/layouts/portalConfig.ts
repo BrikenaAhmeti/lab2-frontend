@@ -99,6 +99,7 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Clinical',
         items: [
           { to: '/doctor', label: 'Dashboard' },
+          { to: '/doctor/lab-reviews', label: 'Lab Reviews', requiredPermissions: ['lab_results:review'] },
           { to: '/doctor/profile', label: 'Profile' },
           { to: '/doctor/sessions', label: 'Sessions' },
         ],

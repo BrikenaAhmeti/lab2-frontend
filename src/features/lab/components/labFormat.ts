@@ -122,6 +122,15 @@ export function hasAllResults(order: LabOrderView) {
   return order.items.every((item) => Boolean(item.resultValue?.trim()));
 }
 
+export function isPendingLabReview(order: LabOrderView) {
+  return order.status === 'COMPLETED' && !order.reviewedAt && hasAllResults(order);
+}
+
+export function belongsToOrderingDoctor(order: LabOrderView, userId?: string, profileId?: string) {
+  if (!userId && !profileId) return true;
+  return order.orderedByStaff.userId === userId || order.orderedByStaff.id === profileId;
+}
+
 export function sortLabOrders(orders: LabOrderView[]) {
   return [...orders].sort((left, right) => {
     const leftPriority = priorityRank[left.priority ?? 'normal'];
