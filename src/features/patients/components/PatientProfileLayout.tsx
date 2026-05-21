@@ -3,6 +3,7 @@ import type { PatientRecord } from '@/lib/api/patients-api';
 import { getApiErrorMessage, getPatientName, usePatientTimeline } from '@/features/patients/hooks/usePatients';
 import Card from '@/ui/atoms/Card';
 import Badge from '@/ui/atoms/Badge';
+import PatientBillingPanel from '@/features/billing/components/PatientBillingPanel';
 import HistoryTimeline from './HistoryTimeline';
 import PatientTabs, { type PatientProfileTab } from './PatientTabs';
 import { EmptyTabPanel, MedicalPanel, PersonalPanel } from './PatientInfoPanels';
@@ -57,7 +58,7 @@ export default function PatientProfileLayout({
           <EmptyTabPanel title="Appointments are not wired yet" text="The appointment module will fill this tab once MS-16 and MS-17 are available." />
         ) : null}
         {activeTab === 'billing' ? (
-          <EmptyTabPanel title="Billing is not wired yet" text="Billing records will appear here once the billing API is available." />
+          <PatientBillingPanel patientId={patient.id} />
         ) : null}
       </div>
     </Card>

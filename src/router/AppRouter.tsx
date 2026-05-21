@@ -45,6 +45,8 @@ const BookAppointmentPage = lazy(() => import('@/features/appointments/pages/Boo
 const AppointmentsPage = lazy(() => import('@/features/appointments/pages/AppointmentsPage'));
 const ConsultationPage = lazy(() => import('@/features/consultation/pages/ConsultationPage'));
 const LabReviewPage = lazy(() => import('@/features/lab/pages/LabReviewPage'));
+const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
+const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBillingPage'));
 
 function RouteSkeleton() {
   return (
@@ -135,6 +137,7 @@ export const router = createBrowserRouter([
           { path: 'staff/:id', element: lazyRoute(<StaffProfilePage />) },
           { path: 'patients', element: lazyRoute(<PatientsPage />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage />) },
+          { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
           { path: 'organization/services', element: lazyRoute(<ServicesPage />) },
           { path: 'organization/service-catalog', element: <Navigate to="/admin/organization/services" replace /> },
@@ -153,6 +156,7 @@ export const router = createBrowserRouter([
           { index: true, element: lazyRoute(<PatientDashboardPage />) },
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="patient" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="patient" />) },
+          { path: 'billing', element: lazyRoute(<PatientBillingPage />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
           { path: 'sessions', element: lazyRoute(<SessionsPage />) },
         ],
@@ -209,6 +213,7 @@ export const router = createBrowserRouter([
           ...portalRoutes(<ReceptionistDashboardPage />),
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="receptionist" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="receptionist" />) },
+          { path: 'billing', element: lazyRoute(<BillingPage portal="receptionist" />) },
           { path: 'patients', element: lazyRoute(<PatientsPage basePath="/receptionist/patients" />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/receptionist" />) },
         ],
@@ -220,6 +225,7 @@ export const router = createBrowserRouter([
       { path: '/dashboard/staff', element: <Navigate to="/admin/staff" replace /> },
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
+      { path: '/dashboard/billing', element: <Navigate to="/admin/billing" replace /> },
       { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
       {
         path: '/dashboard/admin/organization/services',
