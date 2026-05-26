@@ -43,6 +43,9 @@ const PatientProfilePage = lazy(() => import('@/features/patients/pages/PatientP
 const PatientSelfProfilePage = lazy(() => import('@/features/patients/pages/PatientSelfProfilePage'));
 const BookAppointmentPage = lazy(() => import('@/features/appointments/pages/BookAppointmentPage'));
 const AppointmentsPage = lazy(() => import('@/features/appointments/pages/AppointmentsPage'));
+const PatientFeedbackPage = lazy(() => import('@/features/feedback/pages/PatientFeedbackPage'));
+const FeedbackInboxPage = lazy(() => import('@/features/feedback/pages/FeedbackInboxPage'));
+const ContactInboxPage = lazy(() => import('@/features/contact/pages/ContactInboxPage'));
 const ConsultationPage = lazy(() => import('@/features/consultation/pages/ConsultationPage'));
 const LabReviewPage = lazy(() => import('@/features/lab/pages/LabReviewPage'));
 const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
@@ -138,6 +141,8 @@ export const router = createBrowserRouter([
           { path: 'patients', element: lazyRoute(<PatientsPage />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
+          { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="admin" />) },
+          { path: 'contact', element: lazyRoute(<ContactInboxPage />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
           { path: 'organization/services', element: lazyRoute(<ServicesPage />) },
           { path: 'organization/service-catalog', element: <Navigate to="/admin/organization/services" replace /> },
@@ -157,6 +162,7 @@ export const router = createBrowserRouter([
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="patient" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="patient" />) },
           { path: 'billing', element: lazyRoute(<PatientBillingPage />) },
+          { path: 'feedback', element: lazyRoute(<PatientFeedbackPage />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
           { path: 'sessions', element: lazyRoute(<SessionsPage />) },
         ],
@@ -170,6 +176,8 @@ export const router = createBrowserRouter([
         ),
         children: [
           ...portalRoutes(<DoctorDashboardPage />),
+          { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="doctor" />) },
+          { path: 'feedback/:id', element: lazyRoute(<FeedbackInboxPage portal="doctor" />) },
           { path: 'consultations/:appointmentId', element: lazyRoute(<ConsultationPage />) },
           { path: 'lab-reviews', element: lazyRoute(<LabReviewPage />) },
           { path: 'lab-reviews/:id', element: lazyRoute(<LabReviewPage />) },
@@ -226,6 +234,8 @@ export const router = createBrowserRouter([
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
       { path: '/dashboard/billing', element: <Navigate to="/admin/billing" replace /> },
+      { path: '/dashboard/feedback', element: <Navigate to="/admin/feedback" replace /> },
+      { path: '/dashboard/contact', element: <Navigate to="/admin/contact" replace /> },
       { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
       {
         path: '/dashboard/admin/organization/services',

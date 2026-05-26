@@ -73,6 +73,7 @@ export interface AppointmentListParams {
   departmentId?: string;
   from?: string;
   to?: string;
+  hasNoFeedback?: boolean;
 }
 
 export interface AppointmentListResponse {

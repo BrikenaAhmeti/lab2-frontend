@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import PublicContactForm from '@/features/contact/components/PublicContactForm';
 import Button from '@/ui/atoms/Button';
 
 export default function PublicHomePage() {
@@ -27,6 +28,9 @@ export default function PublicHomePage() {
             </Link>
           </div>
         </div>
+      </section>
+      <section className="mx-auto max-w-6xl px-4 pb-12">
+        <PublicContactForm />
       </section>
     </main>
   );
