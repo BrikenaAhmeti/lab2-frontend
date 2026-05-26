@@ -66,6 +66,13 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         ],
       },
       {
+        label: 'CMS',
+        items: [
+          { to: '/admin/cms/pages', label: 'Pages', requiredPermissions: ['cms:edit'] },
+          { to: '/admin/cms/banners', label: 'Banners', requiredPermissions: ['cms:edit'] },
+        ],
+      },
+      {
         label: 'Account',
         items: [
           { to: '/admin/profile', label: 'Profile' },

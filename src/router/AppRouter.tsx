@@ -50,6 +50,9 @@ const ConsultationPage = lazy(() => import('@/features/consultation/pages/Consul
 const LabReviewPage = lazy(() => import('@/features/lab/pages/LabReviewPage'));
 const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
 const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBillingPage'));
+const CmsPagesPage = lazy(() => import('@/features/cms/pages/CmsPagesPage'));
+const CmsPageEditorPage = lazy(() => import('@/features/cms/pages/CmsPageEditorPage'));
+const CmsBannersPage = lazy(() => import('@/features/cms/pages/CmsBannersPage'));
 
 function RouteSkeleton() {
   return (
@@ -144,6 +147,10 @@ export const router = createBrowserRouter([
           { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="admin" />) },
           { path: 'contact', element: lazyRoute(<ContactInboxPage />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
+          { path: 'cms', element: <Navigate to="/admin/cms/pages" replace /> },
+          { path: 'cms/pages', element: lazyRoute(<CmsPagesPage />) },
+          { path: 'cms/pages/:id', element: lazyRoute(<CmsPageEditorPage />) },
+          { path: 'cms/banners', element: lazyRoute(<CmsBannersPage />) },
           { path: 'organization/services', element: lazyRoute(<ServicesPage />) },
           { path: 'organization/service-catalog', element: <Navigate to="/admin/organization/services" replace /> },
           { path: 'organization/staff-position-types', element: lazyRoute(<StaffPositionTypesPage />) },
@@ -237,6 +244,9 @@ export const router = createBrowserRouter([
       { path: '/dashboard/feedback', element: <Navigate to="/admin/feedback" replace /> },
       { path: '/dashboard/contact', element: <Navigate to="/admin/contact" replace /> },
       { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
+      { path: '/dashboard/cms', element: <Navigate to="/admin/cms/pages" replace /> },
+      { path: '/dashboard/cms/pages', element: <Navigate to="/admin/cms/pages" replace /> },
+      { path: '/dashboard/cms/banners', element: <Navigate to="/admin/cms/banners" replace /> },
       {
         path: '/dashboard/admin/organization/services',
         element: <Navigate to="/admin/organization/services" replace />,

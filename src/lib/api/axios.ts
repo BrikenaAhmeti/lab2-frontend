@@ -10,6 +10,7 @@ import { env } from '@/config/env';
 
 const baseURL = import.meta.env.VITE_API_CORE || 'http://localhost:3005';
 const coreBaseURL = import.meta.env.VITE_API_CORE_SERVICE || 'http://localhost:3007';
+const cmsBaseURL = env.CMS_API_URL;
 const LEGACY_AUTH_STORAGE_KEY = 'medsphere.auth';
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -38,6 +39,12 @@ export const notificationApiClient = axios.create({
   withCredentials: true,
 });
 
+export const cmsApiClient = axios.create({
+  baseURL: cmsBaseURL,
+  timeout: 20000,
+  withCredentials: true,
+});
+
 export const rawClient = axios.create({
   baseURL,
   timeout: 20000,
@@ -59,6 +66,32 @@ function setAuthHeader(config: InternalAxiosRequestConfig, token: string) {
     config.headers instanceof AxiosHeaders ? config.headers : AxiosHeaders.from(config.headers ?? {});
   headers.set('Authorization', `Bearer ${token}`);
   config.headers = headers;
+}
+
+function setCmsEditorHeaders(config: InternalAxiosRequestConfig) {
+  if (!authStore) {
+    return config;
+  }
+
+  const user = authStore.getState().auth.user;
+  if (!user) {
+    return config;
+  }
+
+  const headers =
+    config.headers instanceof AxiosHeaders ? config.headers : AxiosHeaders.from(config.headers ?? {});
+  const permissions = new Set(user.permissions ?? []);
+
+  if ([...permissions].some((permission) => permission === 'cms:edit' || permission.startsWith('cms:edit:'))) {
+    permissions.add('cms:edit');
+  }
+
+  headers.set('x-user-id', user.id);
+  headers.set('x-user-roles', (user.roles ?? []).join(','));
+  headers.set('x-user-permissions', [...permissions].join(','));
+  config.headers = headers;
+
+  return config;
 }
 
 function fallbackToLogin() {
@@ -137,6 +170,8 @@ function applyAuthInterceptors(client: typeof apiClient) {
 applyAuthInterceptors(apiClient);
 applyAuthInterceptors(coreApiClient);
 applyAuthInterceptors(notificationApiClient);
+applyAuthInterceptors(cmsApiClient);
+cmsApiClient.interceptors.request.use(setCmsEditorHeaders);
 
 export function setupAxiosInterceptors(store: AppStore) {
   authStore = store;
