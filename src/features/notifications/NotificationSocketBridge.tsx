@@ -8,6 +8,8 @@ import { enqueueToast } from '@/features/ui/uiSlice';
 import { env } from '@/config/env';
 import { addChatMessageToCache, markRoomReadInChatCache } from '@/features/chat/chatCache';
 import { chatKeys } from '@/features/chat/chatKeys';
+import { addActivityToDashboardCache, activityFromSocketPayload } from '@/features/dashboard/dashboardCache';
+import { dashboardKeys } from '@/features/dashboard/dashboardKeys';
 import type { ChatMessage, ChatReadPayload } from '@/features/chat/chatTypes';
 import { notificationKeys } from './notificationKeys';
 import {
@@ -54,6 +56,16 @@ export default function NotificationSocketBridge() {
 
     socket.on('appointment-status', () => {
       queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
+    });
+
+    socket.on('activity:new', (payload: unknown) => {
+      const activity = activityFromSocketPayload(payload);
+
+      if (!activity) return;
+
+      addActivityToDashboardCache(queryClient, activity);
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.stats() });
+      queryClient.invalidateQueries({ queryKey: dashboardKeys.activity({ page: 1, limit: 20 }), refetchType: 'inactive' });
     });
 
     socket.on('chat:message', (message: ChatMessage) => {
