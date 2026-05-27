@@ -33,6 +33,12 @@ export const coreApiClient = axios.create({
   withCredentials: true,
 });
 
+export const publicCoreApiClient = axios.create({
+  baseURL: coreBaseURL,
+  timeout: 20000,
+  withCredentials: false,
+});
+
 export const notificationApiClient = axios.create({
   baseURL: env.NOTIFICATION_API_URL,
   timeout: 20000,

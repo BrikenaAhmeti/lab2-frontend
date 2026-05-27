@@ -140,10 +140,16 @@ export function useDeleteStaffException(staffId: string) {
   });
 }
 
-export function getStaffName(staff: { user?: { name?: string; firstName?: string; lastName?: string }; firstName?: string; lastName?: string; email?: string }) {
+export function getStaffName(staff: {
+  user?: { name?: string; firstName?: string; lastName?: string };
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  employeeCode?: string;
+}) {
   const userName = staff.user?.name ?? [staff.user?.firstName, staff.user?.lastName].filter(Boolean).join(' ');
   const profileName = [staff.firstName, staff.lastName].filter(Boolean).join(' ');
-  return userName || profileName || staff.email || 'Staff member';
+  return userName || profileName || staff.email || staff.employeeCode || 'Staff member';
 }
 
 export function getStaffEmail(staff: { user?: { email?: string }; email?: string }) {

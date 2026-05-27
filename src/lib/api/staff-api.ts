@@ -35,12 +35,14 @@ export interface StaffRecord {
   id: string;
   userId?: string;
   user?: StaffUser;
+  employeeCode?: string;
   firstName?: string;
   lastName?: string;
   email?: string;
   phone?: string | null;
   specialization?: string | null;
   bio?: string | null;
+  isPublicProfile?: boolean;
   status?: string;
   employmentStatus?: string;
   positionType?: StaffPositionType;

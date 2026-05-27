@@ -19,6 +19,7 @@ export const cmsQueryKeys = {
   sections: (pageId: string) => ['cms', 'pages', pageId, 'sections'] as const,
   banners: ['cms', 'banners'] as const,
   publicPage: (slug: string) => ['cms', 'public-pages', slug] as const,
+  publicBanners: ['cms', 'public-banners'] as const,
 };
 
 export function useCmsPages() {
@@ -60,6 +61,14 @@ export function usePublicCmsPage(slug: string) {
     queryKey: cmsQueryKeys.publicPage(slug),
     queryFn: () => cmsApi.getPublicPage(slug),
     enabled: Boolean(slug),
+    retry: false,
+  });
+}
+
+export function usePublicCmsBanners() {
+  return useQuery({
+    queryKey: cmsQueryKeys.publicBanners,
+    queryFn: () => cmsApi.listPublicBanners(),
     retry: false,
   });
 }

@@ -20,7 +20,11 @@ import ReceptionistLayout from '@/layouts/ReceptionistLayout';
 import RoleRedirect from './RoleRedirect';
 
 const PublicHomePage = lazy(() => import('@/pages/public/PublicHomePage'));
+const PublicCmsPage = lazy(() => import('@/pages/public/PublicCmsPage'));
+const PublicDepartmentsPage = lazy(() => import('@/pages/public/PublicDepartmentsPage'));
 const PublicDoctorsPage = lazy(() => import('@/pages/public/PublicDoctorsPage'));
+const PublicServicesPage = lazy(() => import('@/pages/public/PublicServicesPage'));
+const PublicContactPage = lazy(() => import('@/pages/public/PublicContactPage'));
 const AdminDashboardPage = lazy(() => import('@/pages/portals/AdminDashboardPage'));
 const PatientDashboardPage = lazy(() => import('@/pages/portals/PatientDashboardPage'));
 const DoctorDashboardPage = lazy(() => import('@/pages/portals/DoctorDashboardPage'));
@@ -82,12 +86,32 @@ function portalRoutes(home: ReactNode) {
 
 export const router = createBrowserRouter([
   {
-    path: '/public',
+    path: '/',
     element: lazyRoute(<PublicHomePage />),
+  },
+  {
+    path: '/public',
+    element: <Navigate to="/" replace />,
+  },
+  {
+    path: '/about',
+    element: lazyRoute(<PublicCmsPage />),
+  },
+  {
+    path: '/departments',
+    element: lazyRoute(<PublicDepartmentsPage />),
   },
   {
     path: '/doctors',
     element: lazyRoute(<PublicDoctorsPage />),
+  },
+  {
+    path: '/services',
+    element: lazyRoute(<PublicServicesPage />),
+  },
+  {
+    path: '/contact',
+    element: lazyRoute(<PublicContactPage />),
   },
   {
     path: '/login',
@@ -268,11 +292,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/',
-    element: <Navigate to="/public" replace />,
-  },
-  {
     path: '*',
-    element: <Navigate to="/public" replace />,
+    element: <Navigate to="/" replace />,
   },
 ]);
