@@ -3,6 +3,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { closeSidebar } from '@/features/ui/uiSlice';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import ChatNavUnreadBadge from '@/features/chat/components/ChatNavUnreadBadge';
 import type { PortalConfig, PortalNavItem } from '@/layouts/portalConfig';
 
 function canSeeItem(item: PortalNavItem, permissions: string[], roles: string[]) {
@@ -52,7 +53,12 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
                       )
                     }
                   >
-                    {item.label}
+                    {({ isActive }) => (
+                      <span className="flex items-center gap-2">
+                        <span>{item.label}</span>
+                        {item.to.endsWith('/messages') && <ChatNavUnreadBadge active={isActive} />}
+                      </span>
+                    )}
                   </NavLink>
                 ))}
               </div>

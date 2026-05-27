@@ -57,6 +57,8 @@ const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBi
 const CmsPagesPage = lazy(() => import('@/features/cms/pages/CmsPagesPage'));
 const CmsPageEditorPage = lazy(() => import('@/features/cms/pages/CmsPageEditorPage'));
 const CmsBannersPage = lazy(() => import('@/features/cms/pages/CmsBannersPage'));
+const ChatPage = lazy(() => import('@/features/chat/pages/ChatPage'));
+const MessagesRedirect = lazy(() => import('@/features/chat/pages/MessagesRedirect'));
 
 function RouteSkeleton() {
   return (
@@ -79,6 +81,8 @@ function lazyRoute(element: ReactNode) {
 function portalRoutes(home: ReactNode) {
   return [
     { index: true, element: lazyRoute(home) },
+    { path: 'messages', element: lazyRoute(<ChatPage />) },
+    { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
     { path: 'profile', element: lazyRoute(<ProfilePage />) },
     { path: 'sessions', element: lazyRoute(<SessionsPage />) },
   ];
@@ -153,6 +157,14 @@ export const router = createBrowserRouter([
         element: <RoleRedirect />,
       },
       {
+        path: '/messages',
+        element: lazyRoute(<MessagesRedirect />),
+      },
+      {
+        path: '/messages/:roomId',
+        element: lazyRoute(<MessagesRedirect />),
+      },
+      {
         path: '/admin',
         element: (
           <RoleGuard allowedRoles={['Admin', 'Super Admin']}>
@@ -192,6 +204,8 @@ export const router = createBrowserRouter([
           { index: true, element: lazyRoute(<PatientDashboardPage />) },
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="patient" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="patient" />) },
+          { path: 'messages', element: lazyRoute(<ChatPage />) },
+          { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
           { path: 'billing', element: lazyRoute(<PatientBillingPage />) },
           { path: 'feedback', element: lazyRoute(<PatientFeedbackPage />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
@@ -252,6 +266,8 @@ export const router = createBrowserRouter([
           ...portalRoutes(<ReceptionistDashboardPage />),
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="receptionist" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="receptionist" />) },
+          { path: 'messages', element: lazyRoute(<ChatPage />) },
+          { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="receptionist" />) },
           { path: 'patients', element: lazyRoute(<PatientsPage basePath="/receptionist/patients" />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/receptionist" />) },
