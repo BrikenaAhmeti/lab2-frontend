@@ -136,4 +136,9 @@ export const prescriptionsApi = {
       .post<PrescriptionView>(`/api/prescriptions/${id}/void`, { reason })
       .then((response) => response.data);
   },
+  downloadPdf(id: string, instance?: AxiosInstance) {
+    return client(instance)
+      .get<Blob>(`/api/prescriptions/${id}/pdf`, { responseType: 'blob' })
+      .then((response) => response.data);
+  },
 };

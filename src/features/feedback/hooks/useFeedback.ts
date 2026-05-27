@@ -33,17 +33,19 @@ export function useFeedbackList(params: FeedbackListParams, enabled = true) {
   });
 }
 
-export function usePendingFeedbackAppointments(limit = 10) {
+export function usePendingFeedbackAppointments(limit = 10, patientId?: string, enabled = true) {
   const params = {
     page: 1,
     limit,
     status: 'COMPLETED' as const,
     hasNoFeedback: true,
+    ...(patientId ? { patientId } : {}),
   };
 
   return useQuery<AppointmentListResponse>({
     queryKey: appointmentQueryKey.list(params),
     queryFn: () => appointmentsApi.list(params),
+    enabled,
     retry: false,
   });
 }

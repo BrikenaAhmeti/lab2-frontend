@@ -54,6 +54,9 @@ const ConsultationPage = lazy(() => import('@/features/consultation/pages/Consul
 const LabReviewPage = lazy(() => import('@/features/lab/pages/LabReviewPage'));
 const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
 const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBillingPage'));
+const PatientLabResultsPage = lazy(() => import('@/features/patient-portal/pages/PatientLabResultsPage'));
+const PatientPrescriptionsPage = lazy(() => import('@/features/patient-portal/pages/PatientPrescriptionsPage'));
+const PatientMedicalRecordsPage = lazy(() => import('@/features/patient-portal/pages/PatientMedicalRecordsPage'));
 const CmsPagesPage = lazy(() => import('@/features/cms/pages/CmsPagesPage'));
 const CmsPageEditorPage = lazy(() => import('@/features/cms/pages/CmsPageEditorPage'));
 const CmsBannersPage = lazy(() => import('@/features/cms/pages/CmsBannersPage'));
@@ -206,6 +209,9 @@ export const router = createBrowserRouter([
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="patient" />) },
           { path: 'messages', element: lazyRoute(<ChatPage />) },
           { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
+          { path: 'medical-records', element: lazyRoute(<PatientMedicalRecordsPage />) },
+          { path: 'lab-results', element: lazyRoute(<PatientLabResultsPage />) },
+          { path: 'prescriptions', element: lazyRoute(<PatientPrescriptionsPage />) },
           { path: 'billing', element: lazyRoute(<PatientBillingPage />) },
           { path: 'feedback', element: lazyRoute(<PatientFeedbackPage />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },

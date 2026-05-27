@@ -20,4 +20,20 @@ describe('portalConfigs', () => {
       expect.objectContaining({ label: 'Schedule Overview', to: '/admin/staff/schedules' }),
     ]);
   });
+
+  it('wires the patient portal links required by MS-55', () => {
+    const care = portalConfigs.patient.navGroups.find((group) => group.label === 'Care');
+
+    expect(care?.items).toEqual([
+      expect.objectContaining({ label: 'Dashboard', to: '/patient' }),
+      expect.objectContaining({ label: 'Book Appointment', to: '/patient/book-appointment' }),
+      expect.objectContaining({ label: 'My Appointments', to: '/patient/appointments' }),
+      expect.objectContaining({ label: 'Medical Records', to: '/patient/medical-records' }),
+      expect.objectContaining({ label: 'Lab Results', to: '/patient/lab-results' }),
+      expect.objectContaining({ label: 'Prescriptions', to: '/patient/prescriptions' }),
+      expect.objectContaining({ label: 'Billing', to: '/patient/billing' }),
+      expect.objectContaining({ label: 'Messages', to: '/patient/messages' }),
+      expect.objectContaining({ label: 'Profile', to: '/patient/profile' }),
+    ]);
+  });
 });

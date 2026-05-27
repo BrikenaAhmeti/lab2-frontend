@@ -162,4 +162,9 @@ export const medicalRecordsApi = {
       .post(`/api/medical-records/${id}/amendments`, payload)
       .then((response) => response.data);
   },
+  downloadPdf(id: string, instance?: AxiosInstance) {
+    return client(instance)
+      .get<Blob>(`/api/medical-records/${id}/pdf`, { responseType: 'blob' })
+      .then((response) => response.data);
+  },
 };

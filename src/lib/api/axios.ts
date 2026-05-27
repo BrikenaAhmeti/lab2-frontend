@@ -11,6 +11,7 @@ import { env } from '@/config/env';
 const baseURL = import.meta.env.VITE_API_CORE || 'http://localhost:3005';
 const coreBaseURL = import.meta.env.VITE_API_CORE_SERVICE || 'http://localhost:3007';
 const cmsBaseURL = env.CMS_API_URL;
+const aiBaseURL = env.AI_API_URL;
 const LEGACY_AUTH_STORAGE_KEY = 'medsphere.auth';
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
@@ -47,6 +48,12 @@ export const notificationApiClient = axios.create({
 
 export const cmsApiClient = axios.create({
   baseURL: cmsBaseURL,
+  timeout: 20000,
+  withCredentials: true,
+});
+
+export const aiApiClient = axios.create({
+  baseURL: aiBaseURL,
   timeout: 20000,
   withCredentials: true,
 });
@@ -177,6 +184,7 @@ applyAuthInterceptors(apiClient);
 applyAuthInterceptors(coreApiClient);
 applyAuthInterceptors(notificationApiClient);
 applyAuthInterceptors(cmsApiClient);
+applyAuthInterceptors(aiApiClient);
 cmsApiClient.interceptors.request.use(setCmsEditorHeaders);
 
 export function setupAxiosInterceptors(store: AppStore) {

@@ -24,10 +24,11 @@ export function usePendingLabOrders() {
   });
 }
 
-export function useLabOrders(params: LabOrderListParams) {
+export function useLabOrders(params: LabOrderListParams, enabled = true) {
   return useQuery({
     queryKey: labQueryKey.list(params),
     queryFn: () => labApi.listOrders(params),
+    enabled,
     placeholderData: (previousData) => previousData,
     retry: false,
   });
