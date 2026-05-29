@@ -179,7 +179,7 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
       {
         label: 'Pharmacy',
         items: [
-          { to: '/pharmacy', label: 'Dashboard' },
+          { to: '/pharmacy', label: 'Queue', requiredPermissions: ['pharmacy:read'] },
           { to: '/pharmacy/messages', label: 'Messages' },
           { to: '/pharmacy/profile', label: 'Profile' },
           { to: '/pharmacy/sessions', label: 'Sessions' },
