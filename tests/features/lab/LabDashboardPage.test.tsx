@@ -1,9 +1,12 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { configureStore } from '@reduxjs/toolkit';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LabDashboardPage from '@/pages/portals/LabDashboardPage';
 import { labApi, type LabOrderView } from '@/lib/api/lab-api';
+import authReducer from '@/features/auth/authSlice';
 
 vi.mock('@/lib/api/lab-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/lab-api')>('@/lib/api/lab-api');
@@ -116,13 +119,31 @@ function renderPage() {
       mutations: { retry: false },
     },
   });
+  const store = configureStore({
+    reducer: { auth: authReducer },
+    preloadedState: {
+      auth: {
+        accessToken: 'token',
+        tokens: { accessToken: 'token' },
+        status: 'authenticated' as const,
+        user: {
+          id: 'lab-user',
+          email: 'lab@medsphere.local',
+          roles: ['Lab Technician'],
+          permissions: ['lab_orders:read', 'lab_results:read', 'lab_tests:manage'],
+        },
+      },
+    },
+  });
 
   return render(
-    <MemoryRouter initialEntries={['/lab']}>
-      <QueryClientProvider client={queryClient}>
-        <LabDashboardPage />
-      </QueryClientProvider>
-    </MemoryRouter>
+    <Provider store={store}>
+      <MemoryRouter initialEntries={['/lab']}>
+        <QueryClientProvider client={queryClient}>
+          <LabDashboardPage />
+        </QueryClientProvider>
+      </MemoryRouter>
+    </Provider>
   );
 }
 

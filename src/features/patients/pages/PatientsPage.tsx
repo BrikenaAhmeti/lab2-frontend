@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
+import ImportWizard from '@/components/import/ImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
@@ -45,6 +48,7 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
   const [bloodType, setBloodType] = useState('');
   const [page, setPage] = useState(1);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
   const [formError, setFormError] = useState('');
   const [feedback, setFeedback] = useState('');
   const createMutation = useCreatePatient();
@@ -96,9 +100,23 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
         title="Patients"
         subtitle="Search patient profiles and register new patients"
         actions={
-          canCreatePatients(permissions, roles) ? (
-            <Button type="button" onClick={() => setShowRegisterModal(true)}>Register Patient</Button>
-          ) : null
+          <div className="flex flex-wrap justify-end gap-2">
+            <ExportButton entity="patients" />
+            {canCreatePatients(permissions, roles) ? (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Upload className="h-4 w-4" />}
+                  onClick={() => setShowImportWizard(true)}
+                >
+                  Import
+                </Button>
+                <Button type="button" size="sm" onClick={() => setShowRegisterModal(true)}>Register Patient</Button>
+              </>
+            ) : null}
+          </div>
         }
       >
         <div className="space-y-4">
@@ -155,6 +173,16 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
           setShowRegisterModal(false);
         }}
         onSubmit={submitPatient}
+      />
+      <ImportWizard
+        open={showImportWizard}
+        entity="patients"
+        title="Import Patients"
+        onClose={() => setShowImportWizard(false)}
+        onCompleted={() => {
+          setFeedback('Patients imported successfully');
+          void patientsQuery.refetch();
+        }}
       />
     </div>
   );

@@ -1,14 +1,20 @@
 import { AxiosError } from 'axios';
+import { Upload } from 'lucide-react';
+import { useState } from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
+import ImportWizard from '@/components/import/ImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import SearchResultsTable from '@/features/search/components/SearchResultsTable';
 import { useAdvancedSearch } from '@/features/search/hooks/useAdvancedSearch';
 import { useTableFilters } from '@/features/search/hooks/useTableFilters';
 import { getSearchResourceConfig, searchResourceConfigs } from '@/features/search/searchConfig';
 import type { SearchResource } from '@/lib/api/search-api';
+import type { ExportEntity, ImportEntity } from '@/lib/api/data-exchange-api';
+import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
@@ -28,9 +34,36 @@ function apiErrorMessage(error: unknown) {
   return 'Search results could not be loaded';
 }
 
+const exportEntityByResource: Partial<Record<SearchResource, ExportEntity>> = {
+  patients: 'patients',
+  appointments: 'appointments',
+  'lab-orders': 'lab-results',
+  'inventory-items': 'inventory-items',
+  'audit-logs': 'audit-logs',
+};
+
+const importEntityByResource: Partial<Record<SearchResource, ImportEntity>> = {
+  patients: 'patients',
+  'inventory-items': 'inventory-items',
+  staff: 'staff',
+};
+
+const importPermissions: Record<ImportEntity, string[]> = {
+  patients: ['patients:manage', 'patients:create'],
+  'inventory-items': ['inventory:manage'],
+  'lab-tests': ['lab_tests:manage'],
+  'service-catalog': ['services:manage'],
+  staff: ['staff:manage'],
+};
+
+function canImportEntity(permissions: string[], roles: string[], entity: ImportEntity) {
+  return hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, importPermissions[entity], 'any');
+}
+
 export default function AdvancedSearchPage() {
   const params = useParams<{ resource?: string }>();
   const activeConfig = getSearchResourceConfig(params.resource);
+  const [showImportWizard, setShowImportWizard] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
@@ -57,6 +90,9 @@ export default function AdvancedSearchPage() {
   const limit = searchQuery.data?.limit ?? tableFilters.limit;
   const totalPages = searchQuery.data?.totalPages ?? 0;
   const loading = searchQuery.isLoading || tableFilters.isDebouncing;
+  const exportEntity = exportEntityByResource[activeConfig.resource];
+  const importEntity = importEntityByResource[activeConfig.resource];
+  const canImport = importEntity ? canImportEntity(permissions, roles, importEntity) : false;
 
   return (
     <div className="space-y-4">
@@ -86,7 +122,28 @@ export default function AdvancedSearchPage() {
         ))}
       </nav>
 
-      <Card title={activeConfig.title} subtitle={activeConfig.subtitle}>
+      <Card
+        title={activeConfig.title}
+        subtitle={activeConfig.subtitle}
+        actions={
+          exportEntity || canImport ? (
+            <div className="flex flex-wrap justify-end gap-2">
+              {exportEntity ? <ExportButton entity={exportEntity} /> : null}
+              {importEntity && canImport ? (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Upload className="h-4 w-4" />}
+                  onClick={() => setShowImportWizard(true)}
+                >
+                  Import
+                </Button>
+              ) : null}
+            </div>
+          ) : null
+        }
+      >
         <div className="space-y-4">
           <SearchFilterBar
             q={tableFilters.q}
@@ -135,6 +192,18 @@ export default function AdvancedSearchPage() {
           ) : null}
         </div>
       </Card>
+
+      {importEntity ? (
+        <ImportWizard
+          open={showImportWizard}
+          entity={importEntity}
+          title={`Import ${activeConfig.title}`}
+          onClose={() => setShowImportWizard(false)}
+          onCompleted={() => {
+            void searchQuery.refetch();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

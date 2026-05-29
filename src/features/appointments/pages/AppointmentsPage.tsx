@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
+import ExportButton from '@/components/export/ExportButton';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
@@ -82,9 +83,12 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         title={mode === 'patient' ? 'My Appointments' : 'Appointments'}
         subtitle={mode === 'patient' ? 'Upcoming and past appointment history' : 'Facility appointment list'}
         actions={
-          <Link to={`${root}/book-appointment`}>
-            <Button type="button">Book Appointment</Button>
-          </Link>
+          <div className="flex flex-wrap justify-end gap-2">
+            {mode !== 'patient' ? <ExportButton entity="appointments" /> : null}
+            <Link to={`${root}/book-appointment`}>
+              <Button type="button" size="sm">Book Appointment</Button>
+            </Link>
+          </div>
         }
       >
         <div className="space-y-5">

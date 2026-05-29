@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
+import { Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ImportWizard from '@/components/import/ImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
@@ -14,6 +16,7 @@ import StaffDirectoryTable from '@/features/staff/components/StaffDirectoryTable
 import type { StaffRecord } from '@/lib/api/staff-api';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
+import Button from '@/ui/atoms/Button';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 
@@ -35,9 +38,12 @@ export default function StaffDirectoryPage() {
   const [positionTypeId, setPositionTypeId] = useState('');
   const [status, setStatus] = useState<StaffStatus>('all');
   const [staffToDeactivate, setStaffToDeactivate] = useState<StaffRecord | null>(null);
+  const [showImportWizard, setShowImportWizard] = useState(false);
   const [deactivateError, setDeactivateError] = useState('');
   const [feedback, setFeedback] = useState('');
   const deactivateMutation = useDeactivateStaff();
+  const canManage =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, ['staff:manage'], 'any');
 
   const params = useMemo(
     () => ({
@@ -79,7 +85,23 @@ export default function StaffDirectoryPage() {
     <div className="space-y-4">
       <Breadcrumbs items={[{ label: 'Admin', to: '/admin' }, { label: 'Staff Management' }, { label: 'Staff Directory' }]} />
 
-      <Card title="Staff Directory" subtitle="Search staff profiles and open schedule management">
+      <Card
+        title="Staff Directory"
+        subtitle="Search staff profiles and open schedule management"
+        actions={
+          canManage ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<Upload className="h-4 w-4" />}
+              onClick={() => setShowImportWizard(true)}
+            >
+              Import
+            </Button>
+          ) : null
+        }
+      >
         <div className="space-y-4">
           <div className="grid gap-3 lg:grid-cols-[1fr_180px_220px_160px]">
             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search staff..." />
@@ -142,6 +164,16 @@ export default function StaffDirectoryPage() {
           setStaffToDeactivate(null);
         }}
         onConfirm={confirmDeactivate}
+      />
+      <ImportWizard
+        open={showImportWizard}
+        entity="staff"
+        title="Import Staff"
+        onClose={() => setShowImportWizard(false)}
+        onCompleted={() => {
+          setFeedback('Staff imported successfully');
+          void staffQuery.refetch();
+        }}
       />
     </div>
   );

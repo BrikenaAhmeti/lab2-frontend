@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
 import { hasAnyPermission, hasAnyRole, hasPermission } from '@/features/auth/utils/permission';
 import { billingApi, type BillingStatus, type BillingView, type RecordPaymentPayload, type UpdateBillingPayload } from '@/lib/api/billing-api';
 import Button from '@/ui/atoms/Button';
@@ -97,7 +98,7 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const updateMutation = useUpdateBilling();
   const paymentMutation = useRecordBillingPayment();
 
-  const rows = billingsQuery.data?.items ?? [];
+  const rows = useMemo(() => billingsQuery.data?.items ?? [], [billingsQuery.data?.items]);
   const totalPages = billingsQuery.data?.meta.totalPages ?? 1;
   const currentPage = billingsQuery.data?.meta.page ?? page;
   const selectedBilling = detailQuery.data ?? rows.find((billing) => billing.id === selectedId) ?? null;
@@ -176,7 +177,11 @@ export default function BillingPage({ portal }: BillingPageProps) {
         </div>
       </Card>
 
-      <Card title="Billing" subtitle="Manage line items, payments, and patient statements">
+      <Card
+        title="Billing"
+        subtitle="Manage line items, payments, and patient statements"
+        actions={<ExportButton entity="billings" />}
+      >
         <div className="space-y-4">
           <BillingFilters
             status={status}

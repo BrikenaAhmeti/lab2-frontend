@@ -1,8 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Upload } from 'lucide-react';
+import { useAppSelector } from '@/app/hooks';
+import ExportButton from '@/components/export/ExportButton';
+import ImportWizard from '@/components/import/ImportWizard';
+import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import type { EnterLabResultsPayload, LabOrderStatus, LabOrderView } from '@/lib/api/lab-api';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import Input from '@/ui/atoms/Input';
+import Button from '@/ui/atoms/Button';
 import LabOrderDetail from '@/features/lab/components/LabOrderDetail';
 import LabOrderQueue from '@/features/lab/components/LabOrderQueue';
 import LabStatsCards from '@/features/lab/components/LabStatsCards';
@@ -39,12 +45,18 @@ function matchesCompletedSearch(order: LabOrderView, search: string) {
 }
 
 export default function LabDashboardPage() {
+  const user = useAppSelector((state) => state.auth.user);
+  const permissions = user?.permissions ?? [];
+  const roles = user?.roles ?? [];
   const today = useMemo(() => getTodayRange(), []);
   const [selectedId, setSelectedId] = useState<string>('');
   const [completedDate, setCompletedDate] = useState(today.date);
   const [completedSearch, setCompletedSearch] = useState('');
   const [localOrders, setLocalOrders] = useState<Record<string, LabOrderView>>({});
   const [actionError, setActionError] = useState('');
+  const [showImportWizard, setShowImportWizard] = useState(false);
+  const canImportLabTests =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, ['lab_tests:manage'], 'any');
 
   const completedRange = useMemo(() => getDateRange(completedDate), [completedDate]);
   const activeQuery = usePendingLabOrders();
@@ -122,9 +134,25 @@ export default function LabDashboardPage() {
     <div className="space-y-5">
       <Breadcrumbs items={[{ label: 'Lab', to: '/lab' }, { label: 'Dashboard' }]} />
 
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Lab Dashboard</h1>
-        <p className="mt-1 text-sm text-muted">Process lab orders, enter results, and complete the queue.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Lab Dashboard</h1>
+          <p className="mt-1 text-sm text-muted">Process lab orders, enter results, and complete the queue.</p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <ExportButton entity="lab-results" />
+          {canImportLabTests ? (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              leftIcon={<Upload className="h-4 w-4" />}
+              onClick={() => setShowImportWizard(true)}
+            >
+              Import
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <LabStatsCards orders={statsQuery.data?.items ?? []} loading={statsQuery.isLoading} />
@@ -191,6 +219,13 @@ export default function LabDashboardPage() {
           onSaveResults={handleSaveResults}
         />
       </div>
+
+      <ImportWizard
+        open={showImportWizard}
+        entity="lab-tests"
+        title="Import Lab Tests"
+        onClose={() => setShowImportWizard(false)}
+      />
     </div>
   );
 }

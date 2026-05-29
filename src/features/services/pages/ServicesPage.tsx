@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Upload } from 'lucide-react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ImportWizard from '@/components/import/ImportWizard';
 import {
   getApiErrorMessage,
   toServicePayload,
@@ -45,6 +47,7 @@ export default function ServicesPage() {
   const [formError, setFormError] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
   const [editingService, setEditingService] = useState<ServiceRecord | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<ServiceRecord | null>(null);
 
@@ -148,9 +151,20 @@ export default function ServicesPage() {
         subtitle="Manage department services and procedures"
         actions={
           canManage ? (
-            <Button onClick={openCreateModal}>
-              Add Service
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<Upload className="h-4 w-4" />}
+                onClick={() => setShowImportWizard(true)}
+              >
+                Import
+              </Button>
+              <Button size="sm" onClick={openCreateModal}>
+                Add Service
+              </Button>
+            </div>
           ) : null
         }
       >
@@ -242,6 +256,16 @@ export default function ServicesPage() {
             setServiceToDelete(null);
           }}
           onConfirm={confirmDelete}
+        />
+        <ImportWizard
+          open={showImportWizard}
+          entity="service-catalog"
+          title="Import Service Catalog"
+          onClose={() => setShowImportWizard(false)}
+          onCompleted={() => {
+            setFeedback({ type: 'success', message: 'Services imported successfully' });
+            void servicesQuery.refetch();
+          }}
         />
       </Card>
     </div>
