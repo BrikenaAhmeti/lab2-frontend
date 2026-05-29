@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
@@ -11,7 +12,7 @@ interface CmsPagesTableProps {
   onDelete: (page: CmsPage) => void;
 }
 
-export default function CmsPagesTable({
+function CmsPagesTable({
   pages,
   canManage,
   mutationPending,
@@ -78,3 +79,5 @@ export default function CmsPagesTable({
     </div>
   );
 }
+
+export default memo(CmsPagesTable);

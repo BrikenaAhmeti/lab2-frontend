@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
@@ -14,7 +15,7 @@ function statusVariant(status: string): 'success' | 'neutral' {
   return status.toLowerCase() === 'active' ? 'success' : 'neutral';
 }
 
-export default function StaffDirectoryTable({ rows, loading, onDeactivate }: StaffDirectoryTableProps) {
+function StaffDirectoryTable({ rows, loading, onDeactivate }: StaffDirectoryTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
@@ -68,3 +69,5 @@ export default function StaffDirectoryTable({ rows, loading, onDeactivate }: Sta
     </div>
   );
 }
+
+export default memo(StaffDirectoryTable);

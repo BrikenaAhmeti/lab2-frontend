@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
-import ImportWizard from '@/components/import/ImportWizard';
+import LazyImportWizard from '@/components/import/LazyImportWizard';
 import {
   getApiErrorMessage,
   toServicePayload,
@@ -24,6 +24,7 @@ import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import { organizationBreadcrumbs } from '@/pages/admin/organization/organizationBreadcrumbs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
@@ -86,25 +87,39 @@ export default function ServicesPage() {
     ? getApiErrorMessage(servicesQuery.error, 'Services could not be loaded')
     : '';
 
-  const openCreateModal = () => {
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const goPreviousPage = useCallback(() => setPage((currentValue) => Math.max(1, currentValue - 1)), []);
+  const goNextPage = useCallback(() => setPage((currentValue) => currentValue + 1), []);
+  const handleImportCompleted = useCallback(() => {
+    setFeedback({ type: 'success', message: 'Services imported successfully' });
+    void servicesQuery.refetch();
+  }, [servicesQuery.refetch]);
+
+  const openCreateModal = useCallback(() => {
     setFormError('');
     setEditingService(null);
     setShowFormModal(true);
-  };
+  }, []);
 
-  const openEditModal = (service: ServiceRecord) => {
+  const openEditModal = useCallback((service: ServiceRecord) => {
     setFormError('');
     setEditingService(service);
     setShowFormModal(true);
-  };
+  }, []);
 
-  const closeFormModal = () => {
+  const closeFormModal = useCallback(() => {
     setFormError('');
     setEditingService(null);
     setShowFormModal(false);
-  };
+  }, []);
 
-  const submitForm = async (values: ServiceFormValues) => {
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteError('');
+    setServiceToDelete(null);
+  }, []);
+
+  const submitForm = useCallback(async (values: ServiceFormValues) => {
     setFeedback(null);
     setFormError('');
 
@@ -123,9 +138,9 @@ export default function ServicesPage() {
     } catch (error) {
       setFormError(getApiErrorMessage(error, 'Service could not be saved'));
     }
-  };
+  }, [createMutation, editingService, updateMutation, closeFormModal]);
 
-  const confirmDelete = async () => {
+  const confirmDelete = useCallback(async () => {
     if (!serviceToDelete) {
       return;
     }
@@ -140,7 +155,7 @@ export default function ServicesPage() {
     } catch (error) {
       setDeleteError(getApiErrorMessage(error, 'Service could not be deleted'));
     }
-  };
+  }, [deleteMutation, serviceToDelete]);
 
   return (
     <div className="space-y-4">
@@ -157,7 +172,7 @@ export default function ServicesPage() {
                 variant="secondary"
                 size="sm"
                 leftIcon={<Upload className="h-4 w-4" />}
-                onClick={() => setShowImportWizard(true)}
+                onClick={openImportWizard}
               >
                 Import
               </Button>
@@ -181,16 +196,7 @@ export default function ServicesPage() {
 
           {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
 
-          {servicesQuery.isLoading ? (
-            <div className="rounded-xl border border-border p-4">
-              <div className="animate-pulse space-y-3">
-                <div className="h-10 rounded-lg bg-surface" />
-                <div className="h-12 rounded-lg bg-surface" />
-                <div className="h-12 rounded-lg bg-surface" />
-                <div className="h-12 rounded-lg bg-surface" />
-              </div>
-            </div>
-          ) : null}
+          {servicesQuery.isLoading ? <TableSkeleton rows={4} columns={6} /> : null}
 
           {servicesQuery.isError ? <FeedbackMessage type="error" message={servicesErrorMessage} /> : null}
 
@@ -218,7 +224,7 @@ export default function ServicesPage() {
                     variant="secondary"
                     size="sm"
                     disabled={currentPage <= 1 || servicesQuery.isFetching}
-                    onClick={() => setPage((currentValue) => Math.max(1, currentValue - 1))}
+                    onClick={goPreviousPage}
                   >
                     Previous
                   </Button>
@@ -226,7 +232,7 @@ export default function ServicesPage() {
                     variant="secondary"
                     size="sm"
                     disabled={currentPage >= totalPages || servicesQuery.isFetching}
-                    onClick={() => setPage((currentValue) => currentValue + 1)}
+                    onClick={goNextPage}
                   >
                     Next
                   </Button>
@@ -251,21 +257,15 @@ export default function ServicesPage() {
           service={serviceToDelete}
           errorMessage={deleteError}
           loading={deleteMutation.isPending}
-          onClose={() => {
-            setDeleteError('');
-            setServiceToDelete(null);
-          }}
+          onClose={closeDeleteDialog}
           onConfirm={confirmDelete}
         />
-        <ImportWizard
+        <LazyImportWizard
           open={showImportWizard}
           entity="service-catalog"
           title="Import Service Catalog"
-          onClose={() => setShowImportWizard(false)}
-          onCompleted={() => {
-            setFeedback({ type: 'success', message: 'Services imported successfully' });
-            void servicesQuery.refetch();
-          }}
+          onClose={closeImportWizard}
+          onCompleted={handleImportCompleted}
         />
       </Card>
     </div>

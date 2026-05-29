@@ -1,12 +1,12 @@
 import { AxiosError } from 'axios';
 import { Upload } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { NavLink, Navigate, useParams } from 'react-router-dom';
 import clsx from 'clsx';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import ExportButton from '@/components/export/ExportButton';
-import ImportWizard from '@/components/import/ImportWizard';
+import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import SearchResultsTable from '@/features/search/components/SearchResultsTable';
 import { useAdvancedSearch } from '@/features/search/hooks/useAdvancedSearch';
@@ -20,6 +20,7 @@ import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import Pagination from '@/ui/molecules/Pagination';
 import SearchFilterBar from '@/ui/molecules/SearchFilterBar';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 
 function canReadSearch(permissions: string[], roles: string[], permission: string) {
   return hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, [permission], 'any');
@@ -67,7 +68,7 @@ export default function AdvancedSearchPage() {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
-  const filterKeys = activeConfig?.filters.map((field) => field.name) ?? [];
+  const filterKeys = useMemo(() => activeConfig?.filters.map((field) => field.name) ?? [], [activeConfig]);
   const tableFilters = useTableFilters({ filterKeys });
   const allowed = activeConfig ? canReadSearch(permissions, roles, activeConfig.permission) : false;
   const searchQuery = useAdvancedSearch<unknown>(
@@ -93,6 +94,11 @@ export default function AdvancedSearchPage() {
   const exportEntity = exportEntityByResource[activeConfig.resource];
   const importEntity = importEntityByResource[activeConfig.resource];
   const canImport = importEntity ? canImportEntity(permissions, roles, importEntity) : false;
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const handleImportCompleted = useCallback(() => {
+    void searchQuery.refetch();
+  }, [searchQuery.refetch]);
 
   return (
     <div className="space-y-4">
@@ -135,7 +141,7 @@ export default function AdvancedSearchPage() {
                   variant="secondary"
                   size="sm"
                   leftIcon={<Upload className="h-4 w-4" />}
-                  onClick={() => setShowImportWizard(true)}
+                  onClick={openImportWizard}
                 >
                   Import
                 </Button>
@@ -159,9 +165,7 @@ export default function AdvancedSearchPage() {
 
           {searchQuery.isError ? <FeedbackMessage type="error" message={apiErrorMessage(searchQuery.error)} /> : null}
 
-          {searchQuery.isLoading ? (
-            <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading search results...</div>
-          ) : null}
+          {searchQuery.isLoading ? <TableSkeleton rows={6} columns={activeConfig.columns.length} /> : null}
 
           {!searchQuery.isLoading && !searchQuery.isError && rows.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center text-sm text-muted">
@@ -194,14 +198,12 @@ export default function AdvancedSearchPage() {
       </Card>
 
       {importEntity ? (
-        <ImportWizard
+        <LazyImportWizard
           open={showImportWizard}
           entity={importEntity}
           title={`Import ${activeConfig.title}`}
-          onClose={() => setShowImportWizard(false)}
-          onCompleted={() => {
-            void searchQuery.refetch();
-          }}
+          onClose={closeImportWizard}
+          onCompleted={handleImportCompleted}
         />
       ) : null}
     </div>

@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import type { LabOrderView } from '@/lib/api/lab-api';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import LabOrderStatusBadge from './LabOrderStatusBadge';
 import { formatLabDateTime } from './labFormat';
 
@@ -25,7 +26,7 @@ function testNames(order: LabOrderView) {
   return order.items.map((item) => item.labTest.name).join(', ');
 }
 
-export default function LabOrderQueue({
+function LabOrderQueue({
   title,
   orders,
   selectedId,
@@ -48,7 +49,7 @@ export default function LabOrderQueue({
         {actions}
       </div>
 
-      {loading ? <p className="px-4 py-6 text-sm text-muted">Loading lab orders...</p> : null}
+      {loading ? <div className="p-4"><TableSkeleton rows={3} columns={5} /></div> : null}
 
       {!loading && orders.length === 0 ? <p className="px-4 py-6 text-sm text-muted">{emptyText}</p> : null}
 
@@ -106,3 +107,5 @@ export default function LabOrderQueue({
     </section>
   );
 }
+
+export default memo(LabOrderQueue);

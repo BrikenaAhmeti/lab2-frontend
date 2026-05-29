@@ -1,4 +1,5 @@
 import { ArrowDown, ArrowUp, Eye, EyeOff, GripVertical } from 'lucide-react';
+import { memo, useCallback, useMemo } from 'react';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import type { CmsSection, CmsSectionOrderPayload } from '@/lib/api/cms-api';
@@ -32,7 +33,7 @@ function moveSection(sections: CmsSection[], fromIndex: number, toIndex: number)
   return next;
 }
 
-export default function SectionList({
+function SectionList({
   sections,
   canManage,
   mutationPending,
@@ -41,15 +42,15 @@ export default function SectionList({
   onDelete,
   onReorder,
 }: SectionListProps) {
-  const orderedSections = [...sections].sort((a, b) => a.sortOrder - b.sortOrder);
+  const orderedSections = useMemo(() => [...sections].sort((a, b) => a.sortOrder - b.sortOrder), [sections]);
 
-  const reorder = (fromIndex: number, toIndex: number) => {
+  const reorder = useCallback((fromIndex: number, toIndex: number) => {
     if (fromIndex === toIndex || toIndex < 0 || toIndex >= orderedSections.length) {
       return;
     }
 
     onReorder(orderedPayload(moveSection(orderedSections, fromIndex, toIndex)));
-  };
+  }, [onReorder, orderedSections]);
 
   return (
     <div className="space-y-3">
@@ -127,3 +128,5 @@ export default function SectionList({
     </div>
   );
 }
+
+export default memo(SectionList);

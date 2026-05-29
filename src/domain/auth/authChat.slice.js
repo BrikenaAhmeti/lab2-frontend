@@ -9,7 +9,7 @@ const initialState = {
 };
 export const startSignInChat = createAsyncThunk('authChat/start', async (_, { rejectWithValue }) => {
     try {
-        return await signInWithAgent({ dashboard: 'Leo', chatData: [] });
+        return await signInWithAgent({ dashboard: 'MedSphere', chatData: [] });
     }
     catch (e) {
         return rejectWithValue(e?.message ?? 'Failed to start chat');
@@ -29,7 +29,7 @@ export const sendSignInMessage = createAsyncThunk('authChat/send', async (messag
         const flow = lastAgent?.flow ?? 'sign-in';
         const payload = {
             ...(chatId ? { chatId } : {}),
-            dashboard: 'Leo',
+            dashboard: 'MedSphere',
             chatData: [
                 ...messages,
                 {

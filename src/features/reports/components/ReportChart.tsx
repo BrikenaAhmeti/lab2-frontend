@@ -1,8 +1,15 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { BarChart, LineChart, PieChart } from 'echarts/charts';
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import type { EChartsCoreOption } from 'echarts/core';
+import { CanvasRenderer } from 'echarts/renderers';
+import { memo, useEffect, useMemo, useRef } from 'react';
 import type { ReportResult } from '@/lib/api/reports-api';
 import { chartKind, firstNumericKey, formatOptionLabel } from '@/features/reports/reportConfig';
 
-export default function ReportChart({ report }: { report: ReportResult }) {
+echarts.use([PieChart, LineChart, BarChart, TooltipComponent, LegendComponent, GridComponent, CanvasRenderer]);
+
+function ReportChart({ report }: { report: ReportResult }) {
   const chartRef = useRef<HTMLDivElement | null>(null);
   const metricKey = firstNumericKey(report.rows);
   const kind = chartKind(report.type, report.groupBy);
@@ -20,43 +27,38 @@ export default function ReportChart({ report }: { report: ReportResult }) {
   useEffect(() => {
     if (!chartRef.current || data.length === 0) return;
 
-    let disposed = false;
-    let chart: import('echarts').ECharts | null = null;
+    let chart: echarts.ECharts | null = null;
     const element = chartRef.current;
+    const option: EChartsCoreOption = {
+      color: ['#0f83a5', '#48b99f', '#f59e0b', '#ef4444'],
+      tooltip: { trigger: kind === 'pie' ? 'item' : 'axis' },
+      grid: kind === 'pie' ? undefined : { top: 24, right: 18, bottom: 42, left: 52 },
+      xAxis: kind === 'pie' ? undefined : { type: 'category', data: data.map((item) => item.name) },
+      yAxis: kind === 'pie' ? undefined : { type: 'value' },
+      series: [
+        kind === 'pie'
+          ? {
+              name: formatOptionLabel(metricKey),
+              type: 'pie',
+              radius: ['45%', '70%'],
+              data,
+            }
+          : {
+              name: formatOptionLabel(metricKey),
+              type: kind,
+              smooth: kind === 'line',
+              data: data.map((item) => item.value),
+            },
+      ],
+    };
 
-    import('echarts').then((echarts) => {
-      if (disposed) return;
-
-      chart = echarts.init(element);
-      chart.setOption({
-        color: ['#0f83a5', '#48b99f', '#f59e0b', '#ef4444'],
-        tooltip: { trigger: kind === 'pie' ? 'item' : 'axis' },
-        grid: kind === 'pie' ? undefined : { top: 24, right: 18, bottom: 42, left: 52 },
-        xAxis: kind === 'pie' ? undefined : { type: 'category', data: data.map((item) => item.name) },
-        yAxis: kind === 'pie' ? undefined : { type: 'value' },
-        series: [
-          kind === 'pie'
-            ? {
-                name: formatOptionLabel(metricKey),
-                type: 'pie',
-                radius: ['45%', '70%'],
-                data,
-              }
-            : {
-                name: formatOptionLabel(metricKey),
-                type: kind,
-                smooth: kind === 'line',
-                data: data.map((item) => item.value),
-              },
-        ],
-      });
-    });
+    chart = echarts.init(element);
+    chart.setOption(option);
 
     const resize = () => chart?.resize();
     window.addEventListener('resize', resize);
 
     return () => {
-      disposed = true;
       window.removeEventListener('resize', resize);
       chart?.dispose();
     };
@@ -72,3 +74,5 @@ export default function ReportChart({ report }: { report: ReportResult }) {
 
   return <div ref={chartRef} className="h-80 w-full" />;
 }
+
+export default memo(ReportChart);

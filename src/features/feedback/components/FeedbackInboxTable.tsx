@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import type { FeedbackStatus, FeedbackView } from '@/lib/api/feedback-api';
@@ -20,7 +21,7 @@ type FeedbackRowProps = Omit<FeedbackInboxTableProps, 'rows'> & {
   feedback: FeedbackView;
 };
 
-function FeedbackRow({ feedback, canManage, loading, onUpdate }: FeedbackRowProps) {
+const FeedbackRow = memo(function FeedbackRow({ feedback, canManage, loading, onUpdate }: FeedbackRowProps) {
   return (
     <tr className="border-t border-border align-top">
       <td className="px-4 py-3">
@@ -67,9 +68,9 @@ function FeedbackRow({ feedback, canManage, loading, onUpdate }: FeedbackRowProp
       ) : null}
     </tr>
   );
-}
+});
 
-export default function FeedbackInboxTable({ rows, canManage, loading, onUpdate }: FeedbackInboxTableProps) {
+function FeedbackInboxTable({ rows, canManage, loading, onUpdate }: FeedbackInboxTableProps) {
   return (
     <div className="overflow-auto rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
@@ -98,3 +99,5 @@ export default function FeedbackInboxTable({ rows, canManage, loading, onUpdate 
     </div>
   );
 }
+
+export default memo(FeedbackInboxTable);

@@ -1,5 +1,33 @@
 # React + TypeScript + Vite
 
+## MS-46 Frontend Performance Notes
+
+Bundle analysis was run with:
+
+```bash
+npm run build
+npm exec --yes vite-bundle-visualizer -- --template raw-data --output /private/tmp/medsphere-ms46-bundle-analysis.json --open false
+```
+
+Measured on May 29, 2026:
+
+| Area | Before MS-46 pass | After MS-46 pass |
+| --- | ---: | ---: |
+| Startup app JS (`index-*.js`) | 639.79 kB / gzip 200.58 kB | 539.89 kB / gzip 174.25 kB |
+| Largest portal page chunk | `ReportBuilderPage` 24.09 kB / gzip 7.91 kB | `ReportBuilderPage` 24.10 kB / gzip 7.87 kB |
+| Report chart code | Full `echarts` chunk 588.20 kB / gzip 195.71 kB | Lazy `ReportChart` 23.57 kB / gzip 9.28 kB plus deferred shared ECharts renderer |
+
+Performance work completed:
+
+- Auth pages, portal layouts, and major portal pages are loaded with `React.lazy` and Suspense skeleton fallbacks.
+- Heavy widgets are deferred: import wizard, report chart, consultation audio panel, CMS preview, and CMS section editor.
+- High-traffic list/table loading states use animated skeleton placeholders instead of text-only waits.
+- Pure table/list/card components are memoized, and expensive list/chart computations use `useMemo`.
+- Event handlers passed into memoized children were stabilized with `useCallback` in the main filtered/list pages.
+- Images include `loading="lazy"` and async decoding.
+
+The production build still reports a large deferred ECharts renderer chunk. That chunk is not part of the startup app bundle; it loads only when chart routes or chart components are requested.
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:

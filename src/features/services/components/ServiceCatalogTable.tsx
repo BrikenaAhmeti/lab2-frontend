@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import { formatCurrency } from '@/utils/formatters/currency';
@@ -14,7 +15,7 @@ interface ServiceCatalogTableProps {
   onDelete: (service: ServiceRecord) => void;
 }
 
-export default function ServiceCatalogTable({
+function ServiceCatalogTable({
   rows,
   departments,
   canManage,
@@ -71,3 +72,5 @@ export default function ServiceCatalogTable({
     </div>
   );
 }
+
+export default memo(ServiceCatalogTable);

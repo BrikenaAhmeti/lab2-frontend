@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import ExportButton from '@/components/export/ExportButton';
-import ImportWizard from '@/components/import/ImportWizard';
+import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
@@ -20,6 +20,7 @@ import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 
 type BasePath = '/admin/patients' | '/receptionist/patients';
 
@@ -77,7 +78,21 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
     return <Forbidden />;
   }
 
-  const submitPatient = async (values: Record<string, string>) => {
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const openRegisterModal = useCallback(() => setShowRegisterModal(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const goPreviousPage = useCallback(() => setPage((value) => Math.max(1, value - 1)), []);
+  const goNextPage = useCallback(() => setPage((value) => value + 1), []);
+  const closeRegisterModal = useCallback(() => {
+    setFormError('');
+    setShowRegisterModal(false);
+  }, []);
+  const handleImportCompleted = useCallback(() => {
+    setFeedback('Patients imported successfully');
+    void patientsQuery.refetch();
+  }, [patientsQuery.refetch]);
+
+  const submitPatient = useCallback(async (values: Record<string, string>) => {
     setFormError('');
     setFeedback('');
 
@@ -90,7 +105,7 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
     } catch (error) {
       setFormError(getApiErrorMessage(error, 'Patient could not be registered'));
     }
-  };
+  }, [createMutation]);
 
   return (
     <div className="space-y-4">
@@ -109,11 +124,11 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
                   variant="secondary"
                   size="sm"
                   leftIcon={<Upload className="h-4 w-4" />}
-                  onClick={() => setShowImportWizard(true)}
+                  onClick={openImportWizard}
                 >
                   Import
                 </Button>
-                <Button type="button" size="sm" onClick={() => setShowRegisterModal(true)}>Register Patient</Button>
+                <Button type="button" size="sm" onClick={openRegisterModal}>Register Patient</Button>
               </>
             ) : null}
           </div>
@@ -137,7 +152,7 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
 
           {feedback ? <FeedbackMessage type="success" message={feedback} /> : null}
           {patientsQuery.isError ? <FeedbackMessage type="error" message={getApiErrorMessage(patientsQuery.error, 'Patients could not be loaded')} /> : null}
-          {patientsQuery.isLoading ? <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading patients...</div> : null}
+          {patientsQuery.isLoading ? <TableSkeleton rows={6} columns={7} /> : null}
 
           {!patientsQuery.isLoading && !patientsQuery.isError && rows.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center text-sm text-muted">
@@ -151,10 +166,10 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p className="text-sm text-muted">{`Page ${currentPage} of ${Math.max(totalPages, 1)}`}</p>
                 <div className="flex gap-2">
-                  <Button variant="secondary" size="sm" disabled={currentPage <= 1 || patientsQuery.isFetching} onClick={() => setPage((value) => Math.max(1, value - 1))}>
+                  <Button variant="secondary" size="sm" disabled={currentPage <= 1 || patientsQuery.isFetching} onClick={goPreviousPage}>
                     Previous
                   </Button>
-                  <Button variant="secondary" size="sm" disabled={currentPage >= totalPages || patientsQuery.isFetching} onClick={() => setPage((value) => value + 1)}>
+                  <Button variant="secondary" size="sm" disabled={currentPage >= totalPages || patientsQuery.isFetching} onClick={goNextPage}>
                     Next
                   </Button>
                 </div>
@@ -168,21 +183,15 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
         open={showRegisterModal}
         loading={createMutation.isPending}
         error={formError}
-        onClose={() => {
-          setFormError('');
-          setShowRegisterModal(false);
-        }}
+        onClose={closeRegisterModal}
         onSubmit={submitPatient}
       />
-      <ImportWizard
+      <LazyImportWizard
         open={showImportWizard}
         entity="patients"
         title="Import Patients"
-        onClose={() => setShowImportWizard(false)}
-        onCompleted={() => {
-          setFeedback('Patients imported successfully');
-          void patientsQuery.refetch();
-        }}
+        onClose={closeImportWizard}
+        onCompleted={handleImportCompleted}
       />
     </div>
   );

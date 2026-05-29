@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
-import ImportWizard from '@/components/import/ImportWizard';
+import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
@@ -19,6 +19,7 @@ import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 
 type StaffStatus = 'all' | 'active' | 'inactive';
 
@@ -66,7 +67,18 @@ export default function StaffDirectoryPage() {
     return <Forbidden />;
   }
 
-  const confirmDeactivate = async () => {
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const closeDeactivateDialog = useCallback(() => {
+    setDeactivateError('');
+    setStaffToDeactivate(null);
+  }, []);
+  const handleImportCompleted = useCallback(() => {
+    setFeedback('Staff imported successfully');
+    void staffQuery.refetch();
+  }, [staffQuery.refetch]);
+
+  const confirmDeactivate = useCallback(async () => {
     if (!staffToDeactivate) return;
 
     setDeactivateError('');
@@ -79,7 +91,7 @@ export default function StaffDirectoryPage() {
     } catch (error) {
       setDeactivateError(getApiErrorMessage(error, 'Staff member could not be deactivated'));
     }
-  };
+  }, [deactivateMutation, staffToDeactivate]);
 
   return (
     <div className="space-y-4">
@@ -95,7 +107,7 @@ export default function StaffDirectoryPage() {
               variant="secondary"
               size="sm"
               leftIcon={<Upload className="h-4 w-4" />}
-              onClick={() => setShowImportWizard(true)}
+              onClick={openImportWizard}
             >
               Import
             </Button>
@@ -139,9 +151,7 @@ export default function StaffDirectoryPage() {
           {feedback ? <FeedbackMessage type="success" message={feedback} /> : null}
           {staffQuery.isError ? <FeedbackMessage type="error" message={getApiErrorMessage(staffQuery.error, 'Staff could not be loaded')} /> : null}
 
-          {staffQuery.isLoading ? (
-            <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading staff...</div>
-          ) : null}
+          {staffQuery.isLoading ? <TableSkeleton rows={5} columns={5} /> : null}
 
           {!staffQuery.isLoading && !staffQuery.isError && rows.length === 0 ? (
             <p className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center text-sm text-muted">
@@ -159,21 +169,15 @@ export default function StaffDirectoryPage() {
         staff={staffToDeactivate}
         error={deactivateError}
         loading={deactivateMutation.isPending}
-        onClose={() => {
-          setDeactivateError('');
-          setStaffToDeactivate(null);
-        }}
+        onClose={closeDeactivateDialog}
         onConfirm={confirmDeactivate}
       />
-      <ImportWizard
+      <LazyImportWizard
         open={showImportWizard}
         entity="staff"
         title="Import Staff"
-        onClose={() => setShowImportWizard(false)}
-        onCompleted={() => {
-          setFeedback('Staff imported successfully');
-          void staffQuery.refetch();
-        }}
+        onClose={closeImportWizard}
+        onCompleted={handleImportCompleted}
       />
     </div>
   );

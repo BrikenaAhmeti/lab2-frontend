@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import Button from '@/ui/atoms/Button';
 import { formatCurrency } from '@/utils/formatters/currency';
 import type { BillingView } from '@/lib/api/billing-api';
@@ -11,7 +12,7 @@ interface BillingTableProps {
   onSelect: (billing: BillingView) => void;
 }
 
-export default function BillingTable({ rows, selectedId, loading, onSelect }: BillingTableProps) {
+function BillingTable({ rows, selectedId, loading, onSelect }: BillingTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
@@ -56,3 +57,5 @@ export default function BillingTable({ rows, selectedId, loading, onSelect }: Bi
     </div>
   );
 }
+
+export default memo(BillingTable);

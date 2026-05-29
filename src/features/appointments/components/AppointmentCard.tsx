@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import Button from '@/ui/atoms/Button';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
@@ -10,8 +11,11 @@ interface AppointmentCardProps {
   onReschedule: (appointment: AppointmentView) => void;
 }
 
-export default function AppointmentCard({ appointment, onCancel, onDetail, onReschedule }: AppointmentCardProps) {
-  const canChange = !isFinalAppointment(appointment.status) && new Date(appointment.scheduledAt).getTime() > Date.now();
+function AppointmentCard({ appointment, onCancel, onDetail, onReschedule }: AppointmentCardProps) {
+  const canChange = useMemo(
+    () => !isFinalAppointment(appointment.status) && new Date(appointment.scheduledAt).getTime() > Date.now(),
+    [appointment.scheduledAt, appointment.status]
+  );
 
   return (
     <article className="rounded-xl border border-border bg-background p-4">
@@ -60,3 +64,5 @@ export default function AppointmentCard({ appointment, onCancel, onDetail, onRes
     </article>
   );
 }
+
+export default memo(AppointmentCard);

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { reportsApi, type ReportFilters, type ReportType } from '@/lib/api/reports-api';
 import { reportsQueryKey } from '@/features/reports/hooks/useReports';
@@ -12,7 +12,7 @@ interface SnapshotConfig {
   metric: string;
 }
 
-export default function ReportDashboardCards({ enabled }: { enabled: boolean }) {
+function ReportDashboardCards({ enabled }: { enabled: boolean }) {
   const snapshots = useMemo<SnapshotConfig[]>(() => {
     const today = reportSnapshotRange('today');
     const week = reportSnapshotRange('week');
@@ -78,3 +78,5 @@ export default function ReportDashboardCards({ enabled }: { enabled: boolean }) 
     </section>
   );
 }
+
+export default memo(ReportDashboardCards);

@@ -1,10 +1,11 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Badge from '@/ui/atoms/Badge';
 import type { PatientRecord } from '@/lib/api/patients-api';
 import { getPatientName } from '@/features/patients/hooks/usePatients';
 import { formatBloodType, formatDate, formatEnum } from './patientFormat';
 
-export default function PatientTable({ rows, basePath }: { rows: PatientRecord[]; basePath: string }) {
+function PatientTable({ rows, basePath }: { rows: PatientRecord[]; basePath: string }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
@@ -45,3 +46,5 @@ export default function PatientTable({ rows, basePath }: { rows: PatientRecord[]
     </div>
   );
 }
+
+export default memo(PatientTable);

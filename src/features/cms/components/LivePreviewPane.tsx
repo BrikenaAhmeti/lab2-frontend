@@ -36,7 +36,7 @@ function SectionPreview({ section }: { section: CmsSection }) {
   if (section.type === 'HERO') {
     return (
       <section className="overflow-hidden rounded-xl border border-border bg-surface">
-        {section.imageUrl ? <img src={section.imageUrl} alt="" className="h-40 w-full object-cover" loading="lazy" /> : null}
+        {section.imageUrl ? <img src={section.imageUrl} alt="" className="h-40 w-full object-cover" loading="lazy" decoding="async" /> : null}
         <div className="p-4">
           <h3 className="text-2xl font-semibold text-foreground">{section.title}</h3>
           {section.subtitle ? <p className="mt-2 text-sm text-muted">{section.subtitle}</p> : null}
@@ -117,7 +117,7 @@ function SectionPreview({ section }: { section: CmsSection }) {
       <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
       {section.subtitle ? <p className="mt-1 text-sm text-muted">{section.subtitle}</p> : null}
       {section.body ? <p className="mt-3 whitespace-pre-line text-sm leading-6 text-foreground">{section.body}</p> : null}
-      {section.imageUrl ? <img src={section.imageUrl} alt="" className="mt-3 max-h-48 w-full rounded-lg object-cover" loading="lazy" /> : null}
+      {section.imageUrl ? <img src={section.imageUrl} alt="" className="mt-3 max-h-48 w-full rounded-lg object-cover" loading="lazy" decoding="async" /> : null}
     </section>
   );
 }

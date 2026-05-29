@@ -4,21 +4,21 @@ import Forbidden from '@/components/common/Forbidden';
 import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
 import RoleGuard from '@/features/auth/guards/RoleGuard';
-import LoginPage from '@/features/auth/pages/LoginPage';
-import PatientRegistrationPage from '@/features/auth/pages/PatientRegistrationPage';
-import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
-import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
-import VerifyEmailPage from '@/features/auth/pages/VerifyEmailPage';
-import ResendVerificationPage from '@/features/auth/pages/ResendVerificationPage';
-import AdminLayout from '@/layouts/AdminLayout';
-import PatientLayout from '@/layouts/PatientLayout';
-import DoctorLayout from '@/layouts/DoctorLayout';
-import NurseLayout from '@/layouts/NurseLayout';
-import LabLayout from '@/layouts/LabLayout';
-import PharmacyLayout from '@/layouts/PharmacyLayout';
-import ReceptionistLayout from '@/layouts/ReceptionistLayout';
 import RoleRedirect from './RoleRedirect';
 
+const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
+const PatientRegistrationPage = lazy(() => import('@/features/auth/pages/PatientRegistrationPage'));
+const ForgotPasswordPage = lazy(() => import('@/features/auth/pages/ForgotPasswordPage'));
+const ResetPasswordPage = lazy(() => import('@/features/auth/pages/ResetPasswordPage'));
+const VerifyEmailPage = lazy(() => import('@/features/auth/pages/VerifyEmailPage'));
+const ResendVerificationPage = lazy(() => import('@/features/auth/pages/ResendVerificationPage'));
+const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
+const PatientLayout = lazy(() => import('@/layouts/PatientLayout'));
+const DoctorLayout = lazy(() => import('@/layouts/DoctorLayout'));
+const NurseLayout = lazy(() => import('@/layouts/NurseLayout'));
+const LabLayout = lazy(() => import('@/layouts/LabLayout'));
+const PharmacyLayout = lazy(() => import('@/layouts/PharmacyLayout'));
+const ReceptionistLayout = lazy(() => import('@/layouts/ReceptionistLayout'));
 const PublicHomePage = lazy(() => import('@/pages/public/PublicHomePage'));
 const PublicCmsPage = lazy(() => import('@/pages/public/PublicCmsPage'));
 const PublicDepartmentsPage = lazy(() => import('@/pages/public/PublicDepartmentsPage'));
@@ -124,27 +124,27 @@ export const router = createBrowserRouter([
   },
   {
     path: '/login',
-    element: <LoginPage />,
+    element: lazyRoute(<LoginPage />),
   },
   {
     path: '/register',
-    element: <PatientRegistrationPage />,
+    element: lazyRoute(<PatientRegistrationPage />),
   },
   {
     path: '/forgot-password',
-    element: <ForgotPasswordPage />,
+    element: lazyRoute(<ForgotPasswordPage />),
   },
   {
     path: '/reset-password',
-    element: <ResetPasswordPage />,
+    element: lazyRoute(<ResetPasswordPage />),
   },
   {
     path: '/verify-email',
-    element: <VerifyEmailPage />,
+    element: lazyRoute(<VerifyEmailPage />),
   },
   {
     path: '/resend-verification',
-    element: <ResendVerificationPage />,
+    element: lazyRoute(<ResendVerificationPage />),
   },
   {
     path: '/401',
@@ -173,7 +173,7 @@ export const router = createBrowserRouter([
         path: '/admin',
         element: (
           <RoleGuard allowedRoles={['Admin', 'Super Admin']}>
-            <AdminLayout />
+            {lazyRoute(<AdminLayout />)}
           </RoleGuard>
         ),
         children: [
@@ -205,7 +205,7 @@ export const router = createBrowserRouter([
         path: '/patient',
         element: (
           <RoleGuard allowedRoles={['Patient']}>
-            <PatientLayout />
+            {lazyRoute(<PatientLayout />)}
           </RoleGuard>
         ),
         children: [
@@ -227,7 +227,7 @@ export const router = createBrowserRouter([
         path: '/doctor',
         element: (
           <RoleGuard allowedRoles={['Doctor']}>
-            <DoctorLayout />
+            {lazyRoute(<DoctorLayout />)}
           </RoleGuard>
         ),
         children: [
@@ -243,7 +243,7 @@ export const router = createBrowserRouter([
         path: '/nurse',
         element: (
           <RoleGuard allowedRoles={['Nurse']}>
-            <NurseLayout />
+            {lazyRoute(<NurseLayout />)}
           </RoleGuard>
         ),
         children: portalRoutes(<NurseDashboardPage />),
@@ -252,7 +252,7 @@ export const router = createBrowserRouter([
         path: '/lab',
         element: (
           <RoleGuard allowedRoles={['Lab Technician']}>
-            <LabLayout />
+            {lazyRoute(<LabLayout />)}
           </RoleGuard>
         ),
         children: portalRoutes(<LabDashboardPage />),
@@ -261,7 +261,7 @@ export const router = createBrowserRouter([
         path: '/pharmacy',
         element: (
           <RoleGuard allowedRoles={['Pharmacist']}>
-            <PharmacyLayout />
+            {lazyRoute(<PharmacyLayout />)}
           </RoleGuard>
         ),
         children: portalRoutes(<PharmacyDashboardPage />),
@@ -270,7 +270,7 @@ export const router = createBrowserRouter([
         path: '/receptionist',
         element: (
           <RoleGuard allowedRoles={['Receptionist']}>
-            <ReceptionistLayout />
+            {lazyRoute(<ReceptionistLayout />)}
           </RoleGuard>
         ),
         children: [

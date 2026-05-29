@@ -19,6 +19,6 @@ export default function SignInPage() {
         if (authed)
             navigate('/');
     }, [messages, tokens, navigate]);
-    const left = (_jsxs(_Fragment, { children: [_jsx("div", { className: "flex items-center gap-3", children: _jsx("img", { src: "/assets/admin/header-icon.svg", className: "h-10 w-auto object-contain", alt: "HotelWorld AI" }) }), _jsxs("div", { className: "mt-10", children: [_jsx("h1", { className: "text-5xl font-semibold", children: "Sign in" }), _jsx("p", { className: "text-muted mt-2", children: "Into your hotel dashboard" })] }), _jsx(AuthChatCard, {}), _jsx("div", { className: "mt-auto pt-10 text-xs text-muted", children: "Terms \u2022 Privacy Policy" })] }));
+    const left = (_jsxs(_Fragment, { children: [_jsx("div", { className: "flex items-center gap-3", children: _jsx("img", { src: "/assets/admin/header-icon.svg", className: "h-10 w-auto object-contain", alt: "MedSphere" }) }), _jsxs("div", { className: "mt-10", children: [_jsx("h1", { className: "text-5xl font-semibold", children: "Sign in" }), _jsx("p", { className: "text-muted mt-2", children: "Into your MedSphere dashboard" })] }), _jsx(AuthChatCard, {}), _jsx("div", { className: "mt-auto pt-10 text-xs text-muted", children: "Terms \u2022 Privacy Policy" })] }));
     return _jsx(AuthLayout, { left: left });
 }

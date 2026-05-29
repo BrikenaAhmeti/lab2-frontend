@@ -1,12 +1,10 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import CmsPageForm from '@/features/cms/components/CmsPageForm';
-import LivePreviewPane from '@/features/cms/components/LivePreviewPane';
-import SectionEditorPanel from '@/features/cms/components/SectionEditorPanel';
 import SectionList from '@/features/cms/components/SectionList';
 import { cmsBreadcrumbs } from '@/features/cms/cmsBreadcrumbs';
 import { useCmsAccess } from '@/features/cms/hooks/useCmsAccess';
@@ -25,8 +23,12 @@ import {
 } from '@/features/cms/hooks/useCms';
 import type { CmsSection, CmsSectionOrderPayload } from '@/lib/api/cms-api';
 import type { CmsPageFormValues, CmsSectionFormValues } from '@/features/cms/cms.schemas';
+import Skeleton from '@/ui/atoms/Skeleton';
 
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+
+const LivePreviewPane = lazy(() => import('@/features/cms/components/LivePreviewPane'));
+const SectionEditorPanel = lazy(() => import('@/features/cms/components/SectionEditorPanel'));
 
 export default function CmsPageEditorPage() {
   const { id = '' } = useParams();
@@ -65,7 +67,7 @@ export default function CmsPageEditorPage() {
     reorderSections.isPending ||
     deleteSection.isPending;
 
-  const savePage = async (values: CmsPageFormValues) => {
+  const savePage = useCallback(async (values: CmsPageFormValues) => {
     setFeedback(null);
     setPageFormError('');
 
@@ -75,9 +77,9 @@ export default function CmsPageEditorPage() {
     } catch (error) {
       setPageFormError(cmsErrorMessage(error, 'CMS page could not be saved'));
     }
-  };
+  }, [id, updatePage]);
 
-  const togglePublish = async () => {
+  const togglePublish = useCallback(async () => {
     if (!page) {
       return;
     }
@@ -93,27 +95,27 @@ export default function CmsPageEditorPage() {
     } catch (error) {
       setFeedback({ type: 'error', message: cmsErrorMessage(error, 'CMS page could not be updated') });
     }
-  };
+  }, [page, patchPage]);
 
-  const openCreateSection = () => {
+  const openCreateSection = useCallback(() => {
     setSectionFormError('');
     setEditingSection(null);
     setSectionPanelOpen(true);
-  };
+  }, []);
 
-  const openEditSection = (section: CmsSection) => {
+  const openEditSection = useCallback((section: CmsSection) => {
     setSectionFormError('');
     setEditingSection(section);
     setSectionPanelOpen(true);
-  };
+  }, []);
 
-  const closeSectionPanel = () => {
+  const closeSectionPanel = useCallback(() => {
     setSectionFormError('');
     setEditingSection(null);
     setSectionPanelOpen(false);
-  };
+  }, []);
 
-  const saveSection = async (values: CmsSectionFormValues) => {
+  const saveSection = useCallback(async (values: CmsSectionFormValues) => {
     setFeedback(null);
     setSectionFormError('');
 
@@ -130,9 +132,9 @@ export default function CmsPageEditorPage() {
     } catch (error) {
       setSectionFormError(cmsErrorMessage(error, 'CMS section could not be saved'));
     }
-  };
+  }, [createSection, editingSection, updateSection, closeSectionPanel]);
 
-  const changeVisibility = async (section: CmsSection) => {
+  const changeVisibility = useCallback(async (section: CmsSection) => {
     setFeedback(null);
 
     try {
@@ -144,9 +146,9 @@ export default function CmsPageEditorPage() {
     } catch (error) {
       setFeedback({ type: 'error', message: cmsErrorMessage(error, 'CMS section could not be updated') });
     }
-  };
+  }, [toggleSection]);
 
-  const reorder = async (payload: CmsSectionOrderPayload[]) => {
+  const reorder = useCallback(async (payload: CmsSectionOrderPayload[]) => {
     setFeedback(null);
 
     try {
@@ -155,9 +157,9 @@ export default function CmsPageEditorPage() {
     } catch (error) {
       setFeedback({ type: 'error', message: cmsErrorMessage(error, 'CMS sections could not be reordered') });
     }
-  };
+  }, [reorderSections]);
 
-  const removeSection = async (section: CmsSection) => {
+  const removeSection = useCallback(async (section: CmsSection) => {
     if (!window.confirm(`Delete ${section.title || section.type}?`)) {
       return;
     }
@@ -170,7 +172,7 @@ export default function CmsPageEditorPage() {
     } catch (error) {
       setFeedback({ type: 'error', message: cmsErrorMessage(error, 'CMS section could not be deleted') });
     }
-  };
+  }, [deleteSection]);
 
   const pageError = pageQuery.isError ? cmsErrorMessage(pageQuery.error, 'CMS page could not be loaded') : '';
   const sectionsError = sectionsQuery.isError ? cmsErrorMessage(sectionsQuery.error, 'CMS sections could not be loaded') : '';
@@ -194,9 +196,9 @@ export default function CmsPageEditorPage() {
 
       {pageQuery.isLoading ? (
         <div className="rounded-xl border border-border p-4">
-          <div className="animate-pulse space-y-3">
-            <div className="h-10 rounded-lg bg-surface" />
-            <div className="h-28 rounded-lg bg-surface" />
+          <div className="space-y-3">
+            <Skeleton className="h-10" />
+            <Skeleton className="h-28" />
           </div>
         </div>
       ) : null}
@@ -234,9 +236,9 @@ export default function CmsPageEditorPage() {
             >
               <div className="space-y-4">
                 {sectionsQuery.isLoading ? (
-                  <div className="animate-pulse space-y-3">
-                    <div className="h-20 rounded-xl bg-surface" />
-                    <div className="h-20 rounded-xl bg-surface" />
+                  <div className="space-y-3">
+                    <Skeleton className="h-20" />
+                    <Skeleton className="h-20" />
                   </div>
                 ) : null}
 
@@ -265,20 +267,26 @@ export default function CmsPageEditorPage() {
           </div>
 
           <Card className="xl:sticky xl:top-20 xl:self-start">
-            <LivePreviewPane page={page} />
+            <Suspense fallback={<Skeleton className="h-96" />}>
+              <LivePreviewPane page={page} />
+            </Suspense>
           </Card>
         </div>
       ) : null}
 
-      <SectionEditorPanel
-        open={sectionPanelOpen}
-        section={editingSection}
-        nextSortOrder={nextSortOrder}
-        loading={createSection.isPending || updateSection.isPending}
-        submitError={sectionFormError}
-        onClose={closeSectionPanel}
-        onSubmit={saveSection}
-      />
+      {sectionPanelOpen ? (
+        <Suspense fallback={<Skeleton className="fixed inset-x-4 top-20 z-50 mx-auto h-96 max-w-3xl" />}>
+          <SectionEditorPanel
+            open={sectionPanelOpen}
+            section={editingSection}
+            nextSortOrder={nextSortOrder}
+            loading={createSection.isPending || updateSection.isPending}
+            submitError={sectionFormError}
+            onClose={closeSectionPanel}
+            onSubmit={saveSection}
+          />
+        </Suspense>
+      ) : null}
     </div>
   );
 }

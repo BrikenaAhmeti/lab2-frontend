@@ -19,7 +19,7 @@ export default function AppLayout() {
       <div className="mx-auto flex min-h-screen max-w-[1600px]">
         <aside className="hidden w-72 shrink-0 border-r border-border bg-card/90 p-5 backdrop-blur-xl lg:block">
           <div className="mb-8 flex items-center gap-3">
-            <img src="/medsphere.png" alt="MedSphere" className="h-11 w-11 rounded-xl object-cover" />
+            <img src="/medsphere.png" alt="MedSphere" className="h-11 w-11 rounded-xl object-cover" loading="lazy" decoding="async" />
             <div>
               <p className="text-lg font-semibold tracking-wide text-foreground">MedSphere</p>
               <p className="text-xs text-muted">Healthcare Operations</p>

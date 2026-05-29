@@ -1,9 +1,8 @@
-import { useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { Download, FileSpreadsheet, FileText, Save } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import { hasPermission } from '@/features/auth/utils/permission';
-import ReportChart from '@/features/reports/components/ReportChart';
 import ReportDashboardCards from '@/features/reports/components/ReportDashboardCards';
 import ReportDataTable from '@/features/reports/components/ReportDataTable';
 import ReportFiltersPanel from '@/features/reports/components/ReportFiltersPanel';
@@ -35,8 +34,11 @@ import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Skeleton, { TableSkeleton } from '@/ui/atoms/Skeleton';
 
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+
+const ReportChart = lazy(() => import('@/features/reports/components/ReportChart'));
 
 function downloadReport(blob: Blob, filename: string) {
   const url = window.URL.createObjectURL(blob);
@@ -69,7 +71,14 @@ export default function ReportBuilderPage() {
     return <Forbidden />;
   }
 
-  function changeFilters(next: Partial<ReportFilterState>) {
+  const openTemplateModal = useCallback(() => {
+    setTemplateError('');
+    setTemplateModalOpen(true);
+  }, []);
+
+  const closeTemplateModal = useCallback(() => setTemplateModalOpen(false), []);
+
+  const changeFilters = useCallback((next: Partial<ReportFilterState>) => {
     setFilters((current) => {
       const reportType = next.reportType ?? current.reportType;
 
@@ -91,9 +100,9 @@ export default function ReportBuilderPage() {
 
     if (next.reportType && next.reportType !== filters.reportType) setReport(null);
     setFeedback(null);
-  }
+  }, [filters.reportType]);
 
-  async function generateReport() {
+  const generateReport = useCallback(async () => {
     setFeedback(null);
 
     try {
@@ -105,9 +114,9 @@ export default function ReportBuilderPage() {
     } catch (error) {
       setFeedback({ type: 'error', message: getReportApiErrorMessage(error, 'Report could not be generated') });
     }
-  }
+  }, [filters.reportType, generateMutation, queryFilters]);
 
-  async function exportReport(format: ReportExportFormat) {
+  const exportReport = useCallback(async (format: ReportExportFormat) => {
     setFeedback(null);
 
     try {
@@ -121,9 +130,9 @@ export default function ReportBuilderPage() {
     } catch (error) {
       setFeedback({ type: 'error', message: getReportApiErrorMessage(error, 'Report could not be exported') });
     }
-  }
+  }, [exportMutation, filters.reportType, queryFilters]);
 
-  async function saveTemplate(values: ReportTemplateFormValues) {
+  const saveTemplate = useCallback(async (values: ReportTemplateFormValues) => {
     setTemplateError('');
 
     try {
@@ -138,13 +147,17 @@ export default function ReportBuilderPage() {
     } catch (error) {
       setTemplateError(getReportApiErrorMessage(error, 'Template could not be saved'));
     }
-  }
+  }, [filters, saveTemplateMutation]);
 
-  function loadTemplate(template: Parameters<typeof filtersFromTemplate>[0]) {
+  const loadTemplate = useCallback((template: Parameters<typeof filtersFromTemplate>[0]) => {
     setFilters(filtersFromTemplate(template));
     setReport(null);
     setFeedback({ type: 'success', message: 'Template loaded.' });
-  }
+  }, []);
+
+  const exportPdf = useCallback(() => exportReport('pdf'), [exportReport]);
+  const exportCsv = useCallback(() => exportReport('csv'), [exportReport]);
+  const exportExcel = useCallback(() => exportReport('xlsx'), [exportReport]);
 
   const templates = templatesQuery.data?.items ?? [];
   const optionsError = departmentsQuery.isError || staffQuery.isError || servicesQuery.isError;
@@ -167,10 +180,7 @@ export default function ReportBuilderPage() {
                   variant="secondary"
                   size="sm"
                   leftIcon={<Save size={16} />}
-                  onClick={() => {
-                    setTemplateError('');
-                    setTemplateModalOpen(true);
-                  }}
+                  onClick={openTemplateModal}
                 >
                   Save Template
                 </Button>
@@ -180,7 +190,7 @@ export default function ReportBuilderPage() {
                   size="sm"
                   leftIcon={<FileText size={16} />}
                   loading={exportMutation.isPending}
-                  onClick={() => exportReport('pdf')}
+                  onClick={exportPdf}
                 >
                   PDF
                 </Button>
@@ -190,7 +200,7 @@ export default function ReportBuilderPage() {
                   size="sm"
                   leftIcon={<Download size={16} />}
                   loading={exportMutation.isPending}
-                  onClick={() => exportReport('csv')}
+                  onClick={exportCsv}
                 >
                   CSV
                 </Button>
@@ -200,7 +210,7 @@ export default function ReportBuilderPage() {
                   size="sm"
                   leftIcon={<FileSpreadsheet size={16} />}
                   loading={exportMutation.isPending}
-                  onClick={() => exportReport('xlsx')}
+                  onClick={exportExcel}
                 >
                   Excel
                 </Button>
@@ -227,9 +237,7 @@ export default function ReportBuilderPage() {
             title={report?.title ?? 'Preview'}
             subtitle={report ? `Generated ${new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.generatedAt))}` : undefined}
           >
-            {generateMutation.isPending ? (
-              <div className="rounded-xl border border-border p-4 text-sm text-muted">Generating report...</div>
-            ) : null}
+            {generateMutation.isPending ? <TableSkeleton rows={5} columns={4} /> : null}
 
             {!generateMutation.isPending && !report ? (
               <div className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
@@ -240,7 +248,10 @@ export default function ReportBuilderPage() {
             {!generateMutation.isPending && report ? (
               <div className="space-y-4">
                 <ReportSummaryStrip summary={report.summary} />
-                <ReportChart report={report} />
+                <span className="sr-only">Chart preview</span>
+                <Suspense fallback={<Skeleton className="h-72" />}>
+                  <ReportChart report={report} />
+                </Suspense>
                 <ReportDataTable rows={report.rows} />
               </div>
             ) : null}
@@ -254,7 +265,7 @@ export default function ReportBuilderPage() {
         open={templateModalOpen}
         loading={saveTemplateMutation.isPending}
         errorMessage={templateError}
-        onClose={() => setTemplateModalOpen(false)}
+        onClose={closeTemplateModal}
         onSubmit={saveTemplate}
       />
     </div>

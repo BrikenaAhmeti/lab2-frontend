@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { memo } from 'react';
 import type { PharmacyQueueView } from '@/lib/api/pharmacy-api';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
@@ -8,6 +9,7 @@ import {
   normalizeAllergies,
 } from './pharmacyFormat';
 import PharmacyStatusBadge from './PharmacyStatusBadge';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 
 interface PharmacyQueueTableProps {
   queues: PharmacyQueueView[];
@@ -17,7 +19,7 @@ interface PharmacyQueueTableProps {
   onSelect: (queue: PharmacyQueueView) => void;
 }
 
-export default function PharmacyQueueTable({
+function PharmacyQueueTable({
   queues,
   selectedId,
   loading,
@@ -25,7 +27,7 @@ export default function PharmacyQueueTable({
   onSelect,
 }: PharmacyQueueTableProps) {
   if (loading) {
-    return <p className="rounded-lg border border-border bg-card px-4 py-6 text-sm text-muted">Loading pharmacy queue...</p>;
+    return <TableSkeleton rows={4} columns={6} />;
   }
 
   if (queues.length === 0) {
@@ -84,3 +86,5 @@ export default function PharmacyQueueTable({
     </div>
   );
 }
+
+export default memo(PharmacyQueueTable);

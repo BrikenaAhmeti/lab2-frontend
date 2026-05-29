@@ -20,7 +20,7 @@ import ImportModePicker from './ImportModePicker';
 import ImportSummary from './ImportSummary';
 import ImportTemplateStep from './ImportTemplateStep';
 
-interface ImportWizardProps {
+export interface ImportWizardProps {
   open: boolean;
   entity: ImportEntity;
   title: string;

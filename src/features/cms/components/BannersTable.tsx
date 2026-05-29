@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import type { CmsBanner } from '@/lib/api/cms-api';
@@ -12,7 +13,7 @@ interface BannersTableProps {
   onDelete: (banner: CmsBanner) => void;
 }
 
-export default function BannersTable({
+function BannersTable({
   banners,
   canManage,
   mutationPending,
@@ -75,3 +76,5 @@ export default function BannersTable({
     </div>
   );
 }
+
+export default memo(BannersTable);

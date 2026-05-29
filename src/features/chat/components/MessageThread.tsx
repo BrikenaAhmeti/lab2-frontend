@@ -79,7 +79,7 @@ export default function MessageThread({
             >
               {message.type === 'image' && fileUrl && (
                 <a href={fileUrl} target="_blank" rel="noreferrer" className="mb-2 block overflow-hidden rounded-lg">
-                  <img src={fileUrl} alt={messageLabel(message)} className="max-h-64 w-full object-cover" />
+                  <img src={fileUrl} alt={messageLabel(message)} className="max-h-64 w-full object-cover" loading="lazy" decoding="async" />
                 </a>
               )}
 

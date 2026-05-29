@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { LabOrderItemView } from '@/lib/api/lab-api';
 import LabResultFlagBadge from './LabResultFlagBadge';
 
@@ -6,7 +7,7 @@ function resultText(item: LabOrderItemView) {
   return item.resultUnit ? `${item.resultValue} ${item.resultUnit}` : item.resultValue;
 }
 
-export default function ResultsTable({ items }: { items: LabOrderItemView[] }) {
+function ResultsTable({ items }: { items: LabOrderItemView[] }) {
   return (
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="min-w-full text-left text-sm">
@@ -37,3 +38,5 @@ export default function ResultsTable({ items }: { items: LabOrderItemView[] }) {
     </div>
   );
 }
+
+export default memo(ResultsTable);

@@ -41,7 +41,7 @@ function HeroSection({ section }: { section: CmsSection }) {
 
   return (
     <section className="relative overflow-hidden bg-foreground text-white">
-      <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" />
+      <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-35" loading="lazy" decoding="async" />
       <div className="absolute inset-0 bg-foreground/75" />
       <div className="relative mx-auto max-w-6xl px-4 py-20 md:py-24">
         <div className="max-w-3xl">

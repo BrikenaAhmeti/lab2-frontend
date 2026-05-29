@@ -1,7 +1,8 @@
+import { memo } from 'react';
 import type { ReportSummaryMetric } from '@/lib/api/reports-api';
 import { formatReportValue } from '@/features/reports/reportConfig';
 
-export default function ReportSummaryStrip({ summary }: { summary: ReportSummaryMetric[] }) {
+function ReportSummaryStrip({ summary }: { summary: ReportSummaryMetric[] }) {
   if (summary.length === 0) return null;
 
   return (
@@ -15,3 +16,5 @@ export default function ReportSummaryStrip({ summary }: { summary: ReportSummary
     </dl>
   );
 }
+
+export default memo(ReportSummaryStrip);

@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import ExportButton from '@/components/export/ExportButton';
-import ImportWizard from '@/components/import/ImportWizard';
+import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import type { EnterLabResultsPayload, LabOrderStatus, LabOrderView } from '@/lib/api/lab-api';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
@@ -100,12 +100,15 @@ export default function LabDashboardPage() {
     }
   }, [allVisibleOrders, selectedId]);
 
-  const rememberOrder = (order: LabOrderView) => {
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+
+  const rememberOrder = useCallback((order: LabOrderView) => {
     setLocalOrders((current) => ({ ...current, [order.id]: order }));
     setSelectedId(order.id);
-  };
+  }, []);
 
-  const handleStatusChange = async (order: LabOrderView) => {
+  const handleStatusChange = useCallback(async (order: LabOrderView) => {
     const nextStatus = nextLabStatus(order.status);
     if (!nextStatus) return;
 
@@ -117,9 +120,9 @@ export default function LabDashboardPage() {
     } catch (error) {
       setActionError(getLabApiErrorMessage(error, 'Lab order status could not be updated'));
     }
-  };
+  }, [rememberOrder, statusMutation]);
 
-  const handleSaveResults = async (order: LabOrderView, payload: EnterLabResultsPayload) => {
+  const handleSaveResults = useCallback(async (order: LabOrderView, payload: EnterLabResultsPayload) => {
     setActionError('');
 
     try {
@@ -128,7 +131,12 @@ export default function LabDashboardPage() {
     } catch (error) {
       setActionError(getLabApiErrorMessage(error, 'Lab results could not be saved'));
     }
-  };
+  }, [rememberOrder, resultsMutation]);
+
+  const selectOrder = useCallback((order: LabOrderView) => {
+    setActionError('');
+    setSelectedId(order.id);
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -147,7 +155,7 @@ export default function LabDashboardPage() {
               variant="secondary"
               size="sm"
               leftIcon={<Upload className="h-4 w-4" />}
-              onClick={() => setShowImportWizard(true)}
+              onClick={openImportWizard}
             >
               Import
             </Button>
@@ -171,10 +179,7 @@ export default function LabDashboardPage() {
               selectedId={selectedOrder?.id}
               loading={activeQuery.isLoading}
               emptyText={section.emptyText}
-              onSelect={(order) => {
-                setActionError('');
-                setSelectedId(order.id);
-              }}
+              onSelect={selectOrder}
             />
           ))}
 
@@ -203,10 +208,7 @@ export default function LabDashboardPage() {
                 />
               </div>
             }
-            onSelect={(order) => {
-              setActionError('');
-              setSelectedId(order.id);
-            }}
+            onSelect={selectOrder}
           />
         </div>
 
@@ -220,11 +222,11 @@ export default function LabDashboardPage() {
         />
       </div>
 
-      <ImportWizard
+      <LazyImportWizard
         open={showImportWizard}
         entity="lab-tests"
         title="Import Lab Tests"
-        onClose={() => setShowImportWizard(false)}
+        onClose={closeImportWizard}
       />
     </div>
   );

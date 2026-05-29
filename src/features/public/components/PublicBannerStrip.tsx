@@ -14,7 +14,7 @@ export default function PublicBannerStrip() {
         {banners.map((banner) => (
           <article key={banner.id} className="flex gap-3 rounded-lg border border-border bg-background p-3">
             {banner.imageUrl ? (
-              <img src={banner.imageUrl} alt="" className="h-16 w-20 rounded-lg object-cover" loading="lazy" />
+              <img src={banner.imageUrl} alt="" className="h-16 w-20 rounded-lg object-cover" loading="lazy" decoding="async" />
             ) : null}
             <div>
               <h2 className="text-sm font-semibold text-foreground">{banner.title}</h2>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import type { MedicalRecordView } from '@/lib/api/medical-records-api';
@@ -11,7 +11,6 @@ import { usePatientDetail } from '@/features/patients/hooks/usePatients';
 import AppointmentStatusBadge from '@/features/appointments/components/AppointmentStatusBadge';
 import { formatAppointmentDate, isFinalAppointment } from '@/features/appointments/components/appointmentFormat';
 import { getApiErrorMessage, useAppointmentDetail, useUpdateAppointmentStatus } from '@/features/appointments/hooks/useAppointments';
-import AudioRecorderPlaceholder from '../components/AudioRecorderPlaceholder';
 import LabOrderPlaceholder from '../components/LabOrderPlaceholder';
 import MedicalRecordForm, {
   toMedicalRecordPayload,
@@ -30,6 +29,9 @@ import {
   usePrescriptions,
   useUpdateMedicalRecord,
 } from '../hooks/useConsultation';
+import Skeleton from '@/ui/atoms/Skeleton';
+
+const AudioRecorderPlaceholder = lazy(() => import('../components/AudioRecorderPlaceholder'));
 
 function findAppointmentRecord(records: MedicalRecordView[], appointmentId: string) {
   return records.find((record) => record.appointmentId === appointmentId) ?? null;
@@ -77,7 +79,7 @@ export default function ConsultationPage() {
     setRecord((current) => (current?.appointmentId === appointmentId ? current : null));
   }, [appointmentId, appointmentRecord, medicalRecordsQuery.isSuccess]);
 
-  const saveRecord = async (values: MedicalRecordFormValues) => {
+  const saveRecord = useCallback(async (values: MedicalRecordFormValues) => {
     if (!appointment) return;
     if (!appointment.staffProfileId) {
       setActionError('This appointment has no staff profile assigned.');
@@ -103,9 +105,9 @@ export default function ConsultationPage() {
     } catch (error) {
       setActionError(getConsultationErrorMessage(error, 'Medical record could not be saved'));
     }
-  };
+  }, [appointment, createRecordMutation, record, updateRecordMutation]);
 
-  const finalizeRecord = async () => {
+  const finalizeRecord = useCallback(async () => {
     if (!record) return;
 
     setActionError('');
@@ -118,9 +120,9 @@ export default function ConsultationPage() {
     } catch (error) {
       setActionError(getConsultationErrorMessage(error, 'Medical record could not be finalized'));
     }
-  };
+  }, [finalizeRecordMutation, record]);
 
-  const createPrescription = async (payload: CreatePrescriptionPayload) => {
+  const createPrescription = useCallback(async (payload: CreatePrescriptionPayload) => {
     setActionError('');
     setActionSuccess('');
 
@@ -131,9 +133,9 @@ export default function ConsultationPage() {
       setActionError(getConsultationErrorMessage(error, 'Prescription could not be created'));
       throw error;
     }
-  };
+  }, [createPrescriptionMutation]);
 
-  const completeAppointment = async () => {
+  const completeAppointment = useCallback(async () => {
     if (!appointment) return;
 
     setActionError('');
@@ -145,10 +147,21 @@ export default function ConsultationPage() {
     } catch (error) {
       setActionError(getApiErrorMessage(error, 'Appointment could not be completed'));
     }
-  };
+  }, [appointment, updateStatusMutation]);
+
+  const goBack = useCallback(() => navigate('/doctor'), [navigate]);
 
   if (appointmentQuery.isLoading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading consultation...</div>;
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-32" />
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+          <Skeleton className="h-80" />
+          <Skeleton className="h-96" />
+        </div>
+      </div>
+    );
   }
 
   if (appointmentQuery.isError || !appointment) {
@@ -181,7 +194,7 @@ export default function ConsultationPage() {
             >
               Complete Appointment
             </Button>
-            <Button type="button" variant="ghost" onClick={() => navigate('/doctor')}>
+            <Button type="button" variant="ghost" onClick={goBack}>
               Back
             </Button>
           </div>
@@ -218,7 +231,9 @@ export default function ConsultationPage() {
             prescriptions={prescriptions}
             loading={patientQuery.isLoading || prescriptionsQuery.isLoading}
           />
-          <AudioRecorderPlaceholder />
+          <Suspense fallback={<Skeleton className="h-40" />}>
+            <AudioRecorderPlaceholder />
+          </Suspense>
           <LabOrderPlaceholder />
         </div>
 

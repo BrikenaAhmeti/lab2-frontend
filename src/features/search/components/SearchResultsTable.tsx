@@ -1,5 +1,5 @@
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { memo, type ReactNode } from 'react';
 import type { SearchSortOrder } from '@/lib/api/search-api';
 
 export interface SearchColumn<T> {
@@ -29,7 +29,7 @@ function SortIcon({
   return sortOrder === 'asc' ? <ArrowUp className="h-3.5 w-3.5" /> : <ArrowDown className="h-3.5 w-3.5" />;
 }
 
-export default function SearchResultsTable<T>({
+function SearchResultsTable<T>({
   rows,
   columns,
   sortBy,
@@ -74,3 +74,5 @@ export default function SearchResultsTable<T>({
     </div>
   );
 }
+
+export default memo(SearchResultsTable) as typeof SearchResultsTable;

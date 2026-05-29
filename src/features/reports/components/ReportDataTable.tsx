@@ -1,8 +1,9 @@
+import { memo, useMemo } from 'react';
 import type { ReportRow } from '@/lib/api/reports-api';
 import { formatOptionLabel, formatReportValue, tableColumns } from '@/features/reports/reportConfig';
 
-export default function ReportDataTable({ rows }: { rows: ReportRow[] }) {
-  const columns = tableColumns(rows);
+function ReportDataTable({ rows }: { rows: ReportRow[] }) {
+  const columns = useMemo(() => tableColumns(rows), [rows]);
 
   if (rows.length === 0) {
     return (
@@ -41,3 +42,5 @@ export default function ReportDataTable({ rows }: { rows: ReportRow[] }) {
     </div>
   );
 }
+
+export default memo(ReportDataTable);

@@ -32,7 +32,7 @@ export type AuthChatState = {
 };
 
 export type SignInPayload = {
-  dashboard: 'Leo';
+  dashboard: 'MedSphere';
   chatId?: string;
   chatData: any[];
 };
@@ -44,4 +44,3 @@ export const isAgentMessage = (
 export const isUserMessage = (
   m: ChatMessage
 ): m is Extract<ChatMessage, { user: any }> => 'user' in m;
-

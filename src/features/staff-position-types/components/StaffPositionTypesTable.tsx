@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
@@ -13,7 +14,7 @@ interface StaffPositionTypesTableProps {
   onDelete: (record: StaffPositionTypeRecord) => void;
 }
 
-export default function StaffPositionTypesTable({
+function StaffPositionTypesTable({
   rows,
   departments,
   canManage,
@@ -77,3 +78,5 @@ export default function StaffPositionTypesTable({
     </div>
   );
 }
+
+export default memo(StaffPositionTypesTable);

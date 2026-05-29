@@ -27,7 +27,7 @@ export default function PublicLayout({ children }: PublicLayoutProps) {
       <header className="sticky top-0 z-30 border-b border-border bg-card/95 backdrop-blur">
         <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
           <Link to="/" className="flex items-center gap-3">
-            <img src="/medsphere.png" alt="MedSphere" className="h-10 w-10 rounded-lg object-cover" />
+            <img src="/medsphere.png" alt="MedSphere" className="h-10 w-10 rounded-lg object-cover" loading="lazy" decoding="async" />
             <span className="text-base font-semibold">MedSphere</span>
           </Link>
           <div className="flex flex-wrap items-center gap-1 text-sm">

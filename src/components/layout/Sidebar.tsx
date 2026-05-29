@@ -22,7 +22,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
   const content = (
     <div className="flex h-full flex-col bg-card">
       <Link to={portal.homePath} className="flex items-center gap-3 border-b border-border p-5">
-        <img src="/medsphere.png" alt="MedSphere" className="h-10 w-10 rounded-lg object-cover" />
+        <img src="/medsphere.png" alt="MedSphere" className="h-10 w-10 rounded-lg object-cover" loading="lazy" decoding="async" />
         <div>
           <p className="text-lg font-semibold text-foreground">MedSphere</p>
           <p className="text-xs text-muted">{portal.title}</p>

@@ -29,13 +29,15 @@ export default function SignInPage() {
         <img
           src="/assets/admin/header-icon.svg"
           className="h-10 w-auto object-contain"
-          alt="HotelWorld AI"
+          alt="MedSphere"
+          loading="lazy"
+          decoding="async"
         />
       </div>
 
       <div className="mt-10">
         <h1 className="text-5xl font-semibold">Sign in</h1>
-        <p className="text-muted mt-2">Into your hotel dashboard</p>
+        <p className="text-muted mt-2">Into your MedSphere dashboard</p>
       </div>
 
       <AuthChatCard />
