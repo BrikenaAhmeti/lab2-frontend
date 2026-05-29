@@ -54,6 +54,7 @@ const ConsultationPage = lazy(() => import('@/features/consultation/pages/Consul
 const LabReviewPage = lazy(() => import('@/features/lab/pages/LabReviewPage'));
 const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
 const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBillingPage'));
+const ReportBuilderPage = lazy(() => import('@/features/reports/pages/ReportBuilderPage'));
 const PatientLabResultsPage = lazy(() => import('@/features/patient-portal/pages/PatientLabResultsPage'));
 const PatientPrescriptionsPage = lazy(() => import('@/features/patient-portal/pages/PatientPrescriptionsPage'));
 const PatientMedicalRecordsPage = lazy(() => import('@/features/patient-portal/pages/PatientMedicalRecordsPage'));
@@ -183,6 +184,7 @@ export const router = createBrowserRouter([
           { path: 'patients', element: lazyRoute(<PatientsPage />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
+          { path: 'reports', element: lazyRoute(<ReportBuilderPage />) },
           { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="admin" />) },
           { path: 'contact', element: lazyRoute(<ContactInboxPage />) },
           { path: 'users', element: lazyRoute(<UsersPage />) },
@@ -287,6 +289,7 @@ export const router = createBrowserRouter([
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
       { path: '/dashboard/billing', element: <Navigate to="/admin/billing" replace /> },
+      { path: '/dashboard/reports', element: <Navigate to="/admin/reports" replace /> },
       { path: '/dashboard/feedback', element: <Navigate to="/admin/feedback" replace /> },
       { path: '/dashboard/contact', element: <Navigate to="/admin/contact" replace /> },
       { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
