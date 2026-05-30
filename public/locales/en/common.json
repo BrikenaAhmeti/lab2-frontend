@@ -125,6 +125,7 @@
   "auth.navProfile": "Profile",
   "auth.navSessions": "Sessions",
   "auth.navDepartments": "Departments",
+  "auth.navInventory": "Inventory",
   "auth.navServices": "Services",
   "auth.navStaffPositionTypes": "Staff Position Types",
   "auth.navUsers": "Users",

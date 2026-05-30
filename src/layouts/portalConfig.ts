@@ -40,6 +40,7 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/admin', label: 'Dashboard' },
           { to: '/admin/departments', label: 'Departments', requiredPermissions: ['departments:read'] },
           { to: '/admin/patients', label: 'Patients', requiredPermissions: ['patients:read', 'patients:create'] },
+          { to: '/admin/inventory', label: 'Inventory', requiredPermissions: ['inventory:read'] },
           { to: '/admin/billing', label: 'Billing', requiredPermissions: ['billing:read', 'billing:read:all'] },
           { to: '/admin/reports', label: 'Reports', requiredPermissions: ['reports:generate'] },
           {

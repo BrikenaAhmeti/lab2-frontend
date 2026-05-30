@@ -52,6 +52,7 @@ const FeedbackInboxPage = lazy(() => import('@/features/feedback/pages/FeedbackI
 const ContactInboxPage = lazy(() => import('@/features/contact/pages/ContactInboxPage'));
 const ConsultationPage = lazy(() => import('@/features/consultation/pages/ConsultationPage'));
 const LabReviewPage = lazy(() => import('@/features/lab/pages/LabReviewPage'));
+const InventoryPage = lazy(() => import('@/features/inventory/pages/InventoryPage'));
 const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
 const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBillingPage'));
 const ReportBuilderPage = lazy(() => import('@/features/reports/pages/ReportBuilderPage'));
@@ -184,6 +185,7 @@ export const router = createBrowserRouter([
           { path: 'staff/:id', element: lazyRoute(<StaffProfilePage />) },
           { path: 'patients', element: lazyRoute(<PatientsPage />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage />) },
+          { path: 'inventory', element: lazyRoute(<InventoryPage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
           { path: 'reports', element: lazyRoute(<ReportBuilderPage />) },
           { path: 'search', element: <Navigate to="/admin/search/patients" replace /> },
@@ -291,6 +293,7 @@ export const router = createBrowserRouter([
       { path: '/dashboard/staff', element: <Navigate to="/admin/staff" replace /> },
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
+      { path: '/dashboard/inventory', element: <Navigate to="/admin/inventory" replace /> },
       { path: '/dashboard/billing', element: <Navigate to="/admin/billing" replace /> },
       { path: '/dashboard/reports', element: <Navigate to="/admin/reports" replace /> },
       { path: '/dashboard/feedback', element: <Navigate to="/admin/feedback" replace /> },

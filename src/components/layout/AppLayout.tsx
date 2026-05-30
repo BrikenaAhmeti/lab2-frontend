@@ -13,6 +13,7 @@ const navItems = [
   { to: '/dashboard/profile', labelKey: 'auth.navProfile' },
   { to: '/dashboard/sessions', labelKey: 'auth.navSessions' },
   { to: '/dashboard/departments', labelKey: 'auth.navDepartments' },
+  { to: '/dashboard/inventory', labelKey: 'auth.navInventory', requiresInventory: true },
   { to: '/dashboard/admin/organization/services', labelKey: 'auth.navServices', requiresOrganizationAdmin: true },
   {
     to: '/dashboard/admin/organization/staff-position-types',
@@ -52,6 +53,9 @@ export default function AppLayout() {
       ],
       'any'
     );
+  const canAccessInventory =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
+    hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
   const visibleNavItems = navItems.filter((item) => {
     if (item.requiresUserAdmin) {
       return canManageUsers;
@@ -59,6 +63,10 @@ export default function AppLayout() {
 
     if (item.requiresOrganizationAdmin) {
       return canAccessOrganizationSetup;
+    }
+
+    if (item.requiresInventory) {
+      return canAccessInventory;
     }
 
     return true;

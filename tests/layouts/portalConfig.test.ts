@@ -21,6 +21,14 @@ describe('portalConfigs', () => {
     ]);
   });
 
+  it('wires the admin inventory link required by MS-28', () => {
+    const workspace = portalConfigs.admin.navGroups.find((group) => group.label === 'Workspace');
+
+    expect(workspace?.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Inventory', to: '/admin/inventory', requiredPermissions: ['inventory:read'] }),
+    ]));
+  });
+
   it('wires the patient portal links required by MS-55', () => {
     const care = portalConfigs.patient.navGroups.find((group) => group.label === 'Care');
 
