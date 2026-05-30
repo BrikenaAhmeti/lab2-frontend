@@ -1,4 +1,4 @@
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AxiosError, AxiosHeaders } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -36,11 +36,17 @@ function forbiddenError(message: string) {
   );
 }
 
+function VerificationRouteProbe() {
+  const location = useLocation();
+  return <div data-testid="verification-location">{`${location.pathname}${location.search}`}</div>;
+}
+
 function renderLogin() {
   return render(
     <MemoryRouter initialEntries={['/login']}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/verify-email" element={<VerificationRouteProbe />} />
         <Route path="/admin" element={<div>admin-portal</div>} />
         <Route path="/doctor" element={<div>doctor-portal</div>} />
         <Route path="/nurse" element={<div>nurse-portal</div>} />
@@ -85,16 +91,14 @@ describe('LoginPage', () => {
     expect(await screen.findByText(portalText)).toBeInTheDocument();
   });
 
-  it('shows a verification-specific error and resend link for inactive patient accounts', async () => {
+  it('sends inactive patient accounts to the verification-code screen', async () => {
     mocks.login.mockRejectedValue(forbiddenError('Account inactive. Please verify your email.'));
 
     renderLogin();
     fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
 
-    expect(await screen.findByText('auth.verifyEmailBeforeLogin')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'auth.resendVerification' })).toHaveAttribute(
-      'href',
-      '/resend-verification?email=admin%40example.com'
+    expect(await screen.findByTestId('verification-location')).toHaveTextContent(
+      '/verify-email?email=admin%40example.com'
     );
   });
 

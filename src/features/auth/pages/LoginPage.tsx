@@ -35,27 +35,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('UserPassword123!');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showVerificationLink, setShowVerificationLink] = useState(false);
 
   const validation = useMemo(
     () => loginSchema.safeParse({ identifier, password }),
     [identifier, password]
   );
-  const verificationLink = emailIdentifierSchema.safeParse(identifier).success
-    ? `/resend-verification?email=${encodeURIComponent(identifier.trim())}`
-    : '/resend-verification';
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!validation.success) {
       setErrorMessage(t('auth.validationError'));
-      setShowVerificationLink(false);
       return;
     }
 
     setSubmitting(true);
     setErrorMessage('');
-    setShowVerificationLink(false);
 
     try {
       const user = await login(createLoginRequest(identifier, password));
@@ -68,8 +62,14 @@ export default function LoginPage() {
       navigate(destination, { replace: true });
     } catch (error) {
       if (isEmailVerificationRequiredError(error)) {
-        setErrorMessage(t('auth.verifyEmailBeforeLogin'));
-        setShowVerificationLink(true);
+        const emailResult = emailIdentifierSchema.safeParse(identifier);
+        const verifiedEmail = emailResult.success ? emailResult.data : '';
+        navigate(
+          verifiedEmail ? `/verify-email?email=${encodeURIComponent(verifiedEmail)}` : '/verify-email',
+          {
+            state: verifiedEmail ? { email: verifiedEmail } : undefined,
+          }
+        );
       } else {
         setErrorMessage(getAuthApiErrorMessage(error, t('auth.loginFailed')));
       }
@@ -101,20 +101,12 @@ export default function LoginPage() {
               placeholder="********"
             />
             {errorMessage ? <p className="text-sm text-danger">{errorMessage}</p> : null}
-            {showVerificationLink ? (
-              <Link
-                to={verificationLink}
-                className="inline-flex text-sm font-medium text-primary hover:text-primary/80"
-              >
-                {t('auth.resendVerification')}
-              </Link>
-            ) : null}
             <Button type="submit" loading={submitting} className="w-full">
               {t('auth.signIn')}
             </Button>
             <div className="flex items-center justify-between text-sm text-muted">
               <Link to="/forgot-password" className="hover:text-foreground">{t('auth.forgotPassword')}</Link>
-              <Link to="/resend-verification" className="hover:text-foreground">{t('auth.verifyEmail')}</Link>
+              <Link to="/verify-email" className="hover:text-foreground">{t('auth.verifyEmail')}</Link>
             </div>
           </div>
         </Card>

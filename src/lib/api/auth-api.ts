@@ -16,10 +16,11 @@ export interface PatientRegisterRequest {
   lastName: string;
   email: string;
   password: string;
+  personalNumber: string;
+  username?: string;
   phone?: string;
   dateOfBirth?: string;
   gender?: string;
-  personalNumber?: string;
 }
 
 export interface AuthUserDto {
@@ -68,7 +69,8 @@ export interface ResetPasswordRequest {
 }
 
 export interface VerifyEmailRequest {
-  token: string;
+  email: string;
+  code: string;
 }
 
 export interface ResendVerificationRequest {
