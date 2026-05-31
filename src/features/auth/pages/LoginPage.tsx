@@ -1,6 +1,6 @@
 import { type FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
@@ -8,7 +8,7 @@ import Button from '@/ui/atoms/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import type { LoginRequest } from '@/lib/api/auth-api';
 import { getAuthApiErrorMessage, isEmailVerificationRequiredError } from '@/features/auth/utils/errors';
-import { resolvePortalPath } from '@/features/auth/utils/roles';
+import { resolveUserPortalPath } from '@/features/auth/utils/roles';
 
 const emailIdentifierSchema = z.string().trim().email();
 
@@ -28,8 +28,6 @@ export default function LoginPage() {
   const { t } = useTranslation('common');
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const redirectFromState = (location.state as { from?: { pathname?: string } } | null)?.from?.pathname;
 
   const [identifier, setIdentifier] = useState('admin@example.com');
   const [password, setPassword] = useState('UserPassword123!');
@@ -53,13 +51,7 @@ export default function LoginPage() {
 
     try {
       const user = await login(createLoginRequest(identifier, password));
-      const roles = user.roles ?? (user.role ? [user.role] : []);
-
-      const destination = redirectFromState && redirectFromState !== '/login'
-        ? redirectFromState
-        : resolvePortalPath(roles);
-
-      navigate(destination, { replace: true });
+      navigate(resolveUserPortalPath(user), { replace: true });
     } catch (error) {
       if (isEmailVerificationRequiredError(error)) {
         const emailResult = emailIdentifierSchema.safeParse(identifier);

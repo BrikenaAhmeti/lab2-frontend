@@ -9,6 +9,11 @@ const roleDestinations = [
   { role: 'Patient', aliases: ['patient'], to: '/patient' },
 ] as const;
 
+type RoleLike = {
+  roles?: string[];
+  role?: string | null;
+};
+
 function normalizeKey(role: string) {
   return role.trim().toLowerCase().replace(/[\s_-]+/g, '');
 }
@@ -30,4 +35,13 @@ export function hasRole(userRoles: string[], allowedRole: string) {
 export function resolvePortalPath(roles: string[] = []) {
   const normalizedRoles = roles.map(normalizeRoleName);
   return roleDestinations.find((item) => normalizedRoles.includes(item.role))?.to ?? '/admin';
+}
+
+export function getUserRoleNames(user?: RoleLike | null) {
+  const roles = user?.roles ?? [];
+  return user?.role ? [...roles, user.role] : roles;
+}
+
+export function resolveUserPortalPath(user?: RoleLike | null) {
+  return resolvePortalPath(getUserRoleNames(user));
 }

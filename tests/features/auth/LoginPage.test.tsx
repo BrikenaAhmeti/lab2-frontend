@@ -122,4 +122,19 @@ describe('LoginPage', () => {
     }));
     expect(await screen.findByText('doctor-portal')).toBeInTheDocument();
   });
+
+  it('falls back to the legacy role field for portal redirects', async () => {
+    mocks.login.mockResolvedValue({
+      id: 'user-1',
+      email: 'patient@example.com',
+      roles: [],
+      role: 'Patient',
+      permissions: [],
+    });
+
+    renderLogin();
+    fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
+
+    expect(await screen.findByText('patient-portal')).toBeInTheDocument();
+  });
 });

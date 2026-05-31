@@ -16,7 +16,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.core.post('/auth/login', { email, password });
+      const { data } = await api.auth.post('/auth/login', { email, password });
       dispatch(setSession(data)); // expects { user, tokens }
     } finally { setLoading(false); }
   };

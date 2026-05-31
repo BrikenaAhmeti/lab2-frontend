@@ -1,7 +1,8 @@
 import { type ReactNode } from 'react';
 import { useAppSelector } from '@/app/hooks';
-import Forbidden from '@/components/common/Forbidden';
+import PortalRedirect from './PortalRedirect';
 import { hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
 
 interface RoleGuardProps {
   allowedRoles: string[];
@@ -9,11 +10,12 @@ interface RoleGuardProps {
 }
 
 export default function RoleGuard({ allowedRoles, children }: RoleGuardProps) {
-  const roles = useAppSelector((state) => state.auth.user?.roles ?? []);
+  const user = useAppSelector((state) => state.auth.user);
+  const roles = getUserRoleNames(user);
   const allowed = hasAnyRole(roles, allowedRoles);
 
   if (!allowed) {
-    return <Forbidden />;
+    return <PortalRedirect />;
   }
 
   return <>{children}</>;

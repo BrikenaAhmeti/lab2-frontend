@@ -176,7 +176,7 @@ describe('AdminDashboardPage', () => {
 
     expect(await screen.findByText('No activity yet.')).toBeInTheDocument();
     await waitFor(() =>
-      expect(socketState.io).toHaveBeenCalledWith('http://localhost:3005', {
+      expect(socketState.io).toHaveBeenCalledWith('http://localhost:3008', {
         auth: { token: 'access-token' },
       })
     );
