@@ -1,6 +1,5 @@
 import { Suspense, lazy, type ReactNode } from 'react';
 import { Navigate, createBrowserRouter } from 'react-router-dom';
-import Forbidden from '@/components/common/Forbidden';
 import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
 import RoleGuard from '@/features/auth/guards/RoleGuard';
@@ -153,7 +152,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/403',
-    element: <Forbidden />,
+    element: <Navigate to="/role-redirect" replace />,
   },
   {
     element: <PrivateRoute />,

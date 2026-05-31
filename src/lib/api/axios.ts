@@ -8,8 +8,8 @@ import { authApi } from './auth-api';
 import { clearSession, setSession } from '@/features/auth/authSlice';
 import { env } from '@/config/env';
 
-const baseURL = import.meta.env.VITE_API_CORE || 'http://localhost:3005';
-const coreBaseURL = import.meta.env.VITE_API_CORE_SERVICE || 'http://localhost:3007';
+const baseURL = env.AUTH_API_URL;
+const coreBaseURL = env.CORE_API_URL;
 const cmsBaseURL = env.CMS_API_URL;
 const aiBaseURL = env.AI_API_URL;
 const LEGACY_AUTH_STORAGE_KEY = 'medsphere.auth';

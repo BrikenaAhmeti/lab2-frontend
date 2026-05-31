@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { useAppSelector } from '@/app/hooks';
-import Forbidden from '@/components/common/Forbidden';
+import PortalRedirect from './PortalRedirect';
 import { hasAnyPermission } from '../utils/permission';
 
 interface PermissionGuardProps {
@@ -27,5 +27,5 @@ export default function PermissionGuard({
 }
 
 export function PermissionRouteGuard(props: Omit<PermissionGuardProps, 'fallback'>) {
-  return <PermissionGuard {...props} fallback={<Forbidden />} />;
+  return <PermissionGuard {...props} fallback={<PortalRedirect />} />;
 }

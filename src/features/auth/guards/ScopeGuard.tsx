@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { useAppSelector } from '@/app/hooks';
-import Forbidden from '@/components/common/Forbidden';
+import PortalRedirect from './PortalRedirect';
 import { hasPermission, type PermissionScope } from '../utils/permission';
 
 interface ScopeGuardProps {
@@ -14,7 +14,7 @@ export default function ScopeGuard({ resourceAction, requiredScope, children }: 
   const allowed = hasPermission(permissions, resourceAction, requiredScope);
 
   if (!allowed) {
-    return <Forbidden />;
+    return <PortalRedirect />;
   }
 
   return <>{children}</>;

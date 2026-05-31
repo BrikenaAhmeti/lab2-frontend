@@ -1,5 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
+import { hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames, resolvePortalPath } from '@/features/auth/utils/roles';
 
 // Helper: get role (Redux or localStorage)
 const getRole = () => {
@@ -27,7 +29,9 @@ export function RequireRole({ allow }: { allow: string[] }) {
   const { user } = useAppSelector(s => s.auth);
   const role = user?.role || getRole();
   if (!role) return <Navigate to="/login" replace />;
-  return allow.includes(role) ? <Outlet /> : <Navigate to="/403" replace />;
+  const roles = getUserRoleNames(user);
+  const allowed = hasAnyRole(roles.length > 0 ? roles : [role], allow);
+  return allowed ? <Outlet /> : <Navigate to={resolvePortalPath(roles.length > 0 ? roles : [role])} replace />;
 }
 
 // 4) Optional: “finished setup” guard
