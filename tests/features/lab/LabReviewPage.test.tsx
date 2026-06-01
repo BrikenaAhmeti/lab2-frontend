@@ -6,6 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LabReviewPage from '@/features/lab/pages/LabReviewPage';
 import { labApi, type LabOrderView } from '@/lib/api/lab-api';
+import { aiApi } from '@/lib/api/ai-api';
 import authReducer from '@/features/auth/authSlice';
 
 vi.mock('@/lib/api/lab-api', async () => {
@@ -24,6 +25,12 @@ vi.mock('@/lib/api/lab-api', async () => {
     },
   };
 });
+
+vi.mock('@/lib/api/ai-api', () => ({
+  aiApi: {
+    getLabInterpretation: vi.fn(),
+  },
+}));
 
 function makeOrder(overrides: Partial<LabOrderView> = {}): LabOrderView {
   return {
@@ -157,8 +164,13 @@ describe('LabReviewPage', () => {
     vi.mocked(labApi.reviewOrder).mockResolvedValue(makeOrder({ reviewedAt: '2030-01-02T10:00:00.000Z' }));
     vi.mocked(labApi.triggerAi).mockResolvedValue({
       labOrderId: 'lab-order-1',
-      status: 'not_configured',
-      message: 'AI interpretation is not configured in the core service yet',
+      status: 'queued',
+    });
+    vi.mocked(aiApi.getLabInterpretation).mockResolvedValue({
+      labOrderId: 'lab-order-1',
+      patientVersion: 'Your hemoglobin is lower than the usual range.',
+      recommendations: ['Repeat CBC'],
+      riskFlags: ['Critical Hemoglobin'],
     });
   });
 
@@ -169,6 +181,7 @@ describe('LabReviewPage', () => {
     expect(screen.getByText('6.1 g/dL')).toBeInTheDocument();
     expect(screen.getByText('12-16 g/dL')).toBeInTheDocument();
     expect(screen.getByText('Critical results: Hemoglobin')).toBeInTheDocument();
+    expect(await screen.findByText('Your hemoglobin is lower than the usual range.')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Doctor notes'), { target: { value: 'Looks stable after review' } });
     fireEvent.click(screen.getByRole('button', { name: 'Trigger AI' }));
@@ -176,7 +189,7 @@ describe('LabReviewPage', () => {
     await waitFor(() => {
       expect(labApi.triggerAi).toHaveBeenCalledWith('lab-order-1');
     });
-    expect(await screen.findByText('AI interpretation is not configured in the core service yet')).toBeInTheDocument();
+    expect(await screen.findByText('AI interpretation queued.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Mark as Reviewed' }));
 

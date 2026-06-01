@@ -122,7 +122,7 @@
   "auth.createUser": "Create user",
   "auth.createStaffAccount": "Create User / Create Staff Account",
   "auth.createStaffAccountSubtitle": "Create an identity account for a staff member or user.",
-  "auth.userCreatedSuccess": "User account created successfully.",
+  "auth.userCreatedSuccess": "User created successfully. A temporary password was emailed directly to the user.",
   "auth.userCreateFailed": "We couldn't create the user account. Please review the details and try again.",
   "auth.noUsersFound": "No users found.",
   "auth.navDashboard": "Overview",

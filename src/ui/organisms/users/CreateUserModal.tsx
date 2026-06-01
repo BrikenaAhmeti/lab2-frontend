@@ -1,13 +1,11 @@
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
-import PasswordRequirementsList from '@/ui/molecules/PasswordRequirementsList';
 import RoleCheckboxGroup from '@/ui/molecules/RoleCheckboxGroup';
 
 interface CreateUserValues {
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
   phone: string;
   dateOfBirth: string;
   gender: string;
@@ -32,7 +30,6 @@ interface CreateUserModalProps {
     firstName: string;
     lastName: string;
     email: string;
-    password: string;
     phone: string;
     dateOfBirth: string;
     gender: string;
@@ -56,7 +53,6 @@ interface CreateUserModalProps {
   staffPositionTypeOptions: SelectOption[];
   values: CreateUserValues;
   errors: Partial<Record<keyof CreateUserValues, string>>;
-  passwordRequirements: string[];
   loading: boolean;
   doctorDataLoading: boolean;
   doctorDataError: boolean;
@@ -73,7 +69,6 @@ export default function CreateUserModal({
   staffPositionTypeOptions,
   values,
   errors,
-  passwordRequirements,
   loading,
   doctorDataLoading,
   doctorDataError,
@@ -96,7 +91,6 @@ export default function CreateUserModal({
           <Input id="create-user-first-name" label={labels.firstName} value={values.firstName} onChange={(e) => onChange('firstName', e.target.value)} error={errors.firstName} />
           <Input id="create-user-last-name" label={labels.lastName} value={values.lastName} onChange={(e) => onChange('lastName', e.target.value)} error={errors.lastName} />
           <Input id="create-user-email" label={labels.email} value={values.email} onChange={(e) => onChange('email', e.target.value)} error={errors.email} />
-          <Input id="create-user-password" label={labels.password} type="password" value={values.password} onChange={(e) => onChange('password', e.target.value)} error={errors.password} />
           <Input id="create-user-phone" label={labels.phone} value={values.phone} onChange={(e) => onChange('phone', e.target.value)} />
           <Input id="create-user-date-of-birth" label={labels.dateOfBirth} value={values.dateOfBirth} onChange={(e) => onChange('dateOfBirth', e.target.value)} />
           <Input id="create-user-gender" label={labels.gender} value={values.gender} onChange={(e) => onChange('gender', e.target.value)} />
@@ -155,7 +149,6 @@ export default function CreateUserModal({
             </div>
           </div>
         )}
-        <PasswordRequirementsList className="mt-4" items={passwordRequirements} />
         <div className="mt-5 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>{labels.cancel}</Button>
           <Button loading={loading} disabled={showDoctorFields && doctorDataLoading} onClick={onSubmit}>{labels.submit}</Button>

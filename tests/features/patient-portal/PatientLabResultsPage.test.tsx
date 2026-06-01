@@ -160,4 +160,13 @@ describe('PatientLabResultsPage', () => {
     expect(labApi.listOrders).toHaveBeenCalledWith({ page: 1, limit: 50, patientId: 'patient-1' });
     expect(aiApi.getLabInterpretation).toHaveBeenCalledWith('lab-order-1');
   });
+
+  it('treats a missing AI interpretation as pending for completed lab orders', async () => {
+    vi.mocked(aiApi.getLabInterpretation).mockResolvedValueOnce(null);
+
+    renderPage();
+
+    expect(await screen.findByText('Hemoglobin')).toBeInTheDocument();
+    expect(await screen.findByText('AI explanation is being prepared')).toBeInTheDocument();
+  });
 });

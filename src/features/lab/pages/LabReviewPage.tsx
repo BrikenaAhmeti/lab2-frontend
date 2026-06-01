@@ -19,6 +19,7 @@ import {
 } from '@/features/lab/components/labFormat';
 import {
   getLabApiErrorMessage,
+  useLabInterpretation,
   useLabOrder,
   useLabOrders,
   useReviewLabOrder,
@@ -72,6 +73,12 @@ export default function LabReviewPage() {
     pendingReviews[0] ??
     null;
   const selectedCriticalItems = selectedOrder ? criticalItems(selectedOrder) : [];
+  const selectedOrderHasResults = selectedOrder?.items.some((item) => item.resultValue?.trim()) ?? false;
+  const canTriggerAi = Boolean(selectedOrder && selectedOrder.status === 'COMPLETED' && selectedOrderHasResults);
+  const interpretationQuery = useLabInterpretation(
+    selectedOrder?.id ?? '',
+    Boolean(selectedOrder && selectedOrder.status === 'COMPLETED')
+  );
 
   useEffect(() => {
     if (!selectedId && pendingReviews[0]) {
@@ -115,7 +122,7 @@ export default function LabReviewPage() {
   };
 
   const handleTriggerAi = async () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder || !canTriggerAi) return;
     setActionError('');
 
     try {
@@ -194,6 +201,10 @@ export default function LabReviewPage() {
 
               <AIInterpretationPanel
                 loading={aiMutation.isPending}
+                interpretationLoading={interpretationQuery.isFetching}
+                interpretationError={interpretationQuery.isError}
+                interpretation={interpretationQuery.data}
+                canTrigger={canTriggerAi}
                 result={aiResults[selectedOrder.id]}
                 onTrigger={handleTriggerAi}
               />

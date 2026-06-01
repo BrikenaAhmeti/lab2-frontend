@@ -122,7 +122,7 @@
   "auth.createUser": "Benutzer erstellen",
   "auth.createStaffAccount": "Benutzer- / Mitarbeiterkonto erstellen",
   "auth.createStaffAccountSubtitle": "Erstellen Sie ein Identitätskonto für einen Mitarbeiter oder Benutzer.",
-  "auth.userCreatedSuccess": "Benutzerkonto erfolgreich erstellt.",
+  "auth.userCreatedSuccess": "Benutzer erfolgreich erstellt. Ein temporäres Passwort wurde direkt per E-Mail an den Benutzer gesendet.",
   "auth.userCreateFailed": "Das Benutzerkonto konnte nicht erstellt werden. Bitte prüfen Sie die Angaben und versuchen Sie es erneut.",
   "auth.noUsersFound": "Keine Benutzer gefunden.",
   "auth.navDashboard": "Übersicht",

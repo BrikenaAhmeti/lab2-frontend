@@ -11,11 +11,10 @@ import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import UsersTable from '@/ui/organisms/users/UsersTable';
 import CreateUserModal from '@/ui/organisms/users/CreateUserModal';
-import { usersApi } from '@/lib/api/auth-api';
+import { type CreateUserPayload, usersApi } from '@/lib/api/auth-api';
 import { departmentsApi } from '@/lib/api/departments-api';
 import { staffPositionTypesApi } from '@/lib/api/staff-position-types-api';
 import { staffApi } from '@/lib/api/staff-api';
-import { passwordRequirementKeys, passwordSchema } from '@/features/auth/utils/password';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 
 const roleOptions = ['Super Admin', 'Admin', 'Doctor', 'Nurse', 'Lab Technician', 'Pharmacist', 'Receptionist', 'Patient'];
@@ -26,7 +25,6 @@ const initialForm = {
   firstName: '',
   lastName: '',
   email: '',
-  password: '',
   phone: '',
   dateOfBirth: '',
   gender: '',
@@ -42,7 +40,6 @@ const createUserSchema = z.object({
   firstName: z.string().trim().min(1, 'auth.firstNameRequired'),
   lastName: z.string().trim().min(1, 'auth.lastNameRequired'),
   email: z.string().email('auth.emailValidationError'),
-  password: passwordSchema,
   phone: z.string().trim().optional(),
   dateOfBirth: z.string().trim().optional(),
   gender: z.string().trim().optional(),
@@ -108,6 +105,22 @@ export default function UsersPage() {
 
   const validation = useMemo(() => createUserSchema.safeParse(form), [form]);
 
+  const createUserPayload = (): CreateUserPayload => {
+    const payload: CreateUserPayload = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
+      roles: form.roles,
+    };
+
+    if (form.phone.trim()) payload.phone = form.phone.trim();
+    if (form.dateOfBirth.trim()) payload.dateOfBirth = form.dateOfBirth.trim();
+    if (form.gender.trim()) payload.gender = form.gender.trim();
+    if (form.personalNumber.trim()) payload.personalNumber = form.personalNumber.trim();
+
+    return payload;
+  };
+
   const fieldError = (field: keyof typeof form) => {
     if (validation.success) return '';
     const issue = validation.error.issues.find((item) => item.path[0] === field);
@@ -154,18 +167,7 @@ export default function UsersPage() {
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const authPayload = {
-        firstName: form.firstName,
-        lastName: form.lastName,
-        email: form.email,
-        password: form.password,
-        phone: form.phone || undefined,
-        dateOfBirth: form.dateOfBirth || undefined,
-        gender: form.gender || undefined,
-        personalNumber: form.personalNumber || undefined,
-        roles: form.roles,
-      };
-      const created = await usersApi.createUser(authPayload);
+      const created = await usersApi.createUser(createUserPayload());
       let staffProfileCreated = false;
       let staffProfileFailed = false;
 
@@ -274,7 +276,6 @@ export default function UsersPage() {
           firstName: t('auth.firstName'),
           lastName: t('auth.lastName'),
           email: t('auth.email'),
-          password: t('auth.password'),
           phone: t('auth.phone'),
           dateOfBirth: t('auth.dateOfBirth'),
           gender: t('auth.gender'),
@@ -301,14 +302,12 @@ export default function UsersPage() {
           firstName: fieldError('firstName'),
           lastName: fieldError('lastName'),
           email: fieldError('email'),
-          password: fieldError('password'),
           roles: fieldError('roles'),
           departmentId: fieldError('departmentId'),
           staffPositionTypeId: fieldError('staffPositionTypeId'),
           employeeCode: fieldError('employeeCode'),
           specialization: fieldError('specialization'),
         }}
-        passwordRequirements={passwordRequirementKeys.map((key) => t(key))}
         loading={createMutation.isPending}
         doctorDataLoading={departmentsQuery.isLoading || staffPositionTypesQuery.isLoading}
         doctorDataError={departmentsQuery.isError || staffPositionTypesQuery.isError}
