@@ -118,7 +118,7 @@ export interface ReviewLabOrderPayload {
 export interface TriggerLabOrderAiResponse {
   labOrderId: string;
   status: string;
-  message: string;
+  message?: string;
 }
 
 function client(instance?: AxiosInstance) {

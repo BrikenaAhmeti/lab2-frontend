@@ -11,8 +11,7 @@ import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import UsersTable from '@/ui/organisms/users/UsersTable';
 import CreateUserModal from '@/ui/organisms/users/CreateUserModal';
-import { usersApi } from '@/lib/api/auth-api';
-import { passwordRequirementKeys, passwordSchema } from '@/features/auth/utils/password';
+import { type CreateUserPayload, usersApi } from '@/lib/api/auth-api';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 
 const roleOptions = ['Super Admin', 'Admin', 'Doctor', 'Nurse', 'Lab Technician', 'Pharmacist', 'Receptionist', 'Patient'];
@@ -21,7 +20,6 @@ const createUserSchema = z.object({
   firstName: z.string().trim().min(1, 'auth.firstNameRequired'),
   lastName: z.string().trim().min(1, 'auth.lastNameRequired'),
   email: z.string().email('auth.emailValidationError'),
-  password: passwordSchema,
   phone: z.string().trim().optional(),
   dateOfBirth: z.string().trim().optional(),
   gender: z.string().trim().optional(),
@@ -50,7 +48,6 @@ export default function UsersPage() {
     firstName: '',
     lastName: '',
     email: '',
-    password: '',
     phone: '',
     dateOfBirth: '',
     gender: '',
@@ -59,6 +56,22 @@ export default function UsersPage() {
   });
 
   const validation = useMemo(() => createUserSchema.safeParse(form), [form]);
+
+  const createUserPayload = (): CreateUserPayload => {
+    const payload: CreateUserPayload = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
+      roles: form.roles,
+    };
+
+    if (form.phone.trim()) payload.phone = form.phone.trim();
+    if (form.dateOfBirth.trim()) payload.dateOfBirth = form.dateOfBirth.trim();
+    if (form.gender.trim()) payload.gender = form.gender.trim();
+    if (form.personalNumber.trim()) payload.personalNumber = form.personalNumber.trim();
+
+    return payload;
+  };
 
   const fieldError = (field: keyof typeof form) => {
     if (validation.success) return '';
@@ -74,7 +87,7 @@ export default function UsersPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: () => usersApi.createUser(form),
+    mutationFn: () => usersApi.createUser(createUserPayload()),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       setFeedback({ type: 'success', message: t('auth.userCreatedSuccess') });
@@ -83,7 +96,6 @@ export default function UsersPage() {
         firstName: '',
         lastName: '',
         email: '',
-        password: '',
         phone: '',
         dateOfBirth: '',
         gender: '',
@@ -144,7 +156,6 @@ export default function UsersPage() {
           firstName: t('auth.firstName'),
           lastName: t('auth.lastName'),
           email: t('auth.email'),
-          password: t('auth.password'),
           phone: t('auth.phone'),
           dateOfBirth: t('auth.dateOfBirth'),
           gender: t('auth.gender'),
@@ -160,10 +171,8 @@ export default function UsersPage() {
           firstName: fieldError('firstName'),
           lastName: fieldError('lastName'),
           email: fieldError('email'),
-          password: fieldError('password'),
           roles: fieldError('roles'),
         }}
-        passwordRequirements={passwordRequirementKeys.map((key) => t(key))}
         loading={createMutation.isPending}
         onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
         onClose={() => setShowModal(false)}

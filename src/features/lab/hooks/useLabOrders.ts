@@ -7,12 +7,14 @@ import {
   type LabOrderStatusInput,
   type ReviewLabOrderPayload,
 } from '@/lib/api/lab-api';
+import { aiApi } from '@/lib/api/ai-api';
 
 export const labQueryKey = {
   all: ['lab-orders'] as const,
   pending: ['lab-orders', 'pending'] as const,
   list: (params: LabOrderListParams) => [...labQueryKey.all, 'list', params] as const,
   detail: (id: string) => [...labQueryKey.all, 'detail', id] as const,
+  aiInterpretation: (labOrderId: string) => [...labQueryKey.all, 'ai-interpretation', labOrderId] as const,
 };
 
 export function usePendingLabOrders() {
@@ -82,9 +84,24 @@ export function useReviewLabOrder() {
   });
 }
 
+export function useLabInterpretation(labOrderId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: labQueryKey.aiInterpretation(labOrderId),
+    queryFn: () => aiApi.getLabInterpretation(labOrderId),
+    enabled: enabled && Boolean(labOrderId),
+    retry: false,
+    refetchInterval: (query) => (query.state.data === null ? 15000 : false),
+  });
+}
+
 export function useTriggerLabOrderAi() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (id: string) => labApi.triggerAi(id),
+    onSuccess: async (result) => {
+      await queryClient.invalidateQueries({ queryKey: labQueryKey.aiInterpretation(result.labOrderId) });
+    },
     retry: false,
   });
 }

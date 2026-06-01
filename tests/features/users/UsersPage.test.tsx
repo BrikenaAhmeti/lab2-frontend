@@ -101,10 +101,10 @@ describe('UsersPage', () => {
     expect(await screen.findByText('auth.noUsersFound')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'auth.addUser' }));
+    expect(document.getElementById('create-user-password')).not.toBeInTheDocument();
     fireEvent.change(inputById('create-user-first-name'), { target: { value: 'Grace' } });
     fireEvent.change(inputById('create-user-last-name'), { target: { value: 'Hopper' } });
     fireEvent.change(inputById('create-user-email'), { target: { value: 'grace@example.com' } });
-    fireEvent.change(inputById('create-user-password'), { target: { value: 'ValidPassword123!' } });
     fireEvent.change(inputById('create-user-phone'), { target: { value: '+15555550123' } });
     fireEvent.change(inputById('create-user-date-of-birth'), { target: { value: '1980-12-09' } });
     fireEvent.change(inputById('create-user-gender'), { target: { value: 'Female' } });
@@ -120,7 +120,6 @@ describe('UsersPage', () => {
         firstName: 'Grace',
         lastName: 'Hopper',
         email: 'grace@example.com',
-        password: 'ValidPassword123!',
         phone: '+15555550123',
         dateOfBirth: '1980-12-09',
         gender: 'Female',

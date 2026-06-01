@@ -14,6 +14,7 @@ export function usePatientLabInterpretation(labOrderId: string, enabled: boolean
     queryFn: () => aiApi.getLabInterpretation(labOrderId),
     enabled: enabled && Boolean(labOrderId),
     retry: false,
+    refetchInterval: (query) => (query.state.data === null ? 15000 : false),
   });
 }
 
