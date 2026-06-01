@@ -89,11 +89,14 @@ describe('UsersPage', () => {
       })
     );
     vi.mocked(usersApi.createUser).mockResolvedValue({
-      id: '10',
-      firstName: 'Grace',
-      lastName: 'Hopper',
-      email: 'grace@example.com',
-      roles: ['Admin', 'Doctor'],
+      message: 'User account created successfully.',
+      user: {
+        id: '10',
+        firstName: 'Grace',
+        lastName: 'Hopper',
+        email: 'grace@example.com',
+        roles: ['Admin', 'Nurse'],
+      },
     });
 
     renderUsersPage();
@@ -111,7 +114,7 @@ describe('UsersPage', () => {
     fireEvent.change(inputById('create-user-personal-number'), { target: { value: 'EMP-1001' } });
 
     fireEvent.click(screen.getByLabelText('Admin'));
-    fireEvent.click(screen.getByLabelText('Doctor'));
+    fireEvent.click(screen.getByLabelText('Nurse'));
     fireEvent.click(screen.getByLabelText('Patient'));
     fireEvent.click(screen.getByRole('button', { name: 'auth.createUser' }));
 
@@ -125,7 +128,7 @@ describe('UsersPage', () => {
         dateOfBirth: '1980-12-09',
         gender: 'Female',
         personalNumber: 'EMP-1001',
-        roles: ['Admin', 'Doctor'],
+        roles: ['Admin', 'Nurse'],
       })
     );
 

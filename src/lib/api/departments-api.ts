@@ -47,11 +47,36 @@ function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
 
+function logDepartmentListRequest(instance: AxiosInstance, params: DepartmentListParams) {
+  const url = instance.getUri({ url: '/api/departments', params });
+  console.info('[admin-doctor-setup] departments request', { url });
+  return url;
+}
+
 export const departmentsApi = {
   list(params: DepartmentListParams, instance?: AxiosInstance) {
-    return client(instance)
+    const api = client(instance);
+    const url = logDepartmentListRequest(api, params);
+
+    return api
       .get<DepartmentListResponse>('/api/departments', { params })
-      .then((r) => r.data);
+      .then((r) => {
+        console.info('[admin-doctor-setup] departments response', {
+          url,
+          status: r.status,
+          body: r.data,
+        });
+        return r.data;
+      })
+      .catch((error) => {
+        console.error('[admin-doctor-setup] departments error', {
+          url,
+          status: error.response?.status,
+          body: error.response?.data,
+          message: error.message,
+        });
+        throw error;
+      });
   },
   getById(id: string, instance?: AxiosInstance) {
     return client(instance).get<DepartmentRecord>(`/api/departments/${id}`).then((r) => r.data);

@@ -70,6 +70,19 @@ export interface StaffListResponse {
   };
 }
 
+export interface CreateStaffPayload {
+  userId: string;
+  staffPositionTypeId: string;
+  employeeCode: string;
+  specialization?: string;
+  employmentStatus: 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED';
+  isPublicProfile: boolean;
+  departments: Array<{
+    departmentId: string;
+    isPrimary: boolean;
+  }>;
+}
+
 export interface StaffSchedule {
   dayOfWeek: number;
   isWorking: boolean;
@@ -99,6 +112,9 @@ export interface ScheduleExceptionPayload {
 export const staffApi = {
   list(params: StaffListParams, instance?: AxiosInstance) {
     return client(instance).get<StaffListResponse>('/api/staff', { params }).then((response) => response.data);
+  },
+  create(payload: CreateStaffPayload, instance?: AxiosInstance) {
+    return client(instance).post<StaffRecord>('/api/staff', payload).then((response) => response.data);
   },
   publicList(params: StaffListParams & { staffId?: string }, instance?: AxiosInstance) {
     return client(instance).get<StaffListResponse>('/api/staff/public', { params }).then((response) => response.data);

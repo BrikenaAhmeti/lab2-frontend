@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from 'zod';
@@ -12,10 +12,31 @@ import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import UsersTable from '@/ui/organisms/users/UsersTable';
 import CreateUserModal from '@/ui/organisms/users/CreateUserModal';
 import { usersApi } from '@/lib/api/auth-api';
+import { departmentsApi } from '@/lib/api/departments-api';
+import { staffPositionTypesApi } from '@/lib/api/staff-position-types-api';
+import { staffApi } from '@/lib/api/staff-api';
 import { passwordRequirementKeys, passwordSchema } from '@/features/auth/utils/password';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 
 const roleOptions = ['Super Admin', 'Admin', 'Doctor', 'Nurse', 'Lab Technician', 'Pharmacist', 'Receptionist', 'Patient'];
+const doctorRole = 'Doctor';
+const doctorStaffWarning = 'Doctor user was created, but staff profile creation failed.';
+
+const initialForm = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+  phone: '',
+  dateOfBirth: '',
+  gender: '',
+  personalNumber: '',
+  roles: ['Patient'],
+  departmentId: '',
+  staffPositionTypeId: '',
+  employeeCode: '',
+  specialization: '',
+};
 
 const createUserSchema = z.object({
   firstName: z.string().trim().min(1, 'auth.firstNameRequired'),
@@ -27,10 +48,46 @@ const createUserSchema = z.object({
   gender: z.string().trim().optional(),
   personalNumber: z.string().trim().optional(),
   roles: z.array(z.string()).min(1, 'auth.roleRequired'),
+  departmentId: z.string().trim().optional(),
+  staffPositionTypeId: z.string().trim().optional(),
+  employeeCode: z.string().trim().optional(),
+  specialization: z.string().trim().optional(),
+}).superRefine((value, context) => {
+  if (!value.roles.includes(doctorRole)) {
+    return;
+  }
+
+  if (!value.departmentId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['departmentId'],
+      message: 'Department is required for doctors.',
+    });
+  }
+
+  if (!value.staffPositionTypeId) {
+    context.addIssue({
+      code: 'custom',
+      path: ['staffPositionTypeId'],
+      message: 'Staff position type is required for doctors.',
+    });
+  }
+
+  if (!value.employeeCode?.trim()) {
+    context.addIssue({
+      code: 'custom',
+      path: ['employeeCode'],
+      message: 'Employee code is required for doctors.',
+    });
+  }
 });
 
 function getStatusCode(error: unknown) {
   return error instanceof AxiosError ? error.response?.status : undefined;
+}
+
+function normalizeRoleKey(value: string) {
+  return value.trim().toLowerCase().replace(/[\s_-]+/g, '');
 }
 
 export default function UsersPage() {
@@ -45,25 +102,17 @@ export default function UsersPage() {
 
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    phone: '',
-    dateOfBirth: '',
-    gender: '',
-    personalNumber: '',
-    roles: ['Patient'],
-  });
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
+  const [form, setForm] = useState(initialForm);
+  const isDoctorUser = form.roles.includes(doctorRole);
 
   const validation = useMemo(() => createUserSchema.safeParse(form), [form]);
 
   const fieldError = (field: keyof typeof form) => {
     if (validation.success) return '';
     const issue = validation.error.issues.find((item) => item.path[0] === field);
-    return issue ? t(issue.message) : '';
+    if (!issue) return '';
+    return issue.message.startsWith('auth.') ? t(issue.message) : issue.message;
   };
 
   const usersQuery = useQuery({
@@ -73,23 +122,90 @@ export default function UsersPage() {
     enabled: canManageUsers,
   });
 
+  const departmentsQuery = useQuery({
+    queryKey: ['departments', 'active', 'user-doctor-create'],
+    queryFn: () => departmentsApi.list({ page: 1, limit: 100, isActive: true }),
+    enabled: canManageUsers && showModal && isDoctorUser,
+    retry: false,
+  });
+
+  const staffPositionTypesQuery = useQuery({
+    queryKey: ['staff-position-types', 'active', 'user-doctor-create'],
+    queryFn: () => staffPositionTypesApi.list({ isActive: true }),
+    enabled: canManageUsers && showModal && isDoctorUser,
+    retry: false,
+  });
+
+  const doctorPositionType = useMemo(
+    () => staffPositionTypesQuery.data?.items.find((item) => normalizeRoleKey(item.defaultRoleKey) === 'doctor'),
+    [staffPositionTypesQuery.data?.items],
+  );
+
+  useEffect(() => {
+    if (!isDoctorUser || form.staffPositionTypeId || !doctorPositionType) {
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      staffPositionTypeId: prev.staffPositionTypeId || doctorPositionType.id,
+    }));
+  }, [doctorPositionType, form.staffPositionTypeId, isDoctorUser]);
+
   const createMutation = useMutation({
-    mutationFn: () => usersApi.createUser(form),
-    onSuccess: async () => {
+    mutationFn: async () => {
+      const authPayload = {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+        phone: form.phone || undefined,
+        dateOfBirth: form.dateOfBirth || undefined,
+        gender: form.gender || undefined,
+        personalNumber: form.personalNumber || undefined,
+        roles: form.roles,
+      };
+      const created = await usersApi.createUser(authPayload);
+      let staffProfileCreated = false;
+      let staffProfileFailed = false;
+
+      if (form.roles.includes(doctorRole)) {
+        try {
+          await staffApi.create({
+            userId: created.user.id,
+            staffPositionTypeId: form.staffPositionTypeId,
+            employeeCode: form.employeeCode,
+            specialization: form.specialization.trim() || undefined,
+            employmentStatus: 'ACTIVE',
+            isPublicProfile: true,
+            departments: [
+              {
+                departmentId: form.departmentId,
+                isPrimary: true,
+              },
+            ],
+          });
+          staffProfileCreated = true;
+        } catch (error) {
+          console.error('Doctor staff profile creation failed', error);
+          staffProfileFailed = true;
+        }
+      }
+
+      return { created, staffProfileCreated, staffProfileFailed };
+    },
+    onSuccess: async ({ staffProfileCreated, staffProfileFailed }) => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
-      setFeedback({ type: 'success', message: t('auth.userCreatedSuccess') });
-      setShowModal(false);
-      setForm({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        phone: '',
-        dateOfBirth: '',
-        gender: '',
-        personalNumber: '',
-        roles: ['Patient'],
+      if (staffProfileCreated) {
+        await queryClient.invalidateQueries({ queryKey: ['staff'] });
+        await queryClient.invalidateQueries({ queryKey: ['appointments', 'staff'] });
+      }
+      setFeedback({
+        type: staffProfileFailed ? 'warning' : 'success',
+        message: staffProfileFailed ? doctorStaffWarning : t('auth.userCreatedSuccess'),
       });
+      setShowModal(false);
+      setForm(initialForm);
     },
     onError: (error) => {
       const status = getStatusCode(error);
@@ -101,6 +217,20 @@ export default function UsersPage() {
   });
 
   const rows = useMemo(() => usersQuery.data ?? [], [usersQuery.data]);
+  const departmentOptions = useMemo(
+    () => (departmentsQuery.data?.items ?? []).map((department) => ({
+      value: department.id,
+      label: department.name,
+    })),
+    [departmentsQuery.data?.items],
+  );
+  const staffPositionTypeOptions = useMemo(
+    () => (staffPositionTypesQuery.data?.items ?? []).map((positionType) => ({
+      value: positionType.id,
+      label: positionType.name,
+    })),
+    [staffPositionTypesQuery.data?.items],
+  );
 
   if (!canManageUsers) {
     return <Forbidden />;
@@ -151,10 +281,21 @@ export default function UsersPage() {
           personalNumber: t('auth.personalNumber'),
           roles: t('auth.roles'),
           rolesHelp: t('auth.selectRolesHelp'),
+          doctorDetails: 'Doctor details',
+          departmentId: 'Department',
+          staffPositionTypeId: 'Staff position type',
+          employeeCode: 'Employee code',
+          specialization: 'Specialization',
+          loadingDoctorData: 'Loading doctor setup data...',
+          doctorDataLoadFailed: 'Doctor setup data could not be loaded.',
+          selectDepartment: 'Select department',
+          selectStaffPositionType: 'Select staff position type',
           cancel: t('auth.cancel'),
           submit: t('auth.createUser'),
         }}
         roleOptions={roleOptions}
+        departmentOptions={departmentOptions}
+        staffPositionTypeOptions={staffPositionTypeOptions}
         values={form}
         errors={{
           firstName: fieldError('firstName'),
@@ -162,9 +303,15 @@ export default function UsersPage() {
           email: fieldError('email'),
           password: fieldError('password'),
           roles: fieldError('roles'),
+          departmentId: fieldError('departmentId'),
+          staffPositionTypeId: fieldError('staffPositionTypeId'),
+          employeeCode: fieldError('employeeCode'),
+          specialization: fieldError('specialization'),
         }}
         passwordRequirements={passwordRequirementKeys.map((key) => t(key))}
         loading={createMutation.isPending}
+        doctorDataLoading={departmentsQuery.isLoading || staffPositionTypesQuery.isLoading}
+        doctorDataError={departmentsQuery.isError || staffPositionTypesQuery.isError}
         onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
         onClose={() => setShowModal(false)}
         onSubmit={() => {

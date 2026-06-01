@@ -40,11 +40,36 @@ function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
 
+function logStaffPositionTypeListRequest(instance: AxiosInstance, params: StaffPositionTypeListParams) {
+  const url = instance.getUri({ url: '/api/staff-position-types', params });
+  console.info('[admin-doctor-setup] staff position types request', { url });
+  return url;
+}
+
 export const staffPositionTypesApi = {
   list(params: StaffPositionTypeListParams = {}, instance?: AxiosInstance) {
-    return client(instance)
+    const api = client(instance);
+    const url = logStaffPositionTypeListRequest(api, params);
+
+    return api
       .get<StaffPositionTypeListResponse>('/api/staff-position-types', { params })
-      .then((response) => response.data);
+      .then((response) => {
+        console.info('[admin-doctor-setup] staff position types response', {
+          url,
+          status: response.status,
+          body: response.data,
+        });
+        return response.data;
+      })
+      .catch((error) => {
+        console.error('[admin-doctor-setup] staff position types error', {
+          url,
+          status: error.response?.status,
+          body: error.response?.data,
+          message: error.message,
+        });
+        throw error;
+      });
   },
   getById(id: string, instance?: AxiosInstance) {
     return client(instance).get<StaffPositionTypeRecord>(`/api/staff-position-types/${id}`).then((response) => response.data);
