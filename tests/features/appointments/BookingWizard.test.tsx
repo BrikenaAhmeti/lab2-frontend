@@ -14,6 +14,7 @@ vi.mock('@/lib/api/departments-api', async () => {
     ...actual,
     departmentsApi: {
       list: vi.fn(),
+      publicList: vi.fn(),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -29,6 +30,7 @@ vi.mock('@/lib/api/services-api', async () => {
     ...actual,
     servicesApi: {
       list: vi.fn(),
+      publicList: vi.fn(),
       getById: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -68,9 +70,11 @@ vi.mock('@/lib/api/appointments-api', async () => {
       list: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
+      publicCreate: vi.fn(),
       reschedule: vi.fn(),
       updateStatus: vi.fn(),
       availableSlots: vi.fn(),
+      publicAvailableSlots: vi.fn(),
     },
   };
 });
@@ -194,7 +198,48 @@ function renderWizard(patientId?: string) {
   );
 }
 
+function renderPublicWizard() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BookingWizard mode="public" />
+    </QueryClientProvider>
+  );
+}
+
 async function moveToConfirmStep() {
+  fireEvent.click(await screen.findByRole('button', { name: /cardiology/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+  fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+  fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+  fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+}
+
+async function movePublicToConfirmStep() {
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(screen.getByText('Please complete the required patient details before choosing an appointment.')).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Arta' } });
+  fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Krasniqi' } });
+  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'arta@example.com' } });
+  fireEvent.change(screen.getByLabelText(/phone number/i), { target: { value: '+38344111222' } });
+  fireEvent.change(screen.getByLabelText(/personal number/i), { target: { value: '1234567890' } });
+  fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '1995-03-12' } });
+  fireEvent.change(screen.getByLabelText(/gender/i), { target: { value: 'female' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
   fireEvent.click(await screen.findByRole('button', { name: /cardiology/i }));
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
@@ -215,7 +260,15 @@ describe('BookingWizard', () => {
       items: [department],
       meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
     });
+    vi.mocked(departmentsApi.publicList).mockResolvedValue({
+      items: [department],
+      meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
     vi.mocked(servicesApi.list).mockResolvedValue({
+      items: [service],
+      meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+    vi.mocked(servicesApi.publicList).mockResolvedValue({
       items: [service],
       meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
     });
@@ -224,7 +277,9 @@ describe('BookingWizard', () => {
       meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
     });
     vi.mocked(appointmentsApi.availableSlots).mockResolvedValue(slots);
+    vi.mocked(appointmentsApi.publicAvailableSlots).mockResolvedValue(slots);
     vi.mocked(appointmentsApi.create).mockResolvedValue(appointment);
+    vi.mocked(appointmentsApi.publicCreate).mockResolvedValue(appointment);
   });
 
   it('moves through the booking steps and posts the backend payload shape', async () => {
@@ -252,5 +307,32 @@ describe('BookingWizard', () => {
 
     expect(screen.getByRole('button', { name: 'Confirm appointment' })).toBeDisabled();
     expect(screen.getByText('Patient profile could not be resolved from your session.')).toBeInTheDocument();
+  });
+
+  it('collects public patient details and posts the unauthenticated booking payload', async () => {
+    renderPublicWizard();
+    await movePublicToConfirmStep();
+
+    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'New patient website request' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm appointment' }));
+
+    await waitFor(() => {
+      expect(appointmentsApi.publicCreate).toHaveBeenCalledWith({
+        patient: {
+          firstName: 'Arta',
+          lastName: 'Krasniqi',
+          email: 'arta@example.com',
+          phone: '+38344111222',
+          personalNumber: '1234567890',
+          dateOfBirth: '1995-03-12',
+          gender: 'female',
+        },
+        serviceCatalogId: 'service-1',
+        staffProfileId: 'staff-1',
+        scheduledAt: '2026-05-20T09:00:00.000Z',
+        notes: 'New patient website request',
+      });
+    });
+    expect(await screen.findByText('Appointment booked')).toBeInTheDocument();
   });
 });

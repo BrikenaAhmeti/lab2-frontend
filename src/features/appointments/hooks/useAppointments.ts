@@ -8,12 +8,15 @@ import {
   type AppointmentListParams,
   type AppointmentType,
   type BookAppointmentPayload,
+  type PublicAppointmentPatientPayload,
+  type PublicBookAppointmentPayload,
   type RescheduleAppointmentPayload,
   type UpdateAppointmentStatusPayload,
 } from '@/lib/api/appointments-api';
 import type { AuthUser } from '@/features/auth/authSlice';
+import { publicCoreApiClient } from '@/lib/api/axios';
 
-export type BookingMode = 'patient' | 'receptionist';
+export type BookingMode = 'patient' | 'receptionist' | 'public';
 
 export const appointmentQueryKey = {
   all: ['appointments'] as const,
@@ -27,34 +30,28 @@ export const appointmentQueryKey = {
   detail: (id: string) => [...appointmentQueryKey.all, 'detail', id] as const,
 };
 
-export function useAppointmentDepartments() {
+export function useAppointmentDepartments(publicAccess = false) {
   return useQuery({
-    queryKey: appointmentQueryKey.departments,
+    queryKey: publicAccess ? [...appointmentQueryKey.departments, 'public'] : appointmentQueryKey.departments,
     queryFn: async () => {
-      const response = await departmentsApi.list({ page: 1, limit: 100, isActive: true });
+      const response = publicAccess
+        ? await departmentsApi.publicList({ page: 1, limit: 100, isActive: true }, publicCoreApiClient)
+        : await departmentsApi.list({ page: 1, limit: 100, isActive: true });
       return response.items;
     },
     retry: false,
   });
 }
 
-export function useAppointmentServices(departmentId: string) {
+export function useAppointmentServices(departmentId: string, publicAccess = false) {
   return useQuery({
-    queryKey: appointmentQueryKey.services(departmentId),
+    queryKey: publicAccess
+      ? [...appointmentQueryKey.services(departmentId), 'public']
+      : appointmentQueryKey.services(departmentId),
     queryFn: async () => {
-      const response = await servicesApi.list({ page: 1, limit: 100, departmentId, isActive: true });
-      return response.items;
-    },
-    enabled: Boolean(departmentId),
-    retry: false,
-  });
-}
-
-export function useAppointmentStaff(departmentId: string) {
-  return useQuery({
-    queryKey: appointmentQueryKey.staff(departmentId),
-    queryFn: async () => {
-      const response = await staffApi.publicList({ page: 1, limit: 100, departmentId });
+      const response = publicAccess
+        ? await servicesApi.publicList({ page: 1, limit: 100, departmentId, isActive: true }, publicCoreApiClient)
+        : await servicesApi.list({ page: 1, limit: 100, departmentId, isActive: true });
       return response.items;
     },
     enabled: Boolean(departmentId),
@@ -62,10 +59,30 @@ export function useAppointmentStaff(departmentId: string) {
   });
 }
 
-export function useAvailableSlots(staffId: string, serviceId: string, date: string, enabled: boolean) {
+export function useAppointmentStaff(departmentId: string, publicAccess = false) {
   return useQuery({
-    queryKey: appointmentQueryKey.slots(staffId, serviceId, date),
-    queryFn: () => appointmentsApi.availableSlots(staffId, { date, serviceId }),
+    queryKey: publicAccess ? [...appointmentQueryKey.staff(departmentId), 'public'] : appointmentQueryKey.staff(departmentId),
+    queryFn: async () => {
+      const response = await staffApi.publicList(
+        { page: 1, limit: 100, departmentId },
+        publicAccess ? publicCoreApiClient : undefined
+      );
+      return response.items;
+    },
+    enabled: Boolean(departmentId),
+    retry: false,
+  });
+}
+
+export function useAvailableSlots(staffId: string, serviceId: string, date: string, enabled: boolean, publicAccess = false) {
+  return useQuery({
+    queryKey: publicAccess
+      ? [...appointmentQueryKey.slots(staffId, serviceId, date), 'public']
+      : appointmentQueryKey.slots(staffId, serviceId, date),
+    queryFn: () =>
+      publicAccess
+        ? appointmentsApi.publicAvailableSlots(staffId, { date, serviceId }, publicCoreApiClient)
+        : appointmentsApi.availableSlots(staffId, { date, serviceId }),
     enabled: enabled && Boolean(staffId && serviceId && date),
     refetchInterval: enabled ? 30000 : false,
     retry: false,
@@ -105,6 +122,19 @@ export function useBookAppointment() {
 
   return useMutation({
     mutationFn: (payload: BookAppointmentPayload) => appointmentsApi.create(payload),
+    onSuccess: async (appointment) => {
+      await queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
+      queryClient.setQueryData(appointmentQueryKey.detail(appointment.id), appointment);
+    },
+    retry: false,
+  });
+}
+
+export function usePublicBookAppointment() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: PublicBookAppointmentPayload) => appointmentsApi.publicCreate(payload),
     onSuccess: async (appointment) => {
       await queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
       queryClient.setQueryData(appointmentQueryKey.detail(appointment.id), appointment);
@@ -171,6 +201,26 @@ export function buildAppointmentPayload(input: {
 
   return {
     patientId: input.patientId,
+    serviceCatalogId: input.serviceCatalogId,
+    staffProfileId: input.staffProfileId,
+    scheduledAt: input.scheduledAt,
+    ...(input.appointmentType ? { appointmentType: input.appointmentType } : {}),
+    ...(notes ? { notes } : {}),
+  };
+}
+
+export function buildPublicAppointmentPayload(input: {
+  patient: PublicAppointmentPatientPayload;
+  serviceCatalogId: string;
+  staffProfileId: string;
+  scheduledAt: string;
+  appointmentType?: AppointmentType;
+  notes?: string;
+}): PublicBookAppointmentPayload {
+  const notes = input.notes?.trim();
+
+  return {
+    patient: input.patient,
     serviceCatalogId: input.serviceCatalogId,
     staffProfileId: input.staffProfileId,
     scheduledAt: input.scheduledAt,

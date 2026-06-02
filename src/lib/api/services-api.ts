@@ -59,6 +59,11 @@ export const servicesApi = {
       .get<ServiceListResponse>('/api/services', { params })
       .then((r) => r.data);
   },
+  publicList(params: ServiceListParams, instance?: AxiosInstance) {
+    return client(instance)
+      .get<ServiceListResponse>('/api/public/services', { params })
+      .then((r) => r.data);
+  },
   getById(id: string, instance?: AxiosInstance) {
     return client(instance).get<ServiceRecord>(`/api/services/${id}`).then((r) => r.data);
   },

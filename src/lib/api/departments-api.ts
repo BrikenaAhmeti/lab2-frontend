@@ -78,6 +78,11 @@ export const departmentsApi = {
         throw error;
       });
   },
+  publicList(params: DepartmentListParams, instance?: AxiosInstance) {
+    return client(instance)
+      .get<DepartmentListResponse>('/api/public/departments', { params })
+      .then((r) => r.data);
+  },
   getById(id: string, instance?: AxiosInstance) {
     return client(instance).get<DepartmentRecord>(`/api/departments/${id}`).then((r) => r.data);
   },

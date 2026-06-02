@@ -1,4 +1,5 @@
 import { usePublicCmsBanners } from '@/features/cms/hooks/useCms';
+import { ArrowRight } from 'lucide-react';
 
 export default function PublicBannerStrip() {
   const bannersQuery = usePublicCmsBanners();
@@ -9,19 +10,20 @@ export default function PublicBannerStrip() {
   }
 
   return (
-    <section className="border-b border-border bg-card" aria-label="Announcements">
-      <div className="mx-auto grid max-w-6xl gap-3 px-4 py-4 md:grid-cols-2">
+    <section className="border-b border-white/10 bg-cobalt-900 text-white" aria-label="Announcements">
+      <div className="mx-auto grid max-w-6xl gap-3 px-4 py-5 md:grid-cols-2 lg:grid-cols-3">
         {banners.map((banner) => (
-          <article key={banner.id} className="flex gap-3 rounded-lg border border-border bg-background p-3">
+          <article key={banner.id} className="flex min-h-32 gap-4 rounded-lg border border-white/12 bg-white/10 p-4 shadow-soft backdrop-blur">
             {banner.imageUrl ? (
-              <img src={banner.imageUrl} alt="" className="h-16 w-20 rounded-lg object-cover" loading="lazy" decoding="async" />
+              <img src={banner.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover ring-1 ring-white/20" loading="lazy" decoding="async" />
             ) : null}
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">{banner.title}</h2>
-              <p className="mt-1 text-sm text-muted">{banner.message}</p>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-white">{banner.title}</h2>
+              <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/72">{banner.message}</p>
               {banner.linkUrl ? (
-                <a href={banner.linkUrl} className="mt-2 inline-flex text-sm font-medium text-primary">
-                  Learn more
+                <a href={banner.linkUrl} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-med-200 hover:text-white">
+                  <span>Learn more</span>
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
               ) : null}
             </div>

@@ -1,6 +1,6 @@
 import { type FormEvent, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
@@ -24,6 +24,16 @@ const initialValues = {
 };
 
 type PatientRegistrationField = keyof typeof initialValues;
+const publicBookingRegistrationKey = 'medsphere.publicBookingPatient';
+const appointmentPrefillFields: PatientRegistrationField[] = [
+  'firstName',
+  'lastName',
+  'email',
+  'phone',
+  'dateOfBirth',
+  'gender',
+  'personalNumber',
+];
 
 const registrationSchema = z
   .object({
@@ -47,10 +57,34 @@ function optionalText(value: string) {
   return value.trim() || undefined;
 }
 
+function readAppointmentRegistrationDefaults(searchParams: URLSearchParams) {
+  if (searchParams.get('source') !== 'appointment') {
+    return initialValues;
+  }
+
+  let stored: Record<string, unknown> = {};
+
+  try {
+    const raw = window.sessionStorage.getItem(publicBookingRegistrationKey);
+    stored = raw ? JSON.parse(raw) : {};
+  } catch {
+    stored = {};
+  }
+
+  return appointmentPrefillFields.reduce(
+    (next, field) => ({
+      ...next,
+      [field]: typeof stored[field] === 'string' ? stored[field] : next[field],
+    }),
+    { ...initialValues }
+  );
+}
+
 export default function PatientRegistrationPage() {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
-  const [values, setValues] = useState(initialValues);
+  const [searchParams] = useSearchParams();
+  const [values, setValues] = useState(() => readAppointmentRegistrationDefaults(searchParams));
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -92,6 +126,7 @@ export default function PatientRegistrationPage() {
         dateOfBirth: optionalText(data.dateOfBirth),
         gender: optionalText(data.gender),
       });
+      window.sessionStorage.removeItem(publicBookingRegistrationKey);
       navigate(`/verify-email?email=${encodeURIComponent(data.email)}`, {
         state: { email: data.email },
       });

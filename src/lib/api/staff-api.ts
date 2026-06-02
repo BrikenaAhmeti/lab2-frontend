@@ -117,7 +117,7 @@ export const staffApi = {
     return client(instance).post<StaffRecord>('/api/staff', payload).then((response) => response.data);
   },
   publicList(params: StaffListParams & { staffId?: string }, instance?: AxiosInstance) {
-    return client(instance).get<StaffListResponse>('/api/staff/public', { params }).then((response) => response.data);
+    return client(instance).get<StaffListResponse>('/api/public/staff', { params }).then((response) => response.data);
   },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);

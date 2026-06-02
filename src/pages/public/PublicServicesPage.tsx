@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Badge from '@/ui/atoms/Badge';
 import Input from '@/ui/atoms/Input';
-import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import PublicPageShell from '@/features/public/components/PublicPageShell';
 import {
-  getPublicCatalogError,
+  PublicPageIntro,
+  PublicServicesStaticSections,
+} from '@/features/public/components/PublicStaticSections';
+import {
   usePublicDepartments,
   usePublicServices,
 } from '@/features/public/hooks/usePublicCatalog';
@@ -30,6 +32,7 @@ export default function PublicServicesPage() {
   const departmentsQuery = usePublicDepartments();
   const servicesQuery = usePublicServices(serviceParams);
   const services = servicesQuery.data?.items ?? [];
+  const showLiveServices = servicesQuery.isLoading || (!servicesQuery.isError && services.length > 0);
 
   const selectDepartment = (value: string) => {
     setSearchParams(value ? { departmentId: value } : {});
@@ -41,66 +44,69 @@ export default function PublicServicesPage() {
       fallbackTitle="Services"
       fallbackBody="Browse active medical services by department."
     >
-      <section className="bg-background">
-        <div className="mx-auto max-w-6xl px-4 py-12">
-          <div className="mb-5 grid gap-3 md:grid-cols-[1fr_240px]">
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search services..." />
-            <select
-              value={departmentId}
-              onChange={(event) => selectDepartment(event.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground"
-            >
-              <option value="">All departments</option>
-              {(departmentsQuery.data?.items ?? []).map((department) => (
-                <option key={department.id} value={department.id}>{department.name}</option>
-              ))}
-            </select>
+      <PublicPageIntro
+        eyebrow="Services"
+        title="Understand care options before choosing a time."
+        body="Filter available services by department and review what each care path usually includes before booking."
+      >
+        <Link
+          to="/register"
+          className="inline-flex items-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+        >
+          Patient registration
+        </Link>
+      </PublicPageIntro>
+
+      {showLiveServices ? (
+        <section className="bg-background">
+          <div className="mx-auto max-w-6xl px-4 py-12">
+            <div className="mb-5 grid gap-3 md:grid-cols-[1fr_240px]">
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search services..." />
+              <select
+                value={departmentId}
+                onChange={(event) => selectDepartment(event.target.value)}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+              >
+                <option value="">All departments</option>
+                {(departmentsQuery.data?.items ?? []).map((department) => (
+                  <option key={department.id} value={department.id}>{department.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {servicesQuery.isLoading ? (
+              <div className="rounded-lg border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
+                Loading services...
+              </div>
+            ) : null}
+
+            {services.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {services.map((service) => (
+                  <article key={service.id} className="rounded-lg border border-border bg-card p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h2 className="font-semibold text-foreground">{service.name}</h2>
+                      {service.department?.name ? <Badge>{service.department.name}</Badge> : null}
+                    </div>
+                    {service.description ? <p className="mt-3 text-sm leading-6 text-muted">{service.description}</p> : null}
+                    <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <dt className="text-muted">Duration</dt>
+                        <dd className="font-medium text-foreground">{service.defaultDurationMinutes} min</dd>
+                      </div>
+                      <div>
+                        <dt className="text-muted">Price</dt>
+                        <dd className="font-medium text-foreground">{price(service.defaultPrice)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+            ) : null}
           </div>
-
-          {servicesQuery.isLoading ? (
-            <div className="rounded-lg border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
-              Loading services...
-            </div>
-          ) : null}
-
-          {servicesQuery.isError ? (
-            <FeedbackMessage
-              type="error"
-              message={getPublicCatalogError(servicesQuery.error, 'Services could not be loaded.')}
-            />
-          ) : null}
-
-          {!servicesQuery.isLoading && !servicesQuery.isError && services.length === 0 ? (
-            <p className="rounded-lg border border-border bg-surface/60 px-4 py-10 text-center text-sm text-muted">
-              No services found.
-            </p>
-          ) : null}
-
-          {services.length > 0 ? (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {services.map((service) => (
-                <article key={service.id} className="rounded-lg border border-border bg-card p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <h2 className="font-semibold text-foreground">{service.name}</h2>
-                    {service.department?.name ? <Badge>{service.department.name}</Badge> : null}
-                  </div>
-                  {service.description ? <p className="mt-3 text-sm leading-6 text-muted">{service.description}</p> : null}
-                  <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                      <dt className="text-muted">Duration</dt>
-                      <dd className="font-medium text-foreground">{service.defaultDurationMinutes} min</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted">Price</dt>
-                      <dd className="font-medium text-foreground">{price(service.defaultPrice)}</dd>
-                    </div>
-                  </dl>
-                </article>
-              ))}
-            </div>
-          ) : null}
-        </div>
-      </section>
+        </section>
+      ) : null}
+      <PublicServicesStaticSections />
     </PublicPageShell>
   );
 }

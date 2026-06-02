@@ -6,6 +6,7 @@ import type { PatientRecord } from '@/lib/api/patients-api';
 import { getStaffName } from '@/features/staff/hooks/useStaff';
 import { getPatientName } from '@/features/patients/hooks/usePatients';
 import type { BookingMode } from '../hooks/useAppointments';
+import type { PublicPatientDetails } from './PublicPatientDetailsStep';
 import PatientSelector from './PatientSelector';
 import { formatAppointmentDate } from './appointmentFormat';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
@@ -18,6 +19,7 @@ interface ConfirmStepProps {
   slot: AvailableSlot | null;
   patientId?: string;
   selectedPatient: PatientRecord | null;
+  publicPatientDetails?: PublicPatientDetails;
   notes: string;
   onPatientSelect: (patient: PatientRecord) => void;
   onNotesChange: (notes: string) => void;
@@ -31,11 +33,22 @@ export default function ConfirmStep({
   slot,
   patientId,
   selectedPatient,
+  publicPatientDetails,
   notes,
   onPatientSelect,
   onNotesChange,
 }: ConfirmStepProps) {
-  const patientName = selectedPatient ? getPatientName(selectedPatient) : patientId ? 'Your profile' : '';
+  const publicPatientName = publicPatientDetails
+    ? `${publicPatientDetails.firstName} ${publicPatientDetails.lastName}`.trim()
+    : '';
+  const patientName =
+    mode === 'public'
+      ? publicPatientName
+      : selectedPatient
+        ? getPatientName(selectedPatient)
+        : patientId
+          ? 'Your profile'
+          : '';
 
   return (
     <div className="space-y-4">
@@ -52,6 +65,22 @@ export default function ConfirmStep({
           <dt className="text-muted">Patient</dt>
           <dd className="font-medium text-foreground">{patientName || 'Select a patient'}</dd>
         </div>
+        {mode === 'public' ? (
+          <>
+            <div>
+              <dt className="text-muted">Email</dt>
+              <dd className="font-medium text-foreground">{publicPatientDetails?.email || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Phone</dt>
+              <dd className="font-medium text-foreground">{publicPatientDetails?.phone || '-'}</dd>
+            </div>
+            <div>
+              <dt className="text-muted">Personal number</dt>
+              <dd className="font-medium text-foreground">{publicPatientDetails?.personalNumber || '-'}</dd>
+            </div>
+          </>
+        ) : null}
         <div>
           <dt className="text-muted">Department</dt>
           <dd className="font-medium text-foreground">{department?.name ?? '-'}</dd>
