@@ -4,6 +4,7 @@ import type { SearchParams, SearchSortOrder } from '@/lib/api/search-api';
 
 interface UseTableFiltersOptions {
   filterKeys: string[];
+  requestFilterKeys?: string[];
   defaultLimit?: number;
 }
 
@@ -16,7 +17,7 @@ function cappedLimit(value: string | null, fallback: number) {
   return Math.min(numberParam(value, fallback), 100);
 }
 
-export function useTableFilters({ filterKeys, defaultLimit = 10 }: UseTableFiltersOptions) {
+export function useTableFilters({ filterKeys, requestFilterKeys = filterKeys, defaultLimit = 10 }: UseTableFiltersOptions) {
   const [searchParams, setSearchParams] = useSearchParams();
   const qParam = searchParams.get('q') ?? '';
   const [q, setQ] = useState(qParam);
@@ -92,7 +93,7 @@ export function useTableFilters({ filterKeys, defaultLimit = 10 }: UseTableFilte
       next.sortOrder = sortOrder;
     }
 
-    filterKeys.forEach((key) => {
+    requestFilterKeys.forEach((key) => {
       const value = searchParams.get(key);
       if (value) {
         next[key] = value;
@@ -100,7 +101,7 @@ export function useTableFilters({ filterKeys, defaultLimit = 10 }: UseTableFilte
     });
 
     return next;
-  }, [filterKeys, limit, page, qParam, searchParams, sortBy, sortOrder]);
+  }, [limit, page, qParam, requestFilterKeys, searchParams, sortBy, sortOrder]);
 
   const setFilter = useCallback(
     (key: string, value: string) => {

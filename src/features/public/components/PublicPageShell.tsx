@@ -4,6 +4,7 @@ import CmsSections from './CmsSectionRenderer';
 import PublicBannerStrip from './PublicBannerStrip';
 import PublicLayout from './PublicLayout';
 import PublicSeo from './PublicSeo';
+import { defaultPublicSiteSettings, usePublicSiteSettings } from '../hooks/usePublicSiteSettings';
 
 interface PublicPageShellProps {
   slug: string;
@@ -21,12 +22,21 @@ export default function PublicPageShell({
   children,
 }: PublicPageShellProps) {
   const pageQuery = usePublicCmsPage(slug);
+  const siteSettingsQuery = usePublicSiteSettings();
   const page = pageQuery.data;
+  const siteSettings = siteSettingsQuery.data ?? defaultPublicSiteSettings;
   const cmsSections = pageQuery.isSuccess ? page?.sections ?? [] : [];
+  const fallbackSeoTitle = slug === 'home' ? siteSettings.facilityName : fallbackTitle;
 
   return (
-    <PublicLayout>
-      <PublicSeo title={page?.metaTitle || page?.title || fallbackTitle} description={page?.metaDescription} slug={slug} />
+    <PublicLayout siteSettings={siteSettings}>
+      <PublicSeo
+        title={page?.metaTitle || page?.title || fallbackSeoTitle}
+        description={page?.metaDescription}
+        slug={slug}
+        siteName={siteSettings.facilityName}
+        defaultDescription={siteSettings.description}
+      />
       {showBanners ? <PublicBannerStrip /> : null}
       <CmsSections sections={cmsSections} fallbackTitle={fallbackTitle} fallbackBody={fallbackBody} />
       {children}

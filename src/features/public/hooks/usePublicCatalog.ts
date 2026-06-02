@@ -13,7 +13,7 @@ export function usePublicDepartments(search = '') {
   return useQuery({
     queryKey: publicCatalogQueryKeys.departments(search),
     queryFn: () =>
-      departmentsApi.list(
+      departmentsApi.publicList(
         {
           page: 1,
           limit: 100,
@@ -32,7 +32,7 @@ export function usePublicServices(params: { search?: string; departmentId?: stri
   return useQuery({
     queryKey: publicCatalogQueryKeys.services(params),
     queryFn: () =>
-      servicesApi.list(
+      servicesApi.publicList(
         {
           page: 1,
           limit: 100,

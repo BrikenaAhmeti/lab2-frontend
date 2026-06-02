@@ -17,6 +17,8 @@ import {
   WalletCards,
   type LucideIcon,
 } from 'lucide-react';
+import { formatWorkingHoursLine } from '@/features/settings/workingHours';
+import { defaultPublicSiteSettings, usePublicSiteSettings } from '@/features/public/hooks/usePublicSiteSettings';
 
 interface PublicPageIntroProps {
   eyebrow: string;
@@ -436,26 +438,41 @@ export function PublicDoctorsStaticSections() {
 }
 
 export function PublicContactStaticSections() {
+  const settingsQuery = usePublicSiteSettings();
+  const siteSettings = settingsQuery.data ?? defaultPublicSiteSettings;
+  const hours = siteSettings.workingHours.filter((row) => row.isOpen);
+  const cards: IconCard[] = [
+    {
+      icon: PhoneCall,
+      title: siteSettings.phone || siteSettings.email ? 'Call or email' : 'Contact support',
+      body: [siteSettings.phone, siteSettings.email].filter(Boolean).join(' · ') || 'Use the contact form for non-urgent questions and routing requests.',
+    },
+    {
+      icon: CalendarCheck,
+      title: 'Appointments',
+      body: 'Patients can register first, then manage appointment details from the portal.',
+    },
+    {
+      icon: siteSettings.addressLines.length > 0 ? Building2 : ShieldCheck,
+      title: siteSettings.addressLines.length > 0 ? 'Visit information' : 'Privacy',
+      body: siteSettings.addressLines.length > 0
+        ? siteSettings.addressLines.join(', ')
+        : 'Avoid sending sensitive medical details through the public contact form.',
+    },
+  ];
+
+  if (hours.length > 0) {
+    cards.splice(1, 0, {
+      icon: Clock3,
+      title: 'Working hours',
+      body: hours.map(formatWorkingHoursLine).join(' · '),
+    });
+  }
+
   return (
     <section className="bg-card">
-      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-3">
-        {[
-          {
-            icon: PhoneCall,
-            title: 'Call support',
-            body: 'Use the contact form for non-urgent questions and routing requests.',
-          },
-          {
-            icon: CalendarCheck,
-            title: 'Appointments',
-            body: 'Patients can register first, then manage appointment details from the portal.',
-          },
-          {
-            icon: ShieldCheck,
-            title: 'Privacy',
-            body: 'Avoid sending sensitive medical details through the public contact form.',
-          },
-        ].map((item) => (
+      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-2 lg:grid-cols-4">
+        {cards.map((item) => (
           <article key={item.title} className="rounded-lg border border-border bg-background p-5">
             <IconTile icon={item.icon} />
             <h2 className="mt-4 text-base font-semibold text-foreground">{item.title}</h2>

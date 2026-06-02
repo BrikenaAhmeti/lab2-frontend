@@ -20,6 +20,7 @@ export interface SearchResourceConfig {
   searchPlaceholder: string;
   emptyText: string;
   filters: SearchFilterField[];
+  clientFilter?: (row: unknown, filters: Record<string, string>) => boolean;
   columns: Array<SearchColumn<unknown>>;
 }
 
@@ -91,6 +92,214 @@ function staff(row: unknown) {
 
 function auditLog(row: unknown) {
   return row as AuditLogSearchItem;
+}
+
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function safeStringify(value: unknown) {
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function truncate(value: string, maxLength = 88) {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}...` : value;
+}
+
+function formatFieldLabel(value: string) {
+  const normalized = value
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/[.:-]/g, '_')
+    .replaceAll(' ', '_');
+
+  return titleEnum(normalized);
+}
+
+function formatAuditValue(value: unknown): string {
+  if (value === null || value === undefined || value === '') return 'empty';
+  if (typeof value === 'string') return truncate(value);
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return 'empty list';
+    const preview: string = value.slice(0, 3).map(formatAuditValue).join(', ');
+    return value.length > 3 ? `${preview}, +${value.length - 3} more` : preview;
+  }
+
+  if (isPlainRecord(value)) {
+    const displayName = value.displayName ?? value.name ?? value.email ?? value.label ?? value.title;
+    if (typeof displayName === 'string' && displayName.trim()) return truncate(displayName);
+    return truncate(safeStringify(value));
+  }
+
+  return truncate(String(value));
+}
+
+interface AuditChange {
+  field: string;
+  before: string;
+  after: string;
+}
+
+function auditLogChanges(item: AuditLogSearchItem): AuditChange[] {
+  const oldValue = item.oldValue;
+  const newValue = item.newValue;
+
+  if (isPlainRecord(oldValue) || isPlainRecord(newValue)) {
+    const before = isPlainRecord(oldValue) ? oldValue : {};
+    const after = isPlainRecord(newValue) ? newValue : {};
+    const keys = Array.from(new Set([...Object.keys(before), ...Object.keys(after)]));
+
+    return keys
+      .filter((key) => safeStringify(before[key]) !== safeStringify(after[key]))
+      .map((key) => ({
+        field: key,
+        before: formatAuditValue(before[key]),
+        after: formatAuditValue(after[key]),
+      }));
+  }
+
+  if (oldValue !== undefined || newValue !== undefined) {
+    if (safeStringify(oldValue) === safeStringify(newValue)) return [];
+
+    return [
+      {
+        field: 'record',
+        before: formatAuditValue(oldValue),
+        after: formatAuditValue(newValue),
+      },
+    ];
+  }
+
+  return [];
+}
+
+function metadataSummary(metadata: unknown) {
+  if (!isPlainRecord(metadata)) return '';
+
+  const priorityKeys = ['reason', 'source', 'route', 'method', 'statusCode', 'module'];
+  const entries = priorityKeys
+    .filter((key) => metadata[key] !== undefined && metadata[key] !== null && metadata[key] !== '')
+    .map((key) => `${formatFieldLabel(key)}: ${formatAuditValue(metadata[key])}`);
+
+  if (entries.length > 0) return entries.slice(0, 3).join(' · ');
+
+  return Object.entries(metadata)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .slice(0, 3)
+    .map(([key, value]) => `${formatFieldLabel(key)}: ${formatAuditValue(value)}`)
+    .join(' · ');
+}
+
+function auditActor(item: AuditLogSearchItem) {
+  const possibleActor = (item as AuditLogSearchItem & {
+    user?: Record<string, unknown> | null;
+    actor?: Record<string, unknown> | null;
+  }).user ?? (item as AuditLogSearchItem & { actor?: Record<string, unknown> | null }).actor;
+
+  if (!isPlainRecord(possibleActor)) {
+    return {
+      title: fallback(item.userId),
+      detail: '',
+    };
+  }
+
+  const fullName = [possibleActor.firstName, possibleActor.lastName].filter((part) => typeof part === 'string').join(' ');
+  const title =
+    (typeof possibleActor.name === 'string' && possibleActor.name) ||
+    fullName ||
+    (typeof possibleActor.email === 'string' && possibleActor.email) ||
+    fallback(item.userId);
+  const detail = typeof possibleActor.email === 'string' && possibleActor.email !== title ? possibleActor.email : item.userId;
+
+  return {
+    title,
+    detail: detail ? String(detail) : '',
+  };
+}
+
+function auditActionVariant(action: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
+  const normalized = action.toLowerCase();
+
+  if (normalized.includes('delete') || normalized.includes('terminate') || normalized.includes('deactivate')) return 'danger';
+  if (normalized.includes('fail') || normalized.includes('denied') || normalized.includes('error')) return 'danger';
+  if (normalized.includes('update') || normalized.includes('change') || normalized.includes('patch')) return 'warning';
+  if (normalized.includes('create') || normalized.includes('login') || normalized.includes('restore')) return 'success';
+  if (normalized.includes('export') || normalized.includes('import') || normalized.includes('read')) return 'info';
+
+  return 'neutral';
+}
+
+function renderAuditAction(item: AuditLogSearchItem) {
+  return (
+    <div className="space-y-1">
+      <Badge variant={auditActionVariant(item.action)}>{titleEnum(item.action)}</Badge>
+      <p className="text-xs text-muted">{item.action}</p>
+    </div>
+  );
+}
+
+function renderAuditUser(item: AuditLogSearchItem) {
+  const actor = auditActor(item);
+
+  return (
+    <div className="min-w-40">
+      <p className="font-medium text-foreground">{actor.title}</p>
+      {actor.detail ? <p className="mt-1 break-all text-xs text-muted">{actor.detail}</p> : null}
+      {item.ip ? <p className="mt-1 text-xs text-muted">IP {item.ip}</p> : null}
+    </div>
+  );
+}
+
+function renderAuditChanges(item: AuditLogSearchItem) {
+  const changes = auditLogChanges(item);
+
+  if (changes.length === 0) {
+    return <span className="text-muted">No field changes recorded</span>;
+  }
+
+  return (
+    <div className="min-w-64 space-y-2">
+      {changes.slice(0, 3).map((change) => (
+        <div key={change.field} className="rounded-lg border border-border bg-surface/50 px-3 py-2">
+          <p className="text-xs font-semibold uppercase text-muted">{formatFieldLabel(change.field)}</p>
+          <p className="mt-1 break-words text-sm text-foreground">
+            <span className="text-muted">{change.before}</span>
+            <span className="px-1.5 text-muted">to</span>
+            <span>{change.after}</span>
+          </p>
+        </div>
+      ))}
+      {changes.length > 3 ? <p className="text-xs text-muted">+{changes.length - 3} more changes</p> : null}
+    </div>
+  );
+}
+
+function renderAuditContext(item: AuditLogSearchItem) {
+  const summary = metadataSummary(item.metadata);
+
+  return (
+    <div className="min-w-48 space-y-1 text-xs text-muted">
+      {summary ? <p className="text-foreground">{summary}</p> : null}
+      {item.requestId ? <p className="break-all">Request {item.requestId}</p> : null}
+      {item.userAgent ? <p className="break-words">{truncate(item.userAgent, 120)}</p> : null}
+      {!summary && !item.requestId && !item.userAgent ? <span>-</span> : null}
+    </div>
+  );
+}
+
+function auditLogMatchesClientFilters(row: unknown, filters: Record<string, string>) {
+  const changedField = filters.changedField?.trim().toLowerCase();
+
+  if (!changedField) return true;
+
+  return auditLogChanges(auditLog(row)).some((change) =>
+    `${change.field} ${formatFieldLabel(change.field)} ${change.before} ${change.after}`.toLowerCase().includes(changedField)
+  );
 }
 
 function options(values: string[]) {
@@ -311,25 +520,27 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
   {
     resource: 'audit-logs',
     title: 'Audit Logs',
-    subtitle: 'Search compliance logs by action, entity, user, IP address, and date range.',
+    subtitle: 'Review who changed what, when it happened, and the request context behind each action.',
     permission: 'audit_logs:read',
-    searchPlaceholder: 'Search audit logs by action or entity',
+    searchPlaceholder: 'Search audit logs by action, entity, user, or request',
     emptyText: 'No audit logs match these filters.',
     filters: [
-      { name: 'userId', label: 'User ID', placeholder: 'User UUID' },
-      { name: 'action', label: 'Action', placeholder: 'Action' },
-      { name: 'entity', label: 'Entity', placeholder: 'Entity' },
-      { name: 'from', label: 'From', type: 'date' },
-      { name: 'to', label: 'To', type: 'date' },
+      { name: 'userId', label: 'User', placeholder: 'User ID or email' },
+      { name: 'action', label: 'Action', placeholder: 'created, updated, deleted...' },
+      { name: 'entity', label: 'Area', placeholder: 'appointments, staff, settings...' },
+      { name: 'changedField', label: 'Changed field', placeholder: 'status, role, price...', clientOnly: true },
+      { name: 'from', label: 'From date', type: 'date' },
+      { name: 'to', label: 'To date', type: 'date' },
       { name: 'ip', label: 'IP address', placeholder: 'IP address' },
     ],
+    clientFilter: auditLogMatchesClientFilters,
     columns: [
       { key: 'timestamp', label: 'Timestamp', sortBy: 'timestamp', render: (row) => dateCell(auditLog(row).timestamp) },
-      { key: 'action', label: 'Action', sortBy: 'action', render: (row) => auditLog(row).action },
-      { key: 'entity', label: 'Entity', sortBy: 'entity', render: (row) => detailBlock(auditLog(row).entity, auditLog(row).entityId) },
-      { key: 'userId', label: 'User', sortBy: 'userId', render: (row) => fallback(auditLog(row).userId) },
-      { key: 'ip', label: 'IP', sortBy: 'ip', render: (row) => fallback(auditLog(row).ip) },
-      { key: 'requestId', label: 'Request', render: (row) => fallback(auditLog(row).requestId) },
+      { key: 'action', label: 'Action', sortBy: 'action', render: (row) => renderAuditAction(auditLog(row)) },
+      { key: 'entity', label: 'Target', sortBy: 'entity', render: (row) => detailBlock(formatFieldLabel(auditLog(row).entity), auditLog(row).entityId) },
+      { key: 'user', label: 'User', sortBy: 'userId', render: (row) => renderAuditUser(auditLog(row)) },
+      { key: 'changes', label: 'Changes', render: (row) => renderAuditChanges(auditLog(row)) },
+      { key: 'context', label: 'Context', render: (row) => renderAuditContext(auditLog(row)) },
     ],
   },
 ];

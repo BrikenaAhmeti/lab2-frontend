@@ -39,6 +39,7 @@ export default function LabReviewPage() {
   const params = useParams<{ id?: string }>();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const staffProfileId = user?.profileId ?? user?.id;
   const [selectedId, setSelectedId] = useState(params.id ?? '');
   const [localOrders, setLocalOrders] = useState<Record<string, LabOrderView>>({});
   const [reviewNotes, setReviewNotes] = useState('');
@@ -63,10 +64,10 @@ export default function LabReviewPage() {
     () =>
       sortLabOrders(
         completedOrders.filter(
-          (order) => isPendingLabReview(order) && belongsToOrderingDoctor(order, user?.id, user?.profileId)
+          (order) => isPendingLabReview(order) && belongsToOrderingDoctor(order, user?.id, staffProfileId)
         )
       ),
-    [completedOrders, user?.id, user?.profileId]
+    [completedOrders, user?.id, staffProfileId]
   );
   const selectedOrder =
     (selectedId ? localOrders[selectedId] ?? pendingReviews.find((order) => order.id === selectedId) ?? detailQuery.data : null) ??

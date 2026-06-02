@@ -5,6 +5,23 @@ function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
 
+const staffStatusParamMap: Record<string, string> = {
+  active: 'ACTIVE',
+  inactive: 'INACTIVE',
+  on_leave: 'ON_LEAVE',
+  terminated: 'TERMINATED',
+};
+
+function normalizeStaffListParams(params: StaffListParams & { staffId?: string }) {
+  if (!params.status) return params;
+
+  const normalizedStatus = staffStatusParamMap[params.status.toLowerCase()] ?? params.status;
+  return {
+    ...params,
+    status: normalizedStatus,
+  };
+}
+
 export interface StaffDepartment {
   id: string;
   name?: string;
@@ -98,10 +115,14 @@ export interface ScheduleExceptionPayload {
 
 export const staffApi = {
   list(params: StaffListParams, instance?: AxiosInstance) {
-    return client(instance).get<StaffListResponse>('/api/staff', { params }).then((response) => response.data);
+    return client(instance)
+      .get<StaffListResponse>('/api/staff', { params: normalizeStaffListParams(params) })
+      .then((response) => response.data);
   },
   publicList(params: StaffListParams & { staffId?: string }, instance?: AxiosInstance) {
-    return client(instance).get<StaffListResponse>('/api/public/staff', { params }).then((response) => response.data);
+    return client(instance)
+      .get<StaffListResponse>('/api/public/staff', { params: normalizeStaffListParams(params) })
+      .then((response) => response.data);
   },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);

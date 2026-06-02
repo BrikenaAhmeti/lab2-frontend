@@ -13,6 +13,7 @@ import { departmentsApi, type DepartmentRecord } from '@/lib/api/departments-api
 import { servicesApi, type ServiceRecord } from '@/lib/api/services-api';
 import { staffApi, type StaffRecord } from '@/lib/api/staff-api';
 import { contactApi, type ContactMessageView } from '@/lib/api/contact-api';
+import { settingsApi } from '@/lib/api/settings-api';
 
 vi.mock('@/lib/api/cms-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/cms-api')>('@/lib/api/cms-api');
@@ -34,7 +35,7 @@ vi.mock('@/lib/api/departments-api', async () => {
     ...actual,
     departmentsApi: {
       ...actual.departmentsApi,
-      list: vi.fn(),
+      publicList: vi.fn(),
     },
   };
 });
@@ -46,7 +47,7 @@ vi.mock('@/lib/api/services-api', async () => {
     ...actual,
     servicesApi: {
       ...actual.servicesApi,
-      list: vi.fn(),
+      publicList: vi.fn(),
     },
   };
 });
@@ -71,6 +72,18 @@ vi.mock('@/lib/api/contact-api', async () => {
     contactApi: {
       ...actual.contactApi,
       submit: vi.fn(),
+    },
+  };
+});
+
+vi.mock('@/lib/api/settings-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/settings-api')>('@/lib/api/settings-api');
+
+  return {
+    ...actual,
+    settingsApi: {
+      ...actual.settingsApi,
+      publicList: vi.fn(),
     },
   };
 });
@@ -122,7 +135,10 @@ const department: DepartmentRecord = {
   description: 'Heart care',
   floor: '2',
   phoneExtension: '210',
-  operatingHours: null,
+  operatingHours: {
+    monday: { isOpen: true, startTime: '08:00', endTime: '16:00' },
+    tuesday: { isOpen: true, startTime: '08:00', endTime: '16:00' },
+  },
   isActive: true,
   sortOrder: 0,
   createdAt: '2026-05-26T00:00:00.000Z',
@@ -186,6 +202,57 @@ const contactMessage: ContactMessageView = {
   updatedAt: '2026-05-26T00:00:00.000Z',
 };
 
+const publicSettingsResponse = {
+  Facility: [
+    {
+      key: 'facility_name',
+      label: 'Facility name',
+      category: 'Facility',
+      value: 'North Clinic',
+      description: null,
+    },
+    {
+      key: 'facility_tagline',
+      label: 'Facility tagline',
+      category: 'Facility',
+      value: 'Care nearby',
+      description: null,
+    },
+    {
+      key: 'facility_description',
+      label: 'Facility description',
+      category: 'Facility',
+      value: 'Live facility details from settings.',
+      description: null,
+    },
+    {
+      key: 'contact_phone',
+      label: 'Contact phone',
+      category: 'Facility',
+      value: '+383 38 100 200',
+      description: null,
+    },
+    {
+      key: 'contact_email',
+      label: 'Contact email',
+      category: 'Facility',
+      value: 'hello@north.test',
+      description: null,
+    },
+    {
+      key: 'working_hours',
+      label: 'Working hours',
+      category: 'Facility',
+      value: {
+        monday: { isOpen: true, startTime: '08:00', endTime: '17:00' },
+        tuesday: { isOpen: true, startTime: '08:00', endTime: '17:00' },
+        sunday: { isOpen: false, startTime: null, endTime: null },
+      },
+      description: null,
+    },
+  ],
+};
+
 function renderPublic(element: ReactNode, initialEntry = '/') {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -206,11 +273,12 @@ describe('Public website', () => {
     vi.clearAllMocks();
     vi.mocked(cmsApi.getPublicPage).mockImplementation((slug) => Promise.resolve(page(slug)));
     vi.mocked(cmsApi.listPublicBanners).mockResolvedValue([]);
-    vi.mocked(departmentsApi.list).mockResolvedValue({
+    vi.mocked(settingsApi.publicList).mockResolvedValue(publicSettingsResponse);
+    vi.mocked(departmentsApi.publicList).mockResolvedValue({
       items: [department],
       meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
     });
-    vi.mocked(servicesApi.list).mockResolvedValue({
+    vi.mocked(servicesApi.publicList).mockResolvedValue({
       items: [service],
       meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
     });
@@ -229,7 +297,10 @@ describe('Public website', () => {
     expect(await screen.findByRole('heading', { name: 'home title' })).toBeInTheDocument();
     expect(await screen.findByText('Open daily')).toBeInTheDocument();
 
-    await waitFor(() => expect(document.title).toBe('home meta | MedSphere'));
+    expect((await screen.findAllByText('North Clinic')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Care nearby').length).toBeGreaterThan(0);
+
+    await waitFor(() => expect(document.title).toBe('home meta | North Clinic'));
     expect(document.querySelector('meta[name="description"]')?.getAttribute('content')).toBe('home description');
     expect(document.querySelector('meta[property="og:description"]')?.getAttribute('content')).toBe('home description');
   });
@@ -239,7 +310,8 @@ describe('Public website', () => {
 
     expect(await screen.findByText('Cardiology')).toBeInTheDocument();
     expect(screen.getByText('Heart care')).toBeInTheDocument();
-    expect(departmentsApi.list).toHaveBeenCalledWith(
+    expect(screen.getByText('Monday: 08:00 to 16:00')).toBeInTheDocument();
+    expect(departmentsApi.publicList).toHaveBeenCalledWith(
       expect.objectContaining({ isActive: true, limit: 100 }),
       expect.any(Function)
     );
@@ -250,7 +322,7 @@ describe('Public website', () => {
 
     expect(await screen.findByText('Initial Consultation')).toBeInTheDocument();
     expect(screen.getByText('30 min')).toBeInTheDocument();
-    expect(servicesApi.list).toHaveBeenCalledWith(
+    expect(servicesApi.publicList).toHaveBeenCalledWith(
       expect.objectContaining({ departmentId: department.id, isActive: true }),
       expect.any(Function)
     );
@@ -272,6 +344,10 @@ describe('Public website', () => {
 
   it('submits the public contact form with the backend payload', async () => {
     renderPublic(<PublicContactPage />, '/contact');
+
+    expect((await screen.findAllByText('+383 38 100 200')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('hello@north.test').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Monday: 08:00 to 17:00/).length).toBeGreaterThan(0);
 
     fireEvent.change(await screen.findByLabelText('Name'), { target: { value: ' Ada Lovelace ' } });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: ' ada@example.com ' } });

@@ -25,19 +25,66 @@ function fromList(items: SettingRecord[]) {
   return Array.from(groups.values());
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function isSettingRecord(value: unknown): value is SettingRecord {
+  return isRecord(value) && typeof value.key === 'string' && 'value' in value;
+}
+
+function withCategory(setting: SettingRecord, category?: string): SettingRecord {
+  return {
+    ...setting,
+    category: setting.category || category || 'General',
+  };
+}
+
+function settingsFromUnknown(value: unknown, category?: string): SettingRecord[] {
+  if (Array.isArray(value)) {
+    return value.filter(isSettingRecord).map((setting) => withCategory(setting, category));
+  }
+
+  if (!isRecord(value)) {
+    return [];
+  }
+
+  if (Array.isArray(value.settings) || isRecord(value.settings)) {
+    return settingsFromUnknown(value.settings, category ?? (typeof value.category === 'string' ? value.category : undefined));
+  }
+
+  if (isSettingRecord(value)) {
+    return [withCategory(value, category)];
+  }
+
+  return Object.values(value)
+    .filter(isSettingRecord)
+    .map((setting) => withCategory(setting, category));
+}
+
 export function normalizeSettings(response: SettingsResponse): SettingsGroup[] {
   if (Array.isArray(response)) {
-    return fromList(response);
+    return fromList(settingsFromUnknown(response));
+  }
+
+  if (!isRecord(response)) {
+    return [];
   }
 
   if ('items' in response && Array.isArray(response.items)) {
-    return fromList(response.items);
+    return fromList(settingsFromUnknown(response.items));
   }
 
-  return Object.entries(response).map(([category, settings]) => ({
-    category,
-    settings,
-  }));
+  if ('settings' in response && (Array.isArray(response.settings) || isRecord(response.settings))) {
+    return fromList(settingsFromUnknown(response.settings, typeof response.category === 'string' ? response.category : undefined));
+  }
+
+  return Object.entries(response)
+    .map(([category, settings]) => ({
+      category,
+      settings: settingsFromUnknown(settings, category),
+    }))
+    .filter((group) => group.settings.length > 0);
 }
 
 export function useSettings(enabled = true) {

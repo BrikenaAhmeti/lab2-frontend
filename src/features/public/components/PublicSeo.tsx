@@ -1,8 +1,5 @@
 import { useEffect } from 'react';
 
-const siteName = 'MedSphere';
-const defaultDescription = 'MedSphere healthcare services and public patient information.';
-
 function upsertMeta(selector: string, attributes: Record<string, string>, content: string) {
   let element = document.head.querySelector<HTMLMetaElement>(selector);
 
@@ -19,9 +16,11 @@ interface PublicSeoProps {
   title?: string | null;
   description?: string | null;
   slug?: string;
+  siteName: string;
+  defaultDescription: string;
 }
 
-export default function PublicSeo({ title, description, slug }: PublicSeoProps) {
+export default function PublicSeo({ title, description, slug, siteName, defaultDescription }: PublicSeoProps) {
   useEffect(() => {
     const cleanTitle = title?.trim() || siteName;
     const pageTitle = cleanTitle === siteName ? siteName : `${cleanTitle} | ${siteName}`;
@@ -35,7 +34,7 @@ export default function PublicSeo({ title, description, slug }: PublicSeoProps) 
     upsertMeta('meta[property="og:description"]', { property: 'og:description' }, pageDescription);
     upsertMeta('meta[property="og:type"]', { property: 'og:type' }, 'website');
     upsertMeta('meta[property="og:url"]', { property: 'og:url' }, url);
-  }, [description, slug, title]);
+  }, [defaultDescription, description, siteName, slug, title]);
 
   return null;
 }

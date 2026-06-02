@@ -6,6 +6,7 @@ import {
   PublicPageIntro,
 } from '@/features/public/components/PublicStaticSections';
 import { usePublicDepartments } from '@/features/public/hooks/usePublicCatalog';
+import { formatWorkingHoursLine, normalizeWorkingHours, visibleWorkingHours } from '@/features/settings/workingHours';
 
 export default function PublicDepartmentsPage() {
   const departmentsQuery = usePublicDepartments();
@@ -42,33 +43,47 @@ export default function PublicDepartmentsPage() {
             {!departmentsQuery.isLoading && departments.length > 0 ? (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {departments.map((department) => (
-                  <article key={department.id} className="rounded-lg border border-border bg-card p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-semibold text-foreground">{department.name}</h2>
-                      <Badge variant="success">Active</Badge>
-                    </div>
-                    {department.description ? <p className="mt-3 text-sm leading-6 text-muted">{department.description}</p> : null}
-                    <dl className="mt-4 grid gap-2 text-sm text-muted">
-                      {department.floor ? (
-                        <div className="flex justify-between gap-4">
-                          <dt>Floor</dt>
-                          <dd className="font-medium text-foreground">{department.floor}</dd>
+                  (() => {
+                    const openHours = visibleWorkingHours(normalizeWorkingHours(department.operatingHours));
+
+                    return (
+                      <article key={department.id} className="rounded-lg border border-border bg-card p-5">
+                        <div className="flex items-start justify-between gap-3">
+                          <h2 className="text-lg font-semibold text-foreground">{department.name}</h2>
+                          <Badge variant="success">Active</Badge>
                         </div>
-                      ) : null}
-                      {department.phoneExtension ? (
-                        <div className="flex justify-between gap-4">
-                          <dt>Extension</dt>
-                          <dd className="font-medium text-foreground">{department.phoneExtension}</dd>
-                        </div>
-                      ) : null}
-                    </dl>
-                    <Link
-                      to={`/services?departmentId=${department.id}`}
-                      className="mt-5 inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
-                    >
-                      View services
-                    </Link>
-                  </article>
+                        {department.description ? <p className="mt-3 text-sm leading-6 text-muted">{department.description}</p> : null}
+                        <dl className="mt-4 grid gap-2 text-sm text-muted">
+                          {department.floor ? (
+                            <div className="flex justify-between gap-4">
+                              <dt>Floor</dt>
+                              <dd className="font-medium text-foreground">{department.floor}</dd>
+                            </div>
+                          ) : null}
+                          {department.phoneExtension ? (
+                            <div className="flex justify-between gap-4">
+                              <dt>Extension</dt>
+                              <dd className="font-medium text-foreground">{department.phoneExtension}</dd>
+                            </div>
+                          ) : null}
+                        </dl>
+                        {openHours.length > 0 ? (
+                          <div className="mt-4 rounded-lg border border-border bg-surface/50 p-3 text-xs text-muted">
+                            {openHours.slice(0, 3).map((row) => (
+                              <p key={row.day}>{formatWorkingHoursLine(row)}</p>
+                            ))}
+                            {openHours.length > 3 ? <p>+{openHours.length - 3} more days</p> : null}
+                          </div>
+                        ) : null}
+                        <Link
+                          to={`/services?departmentId=${department.id}`}
+                          className="mt-5 inline-flex rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+                        >
+                          View services
+                        </Link>
+                      </article>
+                    );
+                  })()
                 ))}
               </div>
             ) : null}
