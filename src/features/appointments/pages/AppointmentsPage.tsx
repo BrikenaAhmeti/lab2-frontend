@@ -180,7 +180,11 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         </div>
       </Card>
 
-      <AppointmentDetailModal appointment={detailAppointment} onClose={() => setDetailAppointment(null)} />
+      <AppointmentDetailModal
+        appointment={detailAppointment}
+        showClinicalReport={mode === 'patient'}
+        onClose={() => setDetailAppointment(null)}
+      />
       <CancelAppointmentDialog
         appointment={cancelAppointment}
         reason={cancelReason}

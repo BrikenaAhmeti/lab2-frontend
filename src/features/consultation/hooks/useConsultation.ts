@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
+  aiApi,
+  type ConsultationSummaryPayload,
+  type ConsultationTranscribeMetadata,
+  type UpdateConsultationSummaryPayload,
+} from '@/lib/api/ai-api';
+import {
   medicalRecordsApi,
   type CreateMedicalRecordPayload,
   type ListMedicalRecordsParams,
@@ -17,10 +23,21 @@ export const consultationQueryKey = {
   medicalRecordList: (params: ListMedicalRecordsParams) =>
     [...consultationQueryKey.medicalRecords, 'list', params] as const,
   medicalRecordDetail: (id: string) => [...consultationQueryKey.medicalRecords, 'detail', id] as const,
+  aiConsultations: ['consultation', 'ai-consultations'] as const,
+  aiConsultation: (appointmentId: string) => [...consultationQueryKey.aiConsultations, appointmentId] as const,
   prescriptions: ['consultation', 'prescriptions'] as const,
   prescriptionList: (params: ListPrescriptionsParams) =>
     [...consultationQueryKey.prescriptions, 'list', params] as const,
 };
+
+export function useAiConsultation(appointmentId: string, enabled = true) {
+  return useQuery({
+    queryKey: consultationQueryKey.aiConsultation(appointmentId),
+    queryFn: () => aiApi.getConsultation(appointmentId),
+    enabled: enabled && Boolean(appointmentId),
+    retry: false,
+  });
+}
 
 export function useMedicalRecords(params: ListMedicalRecordsParams, enabled = true) {
   return useQuery({
@@ -50,6 +67,51 @@ export function useCreateMedicalRecord() {
     onSuccess: async (record) => {
       queryClient.setQueryData(consultationQueryKey.medicalRecordDetail(record.id), record);
       await queryClient.invalidateQueries({ queryKey: consultationQueryKey.medicalRecords });
+    },
+    retry: false,
+  });
+}
+
+export function useTranscribeConsultation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ audio, metadata }: { audio: Blob; metadata: ConsultationTranscribeMetadata }) =>
+      aiApi.transcribeConsultationAudio(audio, metadata),
+    onSuccess: async (_transcription, variables) => {
+      if (variables.metadata.appointmentId) {
+        await queryClient.invalidateQueries({
+          queryKey: consultationQueryKey.aiConsultation(variables.metadata.appointmentId),
+        });
+      }
+    },
+    retry: false,
+  });
+}
+
+export function useSummarizeConsultation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: ConsultationSummaryPayload) => aiApi.summarizeConsultation(payload),
+    onSuccess: async (_summary, payload) => {
+      await queryClient.invalidateQueries({
+        queryKey: consultationQueryKey.aiConsultation(payload.appointmentId),
+      });
+    },
+    retry: false,
+  });
+}
+
+export function useUpdateAiConsultationSummary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ appointmentId, payload }: { appointmentId: string; payload: UpdateConsultationSummaryPayload }) =>
+      aiApi.updateConsultationSummary(appointmentId, payload),
+    onSuccess: async (conversation) => {
+      queryClient.setQueryData(consultationQueryKey.aiConsultation(conversation.appointmentId), conversation);
+      await queryClient.invalidateQueries({ queryKey: consultationQueryKey.aiConsultations });
     },
     retry: false,
   });

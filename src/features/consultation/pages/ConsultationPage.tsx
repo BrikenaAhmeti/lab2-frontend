@@ -31,7 +31,8 @@ import {
 } from '../hooks/useConsultation';
 import Skeleton from '@/ui/atoms/Skeleton';
 
-const AudioRecorderPlaceholder = lazy(() => import('../components/AudioRecorderPlaceholder'));
+const ConsultationRecorder = lazy(() => import('../components/ConsultationRecorder'));
+const ConsultationAiReportPanel = lazy(() => import('../components/ConsultationAiReportPanel'));
 
 function findAppointmentRecord(records: MedicalRecordView[], appointmentId: string) {
   return records.find((record) => record.appointmentId === appointmentId) ?? null;
@@ -79,11 +80,14 @@ export default function ConsultationPage() {
     setRecord((current) => (current?.appointmentId === appointmentId ? current : null));
   }, [appointmentId, appointmentRecord, medicalRecordsQuery.isSuccess]);
 
-  const saveRecord = useCallback(async (values: MedicalRecordFormValues) => {
-    if (!appointment) return;
+  const persistMedicalRecord = useCallback(async (values: MedicalRecordFormValues, successMessage: string) => {
+    if (!appointment) {
+      throw new Error('Appointment details are not loaded.');
+    }
+
     if (!appointment.staffProfileId) {
       setActionError('This appointment has no staff profile assigned.');
-      return;
+      throw new Error('This appointment has no staff profile assigned.');
     }
 
     setActionError('');
@@ -101,11 +105,25 @@ export default function ConsultationPage() {
           });
 
       setRecord(savedRecord);
-      setActionSuccess('Medical record saved.');
+      setActionSuccess(successMessage);
+      return savedRecord;
     } catch (error) {
       setActionError(getConsultationErrorMessage(error, 'Medical record could not be saved'));
+      throw error;
     }
   }, [appointment, createRecordMutation, record, updateRecordMutation]);
+
+  const saveRecord = useCallback(async (values: MedicalRecordFormValues) => {
+    try {
+      await persistMedicalRecord(values, 'Medical record saved.');
+    } catch {
+      return;
+    }
+  }, [persistMedicalRecord]);
+
+  const saveAiReportAsRecord = useCallback(async (values: MedicalRecordFormValues) => {
+    await persistMedicalRecord(values, 'AI report saved to the medical record draft.');
+  }, [persistMedicalRecord]);
 
   const finalizeRecord = useCallback(async () => {
     if (!record) return;
@@ -232,13 +250,20 @@ export default function ConsultationPage() {
             loading={patientQuery.isLoading || prescriptionsQuery.isLoading}
           />
           <Suspense fallback={<Skeleton className="h-40" />}>
-            <AudioRecorderPlaceholder />
+            <ConsultationRecorder appointment={appointment} disabled={closed} />
           </Suspense>
           <LabOrderPlaceholder />
         </div>
 
         <div className="space-y-4">
           {closed ? <FeedbackMessage type="error" message="This appointment is closed for clinical edits." /> : null}
+          <Suspense fallback={<Skeleton className="h-72" />}>
+            <ConsultationAiReportPanel
+              appointment={appointment}
+              disabled={closed}
+              onSaveAsMedicalRecord={saveAiReportAsRecord}
+            />
+          </Suspense>
           <MedicalRecordForm
             record={record}
             saving={createRecordMutation.isPending || updateRecordMutation.isPending}

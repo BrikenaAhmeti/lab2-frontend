@@ -59,6 +59,15 @@ function renderLogin() {
   );
 }
 
+function fillLogin(identifier = 'admin@example.com', password = 'UserPassword123!') {
+  fireEvent.change(screen.getByLabelText('auth.loginIdentifier'), {
+    target: { value: identifier },
+  });
+  fireEvent.change(screen.getByLabelText('auth.password'), {
+    target: { value: password },
+  });
+}
+
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -82,6 +91,7 @@ describe('LoginPage', () => {
     });
 
     renderLogin();
+    fillLogin();
     fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
 
     await waitFor(() => expect(mocks.login).toHaveBeenCalledWith({
@@ -95,11 +105,20 @@ describe('LoginPage', () => {
     mocks.login.mockRejectedValue(forbiddenError('Account inactive. Please verify your email.'));
 
     renderLogin();
+    fillLogin();
     fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
 
     expect(await screen.findByTestId('verification-location')).toHaveTextContent(
       '/verify-email?email=admin%40example.com'
     );
+  });
+
+  it('starts blank and hides demo account shortcuts', () => {
+    renderLogin();
+
+    expect(screen.getByLabelText('auth.loginIdentifier')).toHaveValue('');
+    expect(screen.getByLabelText('auth.password')).toHaveValue('');
+    expect(screen.queryByText('auth.demoAccounts')).not.toBeInTheDocument();
   });
 
   it('submits a username when the credential is not an email address', async () => {
@@ -111,9 +130,7 @@ describe('LoginPage', () => {
     });
 
     renderLogin();
-    fireEvent.change(screen.getByLabelText('auth.loginIdentifier'), {
-      target: { value: 'doctor01' },
-    });
+    fillLogin('doctor01');
     fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
 
     await waitFor(() => expect(mocks.login).toHaveBeenCalledWith({
@@ -133,6 +150,7 @@ describe('LoginPage', () => {
     });
 
     renderLogin();
+    fillLogin();
     fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
 
     expect(await screen.findByText('patient-portal')).toBeInTheDocument();
