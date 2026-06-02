@@ -98,7 +98,7 @@
   "auth.phone": "Phone",
   "auth.dateOfBirth": "Date of birth",
   "auth.gender": "Gender",
-  "auth.avatarFileId": "Avatar file id",
+  "auth.avatarUrl": "Avatar URL",
   "auth.saveProfile": "Save profile",
   "auth.profileUpdated": "Profile updated successfully.",
   "auth.sessionsTitle": "Active Sessions",

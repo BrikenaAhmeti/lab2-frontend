@@ -26,6 +26,11 @@ function getStatusCode(error: unknown) {
   return error instanceof AxiosError ? error.response?.status : undefined;
 }
 
+function emptyToUndefined(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
 export default function ProfilePage() {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
@@ -35,7 +40,7 @@ export default function ProfilePage() {
     phone: '',
     dateOfBirth: '',
     gender: '',
-    avatarFileId: '',
+    avatarUrl: '',
   });
   const [changePasswordForm, setChangePasswordForm] = useState({
     currentPassword: '',
@@ -59,7 +64,7 @@ export default function ProfilePage() {
       phone: profileQuery.data.phone ?? '',
       dateOfBirth: profileQuery.data.dateOfBirth ?? '',
       gender: profileQuery.data.gender ?? '',
-      avatarFileId: profileQuery.data.avatarFileId ?? '',
+      avatarUrl: profileQuery.data.avatarUrl ?? '',
     });
   }, [profileQuery.data]);
 
@@ -75,7 +80,15 @@ export default function ProfilePage() {
   };
 
   const updateMutation = useMutation({
-    mutationFn: () => profileApi.update(form),
+    mutationFn: () =>
+      profileApi.update({
+        firstName: emptyToUndefined(form.firstName),
+        lastName: emptyToUndefined(form.lastName),
+        phone: emptyToUndefined(form.phone),
+        dateOfBirth: emptyToUndefined(form.dateOfBirth),
+        gender: emptyToUndefined(form.gender),
+        avatarUrl: emptyToUndefined(form.avatarUrl),
+      }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['profile', 'me'] });
       setProfileFeedback({ type: 'success', message: t('auth.profileUpdated') });
@@ -141,7 +154,7 @@ export default function ProfilePage() {
             phone: t('auth.phone'),
             dateOfBirth: t('auth.dateOfBirth'),
             gender: t('auth.gender'),
-            avatarFileId: t('auth.avatarFileId'),
+            avatarUrl: t('auth.avatarUrl'),
             saveProfile: t('auth.saveProfile'),
           }}
           form={form}

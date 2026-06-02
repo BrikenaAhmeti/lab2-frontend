@@ -52,6 +52,7 @@ export interface UpdateProfileRequest {
   dateOfBirth?: string;
   gender?: string;
   avatarFileId?: string;
+  avatarUrl?: string;
 }
 
 export interface ProfileDto extends UpdateProfileRequest {

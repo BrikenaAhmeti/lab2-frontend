@@ -8,7 +8,7 @@ interface ProfileFormValues {
   phone: string;
   dateOfBirth: string;
   gender: string;
-  avatarFileId: string;
+  avatarUrl: string;
 }
 
 interface ProfileDetailsFormProps {
@@ -18,7 +18,7 @@ interface ProfileDetailsFormProps {
     phone: string;
     dateOfBirth: string;
     gender: string;
-    avatarFileId: string;
+    avatarUrl: string;
     saveProfile: string;
   };
   form: ProfileFormValues;
@@ -49,7 +49,7 @@ export default function ProfileDetailsForm({
       <Input id="profile-phone" label={labels.phone} value={form.phone} onChange={(e) => onChange('phone', e.target.value)} />
       <Input id="profile-date-of-birth" label={labels.dateOfBirth} value={form.dateOfBirth} onChange={(e) => onChange('dateOfBirth', e.target.value)} />
       <Input id="profile-gender" label={labels.gender} value={form.gender} onChange={(e) => onChange('gender', e.target.value)} />
-      <Input id="profile-avatar-file-id" label={labels.avatarFileId} value={form.avatarFileId} onChange={(e) => onChange('avatarFileId', e.target.value)} />
+      <Input id="profile-avatar-url" label={labels.avatarUrl} value={form.avatarUrl} onChange={(e) => onChange('avatarUrl', e.target.value)} />
       {feedback && <FeedbackMessage className="md:col-span-2" type={feedback.type} message={feedback.message} />}
       <div className="md:col-span-2">
         <Button loading={loading}>{labels.saveProfile}</Button>
