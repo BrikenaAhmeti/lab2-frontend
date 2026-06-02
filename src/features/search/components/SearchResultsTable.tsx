@@ -37,7 +37,7 @@ function SearchResultsTable<T>({
   onSort,
 }: SearchResultsTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
+    <div className="overflow-x-auto rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>

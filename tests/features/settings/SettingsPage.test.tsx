@@ -40,6 +40,17 @@ const settingsResponse = {
       value: 30,
       description: null,
     },
+    {
+      key: 'working_hours',
+      label: 'Working hours',
+      category: 'Scheduling',
+      value: {
+        monday: { isOpen: true, startTime: '08:00', endTime: '16:00' },
+        tuesday: { isOpen: true, startTime: '08:00', endTime: '16:00' },
+        sunday: { isOpen: false, startTime: null, endTime: null },
+      },
+      description: 'Seeded default hours',
+    },
   ],
 };
 
@@ -110,9 +121,42 @@ describe('SettingsPage', () => {
 
     expect(await screen.findByText('Facility name')).toBeInTheDocument();
     expect(screen.getByText('Scheduling')).toBeInTheDocument();
+    expect(screen.getByText('Monday: 08:00 to 16:00')).toBeInTheDocument();
+    expect(screen.queryByText('Seeded default hours')).not.toBeInTheDocument();
     expect(screen.getByText('Admin')).toBeInTheDocument();
     expect(screen.getByText('Organization')).toBeInTheDocument();
     expect(within(screen.getByLabelText('Breadcrumb')).getByText('Settings')).toBeInTheDocument();
+  });
+
+  it('normalizes object-shaped setting groups before rendering', async () => {
+    setUserSession(['settings:manage']);
+    vi.mocked(settingsApi.list).mockResolvedValue({
+      Facility: {
+        settings: {
+          facility_name: {
+            key: 'facility_name',
+            label: 'Facility name',
+            category: 'Facility',
+            value: 'MedSphere Clinic',
+            description: 'Public facility display name',
+          },
+        },
+      },
+      Scheduling: {
+        default_slot_duration: {
+          key: 'default_slot_duration',
+          label: 'Default slot duration',
+          category: 'Scheduling',
+          value: 30,
+          description: null,
+        },
+      },
+    });
+
+    renderSettingsPage();
+
+    expect(await screen.findByText('Facility name')).toBeInTheDocument();
+    expect(screen.getByText('Default slot duration')).toBeInTheDocument();
   });
 
   it('updates a setting through the Core Service API shape', async () => {
@@ -130,5 +174,42 @@ describe('SettingsPage', () => {
 
     await waitFor(() => expect(settingsApi.update).toHaveBeenCalledWith('facility_name', 'MedSphere Dental'));
     expect(await screen.findByText('Setting saved successfully')).toBeInTheDocument();
+  });
+
+  it('edits working hours with day and time controls instead of raw JSON', async () => {
+    setUserSession(['settings:manage']);
+
+    renderSettingsPage();
+
+    expect(await screen.findByText('Working hours')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue(/"monday"/)).not.toBeInTheDocument();
+
+    const workingHoursRow = screen.getByText('Working hours').closest('tr');
+    if (!workingHoursRow) throw new Error('Missing working hours row');
+
+    fireEvent.click(within(workingHoursRow).getByRole('button', { name: 'Edit' }));
+    const startInputs = within(workingHoursRow).getAllByDisplayValue('08:00');
+    fireEvent.change(startInputs[0], { target: { value: '09:00' } });
+    fireEvent.click(within(workingHoursRow).getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(settingsApi.update).toHaveBeenCalledWith(
+        'working_hours',
+        expect.objectContaining({
+          monday: expect.objectContaining({ isOpen: true, startTime: '09:00', endTime: '16:00' }),
+          sunday: expect.objectContaining({ isOpen: false, startTime: null, endTime: null }),
+        })
+      )
+    );
+  });
+
+  it('does not mention seeding when no settings are returned', async () => {
+    setUserSession(['settings:manage']);
+    vi.mocked(settingsApi.list).mockResolvedValue([]);
+
+    renderSettingsPage();
+
+    expect(await screen.findByText('No settings found')).toBeInTheDocument();
+    expect(screen.queryByText(/seed/i)).not.toBeInTheDocument();
   });
 });

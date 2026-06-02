@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AdvancedSearchPage from '@/features/search/pages/AdvancedSearchPage';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/features/auth/authSlice';
-import { advancedSearchApi, type PatientSearchItem, type SearchParams } from '@/lib/api/search-api';
+import { advancedSearchApi, type AuditLogSearchItem, type PatientSearchItem, type SearchParams } from '@/lib/api/search-api';
 
 vi.mock('@/lib/api/search-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/search-api')>('@/lib/api/search-api');
@@ -34,6 +34,36 @@ const patient: PatientSearchItem = {
   createdAt: '2026-01-10T00:00:00.000Z',
   updatedAt: '2026-01-10T00:00:00.000Z',
 };
+
+const auditLog = {
+  id: 'audit-1',
+  action: 'UPDATE',
+  entity: 'serviceCatalog',
+  entityId: 'service-1',
+  userId: 'user-1',
+  user: {
+    id: 'user-1',
+    firstName: 'Ariana',
+    lastName: 'Kelmendi',
+    email: 'ariana@example.com',
+  },
+  ip: '127.0.0.1',
+  userAgent: 'Vitest browser',
+  requestId: 'request-1',
+  metadata: {
+    reason: 'Admin change',
+    module: 'Services',
+  },
+  oldValue: {
+    defaultPrice: 50,
+    isActive: true,
+  },
+  newValue: {
+    defaultPrice: 75,
+    isActive: false,
+  },
+  timestamp: '2026-01-12T10:00:00.000Z',
+} satisfies AuditLogSearchItem & { user: { id: string; firstName: string; lastName: string; email: string } };
 
 function setAdminSession() {
   store.dispatch(clearSession());
@@ -82,8 +112,8 @@ describe('AdvancedSearchPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setAdminSession();
-    vi.mocked(advancedSearchApi.search).mockImplementation(async (_resource, params: SearchParams) => ({
-      data: [patient],
+    vi.mocked(advancedSearchApi.search).mockImplementation(async (resource, params: SearchParams) => ({
+      data: resource === 'audit-logs' ? [auditLog] : [patient],
       total: 16,
       page: Number(params.page ?? 1),
       limit: Number(params.limit ?? 10),
@@ -156,5 +186,32 @@ describe('AdvancedSearchPage', () => {
         })
       );
     });
+  });
+
+  it('shows audit log actors, changed fields, and request context without sending client-only filters', async () => {
+    renderSearch('/admin/search/audit-logs?userId=user-1&changedField=defaultPrice&from=2026-01-01&to=2026-01-31');
+
+    expect(await screen.findByText('Ariana Kelmendi')).toBeInTheDocument();
+    expect(screen.getByText('Default Price')).toBeInTheDocument();
+    expect(screen.getAllByText('50').length).toBeGreaterThan(0);
+    expect(screen.getByText('75')).toBeInTheDocument();
+    expect(screen.getByText(/Reason: Admin change/)).toBeInTheDocument();
+    expect(screen.getByText(/Request request-1/)).toBeInTheDocument();
+    expect(screen.getByLabelText('Changed field')).toHaveValue('defaultPrice');
+
+    expect(advancedSearchApi.search).toHaveBeenCalledWith(
+      'audit-logs',
+      expect.objectContaining({
+        userId: 'user-1',
+        from: '2026-01-01',
+        to: '2026-01-31',
+      })
+    );
+    expect(advancedSearchApi.search).not.toHaveBeenCalledWith(
+      'audit-logs',
+      expect.objectContaining({
+        changedField: 'defaultPrice',
+      })
+    );
   });
 });

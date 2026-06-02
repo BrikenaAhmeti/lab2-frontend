@@ -14,6 +14,7 @@ export interface SearchFilterField {
   options?: SearchFilterOption[];
   min?: number;
   max?: number;
+  clientOnly?: boolean;
 }
 
 interface SearchFilterBarProps {

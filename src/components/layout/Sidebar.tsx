@@ -152,7 +152,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
         </div>
       </Link>
 
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-4">
+      <nav className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-3 py-4">
         {portal.navGroups.map((group) => {
           const items = group.items.filter((item) => canSeeItem(item, permissions, roles));
           if (items.length === 0) return null;
@@ -200,7 +200,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
 
   return (
     <>
-      <aside className="hidden w-72 shrink-0 border-r border-[#0b345f] bg-[#06264a] lg:block">{content}</aside>
+      <aside className="hidden h-screen w-72 shrink-0 overflow-hidden border-r border-[#0b345f] bg-[#06264a] lg:sticky lg:top-0 lg:block">{content}</aside>
       <div className={clsx('fixed inset-0 z-40 lg:hidden', sidebarOpen ? 'block' : 'hidden')}>
         <button
           type="button"

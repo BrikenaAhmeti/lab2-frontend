@@ -69,13 +69,23 @@ export default function AdvancedSearchPage() {
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
   const filterKeys = useMemo(() => activeConfig?.filters.map((field) => field.name) ?? [], [activeConfig]);
-  const tableFilters = useTableFilters({ filterKeys });
+  const requestFilterKeys = useMemo(
+    () => activeConfig?.filters.filter((field) => !field.clientOnly).map((field) => field.name) ?? [],
+    [activeConfig]
+  );
+  const tableFilters = useTableFilters({ filterKeys, requestFilterKeys });
   const allowed = activeConfig ? canReadSearch(permissions, roles, activeConfig.permission) : false;
   const searchQuery = useAdvancedSearch<unknown>(
     (activeConfig?.resource ?? 'patients') as SearchResource,
     tableFilters.params,
     Boolean(activeConfig && allowed)
   );
+  const { refetch: refetchSearch } = searchQuery;
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const handleImportCompleted = useCallback(() => {
+    void refetchSearch();
+  }, [refetchSearch]);
 
   if (!activeConfig) {
     return <Navigate to="/admin/search/patients" replace />;
@@ -85,7 +95,10 @@ export default function AdvancedSearchPage() {
     return <Forbidden />;
   }
 
-  const rows = searchQuery.data?.data ?? [];
+  const data = searchQuery.data?.data ?? [];
+  const rows = activeConfig.clientFilter
+    ? data.filter((row) => activeConfig.clientFilter?.(row, tableFilters.filters) ?? true)
+    : data;
   const total = searchQuery.data?.total ?? 0;
   const page = searchQuery.data?.page ?? tableFilters.page;
   const limit = searchQuery.data?.limit ?? tableFilters.limit;
@@ -94,11 +107,6 @@ export default function AdvancedSearchPage() {
   const exportEntity = exportEntityByResource[activeConfig.resource];
   const importEntity = importEntityByResource[activeConfig.resource];
   const canImport = importEntity ? canImportEntity(permissions, roles, importEntity) : false;
-  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
-  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
-  const handleImportCompleted = useCallback(() => {
-    void searchQuery.refetch();
-  }, [searchQuery.refetch]);
 
   return (
     <div className="space-y-4">

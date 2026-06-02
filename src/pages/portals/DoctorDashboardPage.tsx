@@ -38,23 +38,24 @@ function canStartConsultation(appointment: AppointmentView) {
 export default function DoctorDashboardPage() {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
+  const staffProfileId = user?.profileId ?? user?.id;
   const todayQuery = useTodayAppointments();
   const labReviewsQuery = useLabOrders({ page: 1, limit: 100, status: 'completed' });
   const updateStatusMutation = useUpdateAppointmentStatus();
   const [actionError, setActionError] = useState('');
   const [activePanel, setActivePanel] = useState<'appointments' | 'lab-reviews'>('appointments');
   const appointments = useMemo(
-    () => (todayQuery.data ?? []).filter((appointment) => belongsToDoctor(appointment, user?.id, user?.profileId)),
-    [todayQuery.data, user?.id, user?.profileId]
+    () => (todayQuery.data ?? []).filter((appointment) => belongsToDoctor(appointment, user?.id, staffProfileId)),
+    [todayQuery.data, user?.id, staffProfileId]
   );
   const pendingLabReviews = useMemo(
     () =>
       sortLabOrders(
         (labReviewsQuery.data?.items ?? []).filter(
-          (order) => isPendingLabReview(order) && belongsToOrderingDoctor(order, user?.id, user?.profileId)
+          (order) => isPendingLabReview(order) && belongsToOrderingDoctor(order, user?.id, staffProfileId)
         )
       ),
-    [labReviewsQuery.data?.items, user?.id, user?.profileId]
+    [labReviewsQuery.data?.items, user?.id, staffProfileId]
   );
   const readyCount = appointments.filter(canStartConsultation).length;
   const unreadMessagesCount = 0;

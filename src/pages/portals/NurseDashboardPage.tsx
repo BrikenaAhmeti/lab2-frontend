@@ -26,7 +26,8 @@ function departmentKey(value: { departmentId?: string; department?: { id: string
 
 export default function NurseDashboardPage() {
   const user = useAppSelector((state) => state.auth.user);
-  const staffQuery = useStaffDetail(user?.profileId ?? '');
+  const staffProfileId = user?.profileId ?? user?.id ?? '';
+  const staffQuery = useStaffDetail(staffProfileId);
   const todayQuery = useTodayAppointments();
   const updateStatusMutation = useUpdateAppointmentStatus();
 
