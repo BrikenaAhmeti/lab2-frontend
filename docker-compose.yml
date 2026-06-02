@@ -1,0 +1,20 @@
+services:
+  frontend:
+    build:
+      context: .
+      target: production
+      args:
+        VITE_AUTH_API_URL: ${VITE_AUTH_API_URL:-http://localhost:3005}
+        VITE_CORE_API_URL: ${VITE_CORE_API_URL:-http://localhost:3007}
+        VITE_NOTIFICATION_API_URL: ${VITE_NOTIFICATION_API_URL:-http://localhost:3008}
+        VITE_NOTIFICATION_SOCKET_URL: ${VITE_NOTIFICATION_SOCKET_URL:-http://localhost:3008}
+        VITE_CMS_API_URL: ${VITE_CMS_API_URL:-http://localhost:3009}
+        VITE_CMS_SOCKET_URL: ${VITE_CMS_SOCKET_URL:-http://localhost:3009}
+        VITE_AI_API_URL: ${VITE_AI_API_URL:-http://localhost:3010}
+        VITE_API_DEVICE_INFO: ${VITE_API_DEVICE_INFO:-}
+        VITE_VAPI_PUBLIC_KEY: ${VITE_VAPI_PUBLIC_KEY:-}
+        VITE_VAPI_ASSISTANT_ID: ${VITE_VAPI_ASSISTANT_ID:-}
+    container_name: medsphere-frontend
+    ports:
+      - "${FRONTEND_PORT:-3001}:80"
+    restart: unless-stopped
