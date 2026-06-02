@@ -1,6 +1,4 @@
 import type { ReactNode } from 'react';
-import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
-import { getApiErrorMessage } from '@/features/staff/hooks/useStaff';
 import { usePublicCmsPage } from '@/features/cms/hooks/useCms';
 import CmsSections from './CmsSectionRenderer';
 import PublicBannerStrip from './PublicBannerStrip';
@@ -24,20 +22,13 @@ export default function PublicPageShell({
 }: PublicPageShellProps) {
   const pageQuery = usePublicCmsPage(slug);
   const page = pageQuery.data;
+  const cmsSections = pageQuery.isSuccess ? page?.sections ?? [] : [];
 
   return (
     <PublicLayout>
       <PublicSeo title={page?.metaTitle || page?.title || fallbackTitle} description={page?.metaDescription} slug={slug} />
       {showBanners ? <PublicBannerStrip /> : null}
-      {pageQuery.isError ? (
-        <section className="mx-auto max-w-6xl px-4 py-8">
-          <FeedbackMessage
-            type="error"
-            message={getApiErrorMessage(pageQuery.error, 'CMS page content could not be loaded.')}
-          />
-        </section>
-      ) : null}
-      <CmsSections sections={page?.sections ?? []} fallbackTitle={fallbackTitle} fallbackBody={fallbackBody} />
+      <CmsSections sections={cmsSections} fallbackTitle={fallbackTitle} fallbackBody={fallbackBody} />
       {children}
     </PublicLayout>
   );

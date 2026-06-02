@@ -23,6 +23,7 @@ const PublicCmsPage = lazy(() => import('@/pages/public/PublicCmsPage'));
 const PublicDepartmentsPage = lazy(() => import('@/pages/public/PublicDepartmentsPage'));
 const PublicDoctorsPage = lazy(() => import('@/pages/public/PublicDoctorsPage'));
 const PublicServicesPage = lazy(() => import('@/pages/public/PublicServicesPage'));
+const PublicBookAppointmentPage = lazy(() => import('@/pages/public/PublicBookAppointmentPage'));
 const PublicContactPage = lazy(() => import('@/pages/public/PublicContactPage'));
 const AdminDashboardPage = lazy(() => import('@/pages/portals/AdminDashboardPage'));
 const PatientDashboardPage = lazy(() => import('@/pages/portals/PatientDashboardPage'));
@@ -117,6 +118,10 @@ export const router = createBrowserRouter([
   {
     path: '/services',
     element: lazyRoute(<PublicServicesPage />),
+  },
+  {
+    path: '/book-appointment',
+    element: lazyRoute(<PublicBookAppointmentPage />),
   },
   {
     path: '/contact',

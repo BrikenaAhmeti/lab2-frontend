@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { CalendarPlus, PhoneCall } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import ExportButton from '@/components/export/ExportButton';
 import type { AppointmentView } from '@/lib/api/appointments-api';
@@ -86,7 +87,23 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
           <div className="flex flex-wrap justify-end gap-2">
             {mode !== 'patient' ? <ExportButton entity="appointments" /> : null}
             <Link to={`${root}/book-appointment`}>
-              <Button type="button" size="sm">Book Appointment</Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                leftIcon={<PhoneCall className="h-4 w-4" aria-hidden="true" />}
+              >
+                Call
+              </Button>
+            </Link>
+            <Link to={`${root}/book-appointment`}>
+              <Button
+                type="button"
+                size="sm"
+                leftIcon={<CalendarPlus className="h-4 w-4" aria-hidden="true" />}
+              >
+                Book Appointment
+              </Button>
             </Link>
           </div>
         }

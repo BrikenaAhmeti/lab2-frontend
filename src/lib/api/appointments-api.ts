@@ -1,5 +1,5 @@
 import type { AxiosInstance } from 'axios';
-import { coreApiClient } from './axios';
+import { coreApiClient, publicCoreApiClient } from './axios';
 
 export type AppointmentStatus =
   | 'SCHEDULED'
@@ -110,6 +110,25 @@ export interface BookAppointmentPayload {
   notes?: string | null;
 }
 
+export interface PublicAppointmentPatientPayload {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  personalNumber: string;
+  dateOfBirth: string;
+  gender: string;
+}
+
+export interface PublicBookAppointmentPayload {
+  patient: PublicAppointmentPatientPayload;
+  serviceCatalogId: string;
+  staffProfileId: string;
+  scheduledAt: string;
+  appointmentType?: AppointmentType;
+  notes?: string | null;
+}
+
 export interface RescheduleAppointmentPayload {
   scheduledAt: string;
   serviceCatalogId?: string;
@@ -142,6 +161,11 @@ export const appointmentsApi = {
   create(payload: BookAppointmentPayload, instance?: AxiosInstance) {
     return client(instance).post<AppointmentView>('/api/appointments', payload).then((response) => response.data);
   },
+  publicCreate(payload: PublicBookAppointmentPayload, instance?: AxiosInstance) {
+    return (instance ?? publicCoreApiClient)
+      .post<AppointmentView>('/api/public/appointments', payload)
+      .then((response) => response.data);
+  },
   reschedule(id: string, payload: RescheduleAppointmentPayload, instance?: AxiosInstance) {
     return client(instance).put<AppointmentView>(`/api/appointments/${id}`, payload).then((response) => response.data);
   },
@@ -151,6 +175,11 @@ export const appointmentsApi = {
   availableSlots(staffProfileId: string, params: { date: string; serviceId: string }, instance?: AxiosInstance) {
     return client(instance)
       .get<AvailableSlotsResponse>(`/api/staff/${staffProfileId}/available-slots`, { params })
+      .then((response) => response.data);
+  },
+  publicAvailableSlots(staffProfileId: string, params: { date: string; serviceId: string }, instance?: AxiosInstance) {
+    return (instance ?? publicCoreApiClient)
+      .get<AvailableSlotsResponse>(`/api/public/staff/${staffProfileId}/available-slots`, { params })
       .then((response) => response.data);
   },
 };

@@ -53,7 +53,7 @@ export function getPublicCatalogError(error: unknown, fallback: string) {
     const status = error.response?.status;
     const message = (error.response?.data as { message?: string } | undefined)?.message;
 
-    if (status === 401 || status === 403) return 'This public list is not available from the backend yet.';
+    if (status === 401 || status === 403) return 'This public list is not available right now.';
     if (message) return message;
   }
 
