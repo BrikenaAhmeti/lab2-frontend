@@ -1,101 +1,99 @@
-# React + TypeScript + Vite
+# MedSphere Frontend
 
-## MS-46 Frontend Performance Notes
+React + TypeScript + Vite frontend for the Lab2 MedSphere platform. It serves the public website, authentication screens, and role-based portals for admins, doctors, nurses, receptionists, lab staff, pharmacy staff, and patients.
 
-Bundle analysis was run with:
+The frontend does not own a database. It talks to the Lab2 backend services through HTTP and Socket.IO.
+
+## Port
+
+- Local Vite dev server: `http://localhost:3001`
+- Docker host port: `http://localhost:3001`
+- Docker container port: `80`
+- Docker health check path: `/health`
+
+## Environment Keys
+
+Copy `.env.example` to `.env`. Vite reads these keys at build time, so rebuild the Docker image after changing them.
+
+Preferred keys:
+
+- `VITE_AUTH_API_URL`
+- `VITE_CORE_API_URL`
+- `VITE_NOTIFICATION_API_URL`
+- `VITE_NOTIFICATION_SOCKET_URL`
+- `VITE_CMS_API_URL`
+- `VITE_CMS_SOCKET_URL`
+- `VITE_AI_API_URL`
+- `VITE_API_DEVICE_INFO`
+- `VITE_VAPI_PUBLIC_KEY`
+- `VITE_VAPI_ASSISTANT_ID`
+
+Accepted legacy aliases still supported by `src/config/env.ts`:
+
+- `VITE_API_AUTH_SERVICE`
+- `VITE_API_CORE_SERVICE`
+- `VITE_API_NOTIFICATION_SERVICE`
+- `VITE_API_CMS_SERVICE`
+- `VITE_API_AI_SERVICE`
+- `VITE_API_CORE`
+
+Docker-only host port override:
+
+- `FRONTEND_PORT`
+
+## Start Locally
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
+```
+
+Open `http://localhost:3001`.
+
+## Run With Docker
+
+```bash
+cp .env.example .env
+npm run docker:up
+npm run docker:logs
+```
+
+Stop the container:
+
+```bash
+npm run docker:down
+```
+
+The Docker image builds the Vite app and serves static files with Nginx. SPA routes fall back to `index.html`.
+
+## Build And Tests
 
 ```bash
 npm run build
-npm exec --yes vite-bundle-visualizer -- --template raw-data --output /private/tmp/medsphere-ms46-bundle-analysis.json --open false
+npm run test
 ```
 
-Measured on May 29, 2026:
+Additional test modes:
 
-| Area | Before MS-46 pass | After MS-46 pass |
-| --- | ---: | ---: |
-| Startup app JS (`index-*.js`) | 639.79 kB / gzip 200.58 kB | 539.89 kB / gzip 174.25 kB |
-| Largest portal page chunk | `ReportBuilderPage` 24.09 kB / gzip 7.91 kB | `ReportBuilderPage` 24.10 kB / gzip 7.87 kB |
-| Report chart code | Full `echarts` chunk 588.20 kB / gzip 195.71 kB | Lazy `ReportChart` 23.57 kB / gzip 9.28 kB plus deferred shared ECharts renderer |
-
-Performance work completed:
-
-- Auth pages, portal layouts, and major portal pages are loaded with `React.lazy` and Suspense skeleton fallbacks.
-- Heavy widgets are deferred: import wizard, report chart, consultation audio panel, CMS preview, and CMS section editor.
-- High-traffic list/table loading states use animated skeleton placeholders instead of text-only waits.
-- Pure table/list/card components are memoized, and expensive list/chart computations use `useMemo`.
-- Event handlers passed into memoized children were stabilized with `useCallback` in the main filtered/list pages.
-- Images include `loading="lazy"` and async decoding.
-
-The production build still reports a large deferred ECharts renderer chunk. That chunk is not part of the startup app bundle; it loads only when chart routes or chart components are requested.
-
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run test:watch
+npm run test:ui
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Swagger
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+This repository does not expose Swagger because it is a browser frontend, not an API service. Use the backend service Swagger URLs:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- Auth: `http://localhost:3005/docs` or `http://localhost:3005/api/docs`
+- Core: `http://localhost:3007/api/docs`
+- Notifications: `http://localhost:3008/api/docs`
+- CMS: `http://localhost:3009/api/docs`
+- AI: `http://localhost:3010/api/docs`
+
+## Notes
+
+- The app uses React Query, Redux Toolkit, React Router, Socket.IO client, Tailwind, and Vitest.
+- Notification and chat realtime features require the Notification Service Socket.IO URL.
+- Voice booking requires Vapi keys when that assistant is enabled.
+- The latest bundle optimization pass lazy-loads auth pages, portal layouts, heavy widgets, report charts, CMS preview/editor panels, and consultation audio tools.
