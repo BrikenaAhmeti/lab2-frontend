@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { AxiosAdapter, AxiosResponse } from 'axios';
+import type { AxiosAdapter, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { apiClient } from '@/lib/api/axios';
 import { authApi } from '@/lib/api/auth-api';
 
-function makeResponse<T>(cfg: any, status: number, data: T): AxiosResponse<T> {
+function makeResponse<T>(cfg: InternalAxiosRequestConfig, status: number, data: T): AxiosResponse<T> {
   return {
     data,
     status,

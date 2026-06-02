@@ -38,11 +38,56 @@ export interface AuthResponse {
 
 export interface SessionDto {
   id: string;
+  userId?: string;
   deviceInfo: string;
   ipAddress: string;
   createdAt: string;
   lastUsedAt: string;
   expiresAt: string;
+  user?: SessionUserDto;
+}
+
+export interface SessionUserDto {
+  id: string;
+  email: string;
+  username?: string | null;
+  firstName: string;
+  lastName: string;
+}
+
+export interface SessionLogDto {
+  id: string;
+  userId?: string | null;
+  action: string;
+  entity: string;
+  entityId?: string | null;
+  oldValue?: unknown;
+  newValue?: unknown;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  createdAt: string;
+  actor?: SessionUserDto | null;
+}
+
+export interface SessionLogListParams {
+  page?: number;
+  limit?: number;
+  action?: string;
+  userId?: string;
+  userSearch?: string;
+  changed?: string;
+  from?: string;
+  to?: string;
+}
+
+export interface SessionLogListResponse {
+  items: SessionLogDto[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
 
 export interface UpdateProfileRequest {
@@ -140,6 +185,9 @@ export const authApi = {
 export const sessionsApi = {
   list(instance?: AxiosInstance) {
     return client(instance).get<SessionDto[]>('/api/auth/sessions').then((r) => r.data);
+  },
+  logs(params: SessionLogListParams = {}, instance?: AxiosInstance) {
+    return client(instance).get<SessionLogListResponse>('/api/auth/session-logs', { params }).then((r) => r.data);
   },
   revoke(sessionId: string, instance?: AxiosInstance) {
     return client(instance).delete(`/api/auth/sessions/${sessionId}`).then((r) => r.data);
