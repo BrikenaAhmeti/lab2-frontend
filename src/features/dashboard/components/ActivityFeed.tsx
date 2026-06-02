@@ -53,7 +53,7 @@ export default function ActivityFeed({
   isLoading: boolean;
 }) {
   return (
-    <Card title="Recent Activity" subtitle="Last 20 facility-wide actions">
+    <Card title="Recent Activity" subtitle="Last 20 facility-wide actions" className="p-4 md:p-5">
       {isLoading && (
         <ul className="space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
@@ -63,7 +63,7 @@ export default function ActivityFeed({
       )}
 
       {!isLoading && items.length === 0 && (
-        <p className="rounded-lg border border-border bg-surface/60 p-4 text-sm text-muted">No activity yet.</p>
+        <p className="rounded-lg border border-dashed border-border bg-surface/50 p-4 text-sm text-muted">No activity yet.</p>
       )}
 
       {!isLoading && items.length > 0 && (
@@ -72,9 +72,9 @@ export default function ActivityFeed({
             const Icon = iconFor(item.actionType);
 
             return (
-              <li key={item.id} className="rounded-lg border border-border bg-surface/60 p-4">
+              <li key={item.id} className="rounded-lg border border-border bg-surface/50 p-4 transition hover:bg-surface">
                 <div className="flex gap-3">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-card text-primary">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">

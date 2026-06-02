@@ -6,13 +6,27 @@ import axios, {
 import type { AppStore } from '@/app/store';
 import { authApi } from './auth-api';
 import { clearSession, setSession } from '@/features/auth/authSlice';
+import {
+  clearPersistedAuthSession,
+  persistAuthSession,
+  readPersistedAuthSession,
+} from '@/features/auth/authStorage';
 import { env } from '@/config/env';
 
 const baseURL = env.AUTH_API_URL;
 const coreBaseURL = env.CORE_API_URL;
 const cmsBaseURL = env.CMS_API_URL;
 const aiBaseURL = env.AI_API_URL;
-const LEGACY_AUTH_STORAGE_KEY = 'medsphere.auth';
+const AUTH_REFRESH_EXEMPT_PATHS = new Set([
+  '/api/auth/login',
+  '/api/auth/refresh',
+  '/api/auth/logout',
+  '/api/auth/register',
+  '/api/auth/verify-email',
+  '/api/auth/resend-verification',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+]);
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -113,14 +127,36 @@ function fallbackToLogin() {
   }
 }
 
-function clearLegacyStoredAuth() {
-  localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
+function getRequestPath(config: InternalAxiosRequestConfig) {
+  try {
+    return new URL(config.url ?? '', config.baseURL ?? 'http://local.test').pathname;
+  } catch {
+    return config.url ?? '';
+  }
+}
+
+function shouldSkipRefreshRetry(config: InternalAxiosRequestConfig) {
+  return AUTH_REFRESH_EXEMPT_PATHS.has(getRequestPath(config));
 }
 
 async function refreshTokenFlow(store: AppStore) {
-  const refreshed = await authApi.refresh(undefined, rawClient);
-  store.dispatch(setSession(refreshed));
-  return refreshed.accessToken;
+  const auth = store.getState().auth;
+  const refreshToken = auth.refreshToken ?? auth.tokens?.refreshToken ?? readPersistedAuthSession()?.refreshToken;
+
+  if (!refreshToken) {
+    throw new Error('Cannot refresh session without a refresh token');
+  }
+
+  const refreshed = await authApi.refresh(refreshToken, rawClient);
+  store.dispatch(setSession({ ...refreshed, refreshToken: refreshed.refreshToken ?? refreshToken }));
+  const nextAuth = store.getState().auth;
+  persistAuthSession(nextAuth);
+
+  if (!nextAuth.accessToken) {
+    throw new Error('Refresh response did not include an access token');
+  }
+
+  return nextAuth.accessToken;
 }
 
 function applyAuthInterceptors(client: typeof apiClient) {
@@ -145,7 +181,12 @@ function applyAuthInterceptors(client: typeof apiClient) {
       const status = error.response?.status;
       const originalRequest = error.config as RetryableConfig | undefined;
 
-      if (!originalRequest || status !== 401 || originalRequest._retry) {
+      if (
+        !originalRequest ||
+        status !== 401 ||
+        originalRequest._retry ||
+        shouldSkipRefreshRetry(originalRequest)
+      ) {
         return Promise.reject(error);
       }
 
@@ -172,7 +213,7 @@ function applyAuthInterceptors(client: typeof apiClient) {
         isRefreshing = false;
         subscribers = [];
         authStore.dispatch(clearSession());
-        clearLegacyStoredAuth();
+        clearPersistedAuthSession();
         fallbackToLogin();
         return Promise.reject(refreshError);
       }

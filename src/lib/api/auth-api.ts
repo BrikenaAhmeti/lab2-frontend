@@ -92,12 +92,20 @@ function client(instance?: AxiosInstance) {
   return instance ?? apiClient;
 }
 
+function normalizeLoginPayload(payload: LoginRequest) {
+  const credential = 'email' in payload ? payload.email : payload.username;
+  return {
+    email: credential,
+    password: payload.password,
+  };
+}
+
 export const authApi = {
   register(payload: PatientRegisterRequest, instance?: AxiosInstance) {
     return client(instance).post<AuthActionResponse>('/api/auth/register', payload).then((r) => r.data);
   },
   login(payload: LoginRequest, instance?: AxiosInstance) {
-    return client(instance).post<AuthResponse>('/api/auth/login', payload).then((r) => r.data);
+    return client(instance).post<AuthResponse>('/api/auth/login', normalizeLoginPayload(payload)).then((r) => r.data);
   },
   refresh(refreshToken?: string, instance?: AxiosInstance) {
     return client(instance)

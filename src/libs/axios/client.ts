@@ -2,6 +2,11 @@ import axios, { AxiosHeaders } from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/domain/auth/authSlice';
+import {
+  clearPersistedAuthSession,
+  persistAuthSession,
+  readPersistedAuthSession,
+} from '@/features/auth/authStorage';
 import { env } from '@/config/env';
 import { addSubscriber, flushSubscribers, getRefreshing, setRefreshing } from './refreshQueue';
 import type { AuthUser } from '@/domain/auth/types';
@@ -11,8 +16,10 @@ type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
 interface RefreshResponse {
   accessToken?: string;
+  refreshToken?: string;
   tokens?: {
     accessToken?: string;
+    refreshToken?: string;
   };
   user: AuthUser;
 }
@@ -55,12 +62,27 @@ function build(key: ApiKey): AxiosInstance {
         if (!getRefreshing()) {
           setRefreshing(true);
           try {
-            const { data } = await axios.post<RefreshResponse>(`${base.auth}/auth/refresh`, {}, { withCredentials: true });
+            const auth = store.getState().auth;
+            const refreshToken = auth.refreshToken ?? auth.tokens?.refreshToken ?? readPersistedAuthSession()?.refreshToken;
+            if (!refreshToken) {
+              throw new Error('Cannot refresh session without a refresh token');
+            }
+
+            const { data } = await axios.post<RefreshResponse>(
+              `${base.auth}/auth/refresh`,
+              { refreshToken },
+              { withCredentials: true }
+            );
             const accessToken = data.accessToken ?? data.tokens?.accessToken;
             if (!accessToken) {
               throw new Error('Refresh response did not include an access token');
             }
-            store.dispatch(setSession({ user: data.user, accessToken }));
+            store.dispatch(setSession({
+              user: data.user,
+              accessToken,
+              refreshToken: data.refreshToken ?? data.tokens?.refreshToken ?? refreshToken,
+            }));
+            persistAuthSession(store.getState().auth);
             setRefreshing(false);
             flushSubscribers(accessToken);
             setAuthHeader(orig, accessToken);
@@ -68,6 +90,7 @@ function build(key: ApiKey): AxiosInstance {
           } catch (e) {
             setRefreshing(false);
             store.dispatch(clearSession());
+            clearPersistedAuthSession();
             return Promise.reject(e);
           }
         }
@@ -82,6 +105,7 @@ function build(key: ApiKey): AxiosInstance {
 
       if (status === 403) {
         store.dispatch(clearSession());
+        clearPersistedAuthSession();
       }
       return Promise.reject(error);
     }

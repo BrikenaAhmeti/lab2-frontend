@@ -197,4 +197,20 @@ describe('AdminDashboardPage', () => {
     expect(screen.getByRole('link', { name: 'Open billing' })).toHaveAttribute('href', '/admin/billing');
     await waitFor(() => expect(dashboardApi.stats).toHaveBeenCalledTimes(2));
   });
+
+  it('hides dashboard data sections when backend dashboard calls fail', async () => {
+    vi.mocked(dashboardApi.stats).mockRejectedValue(new Error('stats unavailable'));
+    vi.mocked(dashboardApi.activity).mockRejectedValue(new Error('activity unavailable'));
+
+    renderPage();
+
+    expect(await screen.findByText('Facility Command Center')).toBeInTheDocument();
+    await waitFor(() => expect(dashboardApi.stats).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(dashboardApi.activity).toHaveBeenCalledTimes(1));
+
+    expect(screen.queryByText('Dashboard stats could not be loaded.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recent activity could not be loaded.')).not.toBeInTheDocument();
+    expect(screen.queryByText("Today's appointments")).not.toBeInTheDocument();
+    expect(screen.queryByText('Recent Activity')).not.toBeInTheDocument();
+  });
 });

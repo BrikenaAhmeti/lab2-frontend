@@ -90,19 +90,21 @@ export default function StatsCards({ stats, isLoading }: { stats?: DashboardStat
         const Icon = card.icon;
 
         return (
-          <Card key={card.label} className="p-4">
+          <Card key={card.label} className="overflow-hidden p-0">
+            <div className="p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm text-muted">{card.label}</p>
-                <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">{card.value}</p>
+                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted">{card.label}</p>
+                <p className="mt-3 text-3xl font-semibold tracking-tight text-foreground">{card.value}</p>
               </div>
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-surface text-primary">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
                 <Icon className="h-5 w-5" aria-hidden="true" />
               </span>
             </div>
-            <Badge variant={card.tone} className="mt-4">
+            <Badge variant={card.tone} className="mt-4 max-w-full">
               {card.detail}
             </Badge>
+            </div>
           </Card>
         );
       })}
