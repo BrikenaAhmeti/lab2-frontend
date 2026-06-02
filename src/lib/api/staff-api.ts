@@ -37,6 +37,8 @@ export interface StaffDepartment {
 export interface StaffPositionType {
   id: string;
   name: string;
+  defaultRoleKey?: string;
+  isActive?: boolean;
 }
 
 export interface StaffUser {
@@ -58,6 +60,7 @@ export interface StaffRecord {
   email?: string;
   phone?: string | null;
   specialization?: string | null;
+  licenseNumber?: string | null;
   bio?: string | null;
   isPublicProfile?: boolean;
   status?: string;

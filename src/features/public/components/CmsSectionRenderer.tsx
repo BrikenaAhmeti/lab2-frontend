@@ -32,6 +32,9 @@ import {
   Video,
 } from 'lucide-react';
 import type { CmsSection } from '@/lib/api/cms-api';
+import { usePublicStaffList } from '@/features/staff/hooks/useStaff';
+import PublicDoctorCard from './PublicDoctorCard';
+import { isDoctorProfile } from '../utils/publicStaffPresentation';
 
 type ContentMap = Record<string, unknown>;
 
@@ -331,10 +334,22 @@ function ServiceCardsSection({ section }: { section: CmsSection }) {
 }
 
 function DoctorCardsSection({ section }: { section: CmsSection }) {
-  const doctors = asArray(section.content, 'doctors');
   const filters = isMap(section.content) && Array.isArray(section.content.filters) ? section.content.filters.map(text).filter(Boolean) : [];
+  const limitValue = Number(isMap(section.content) ? numberText(section.content.limit) ?? 0 : 0);
+  const limit = Number.isFinite(limitValue) && limitValue > 0 ? limitValue : 4;
+  const staffQuery = usePublicStaffList({ page: 1, limit: 24 });
+  const doctors = (staffQuery.data?.items ?? []).filter(isDoctorProfile).slice(0, limit);
 
-  if (doctors.length === 0) return <SectionText section={section} />;
+  if (staffQuery.isError) {
+    return (
+      <SectionShell>
+        <SectionHeading section={section} />
+        <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm text-muted">
+          Public doctor profiles are not available right now.
+        </div>
+      </SectionShell>
+    );
+  }
 
   return (
     <SectionShell>
@@ -351,40 +366,24 @@ function DoctorCardsSection({ section }: { section: CmsSection }) {
         ) : null}
       </div>
       <div className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {doctors.map((doctor, index) => {
-          const tags = Array.isArray(doctor.tags) ? doctor.tags.map(text).filter(Boolean) : [];
-
-          return (
-            <article key={`${text(doctor.name) ?? index}`} className="overflow-hidden rounded-lg border border-border bg-card shadow-panel">
-              {text(doctor.imageUrl) ? (
-                <img src={text(doctor.imageUrl) ?? ''} alt="" className="h-52 w-full object-cover" loading="lazy" decoding="async" />
-              ) : null}
-              <div className="p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground">{text(doctor.name) ?? 'Doctor'}</h3>
-                    <p className="mt-1 text-sm text-muted">{text(doctor.role) ?? text(doctor.specialty)}</p>
-                  </div>
-                  <span className="inline-flex items-center gap-1 rounded-lg bg-warning/10 px-2.5 py-1 text-xs font-semibold text-warning">
-                    <Star className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
-                    {numberText(doctor.rating) ?? '4.9'}
-                  </span>
+        {staffQuery.isLoading
+          ? Array.from({ length: Math.min(limit, 4) }).map((_, index) => (
+              <div key={index} className="min-h-96 animate-pulse rounded-lg border border-border bg-card shadow-panel">
+                <div className="h-40 bg-surface" />
+                <div className="space-y-3 p-5">
+                  <div className="h-4 w-2/3 rounded bg-surface" />
+                  <div className="h-6 w-4/5 rounded bg-surface" />
+                  <div className="h-16 rounded bg-surface" />
                 </div>
-                {text(doctor.specialty) ? <p className="mt-4 text-sm font-medium text-primary">{text(doctor.specialty)}</p> : null}
-                {tags.length > 0 ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {tags.slice(0, 3).map((tag) => (
-                      <span key={tag} className="rounded-lg bg-surface px-2.5 py-1.5 text-xs text-muted">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                ) : null}
               </div>
-            </article>
-          );
-        })}
+            ))
+          : doctors.map((doctor, index) => <PublicDoctorCard key={doctor.id} staff={doctor} index={index} />)}
       </div>
+      {!staffQuery.isLoading && doctors.length === 0 ? (
+        <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm text-muted">
+          No public doctor profiles are published yet.
+        </div>
+      ) : null}
     </SectionShell>
   );
 }
