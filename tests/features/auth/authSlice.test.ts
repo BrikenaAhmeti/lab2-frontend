@@ -19,7 +19,8 @@ describe('authSlice', () => {
     );
 
     expect(state.accessToken).toBe('a1');
-    expect(state.tokens).toEqual({ accessToken: 'a1' });
+    expect(state.refreshToken).toBe('r1');
+    expect(state.tokens).toEqual({ accessToken: 'a1', refreshToken: 'r1' });
     expect(state.status).toBe('authenticated');
     expect(state.user?.role).toBe('Admin');
   });

@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
+import { useAuthBootstrap } from '@/features/auth/useAuthBootstrap';
 
 function BootstrapSkeleton() {
   return (
@@ -19,6 +20,7 @@ function BootstrapSkeleton() {
 
 export default function ProtectedRoute() {
   const location = useLocation();
+  useAuthBootstrap();
   const { accessToken, user, status } = useAppSelector((state) => state.auth);
 
   if (status === 'idle' || status === 'loading') {

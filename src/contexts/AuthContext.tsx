@@ -7,7 +7,13 @@ import {
 } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { authApi, type LoginRequest } from '@/lib/api/auth-api';
+import { rawClient } from '@/lib/api/axios';
 import { clearSession, setSession, type AuthUser } from '@/features/auth/authSlice';
+import {
+  clearPersistedAuthSession,
+  persistAuthSession,
+  readPersistedAuthSession,
+} from '@/features/auth/authStorage';
 
 interface AuthContextValue {
   currentUser: AuthUser | null;
@@ -23,35 +29,48 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const dispatch = useAppDispatch();
-  const { user, accessToken, status } = useAppSelector((state) => state.auth);
+  const { user, accessToken, refreshToken, tokens, status } = useAppSelector((state) => state.auth);
 
   const refreshSession = useCallback(async () => {
+    const nextRefreshToken = refreshToken ?? tokens?.refreshToken ?? readPersistedAuthSession()?.refreshToken;
+    if (!nextRefreshToken) {
+      dispatch(clearSession());
+      clearPersistedAuthSession();
+      return null;
+    }
+
     try {
-      const refreshed = await authApi.refresh();
-      dispatch(setSession(refreshed));
+      const refreshed = await authApi.refresh(nextRefreshToken, rawClient);
+      const session = { ...refreshed, refreshToken: refreshed.refreshToken ?? nextRefreshToken };
+      dispatch(setSession(session));
+      persistAuthSession(session);
       return refreshed.user;
     } catch {
       dispatch(clearSession());
+      clearPersistedAuthSession();
       return null;
     }
-  }, [dispatch]);
+  }, [dispatch, refreshToken, tokens?.refreshToken]);
 
   const login = useCallback(
     async (payload: LoginRequest) => {
       const session = await authApi.login(payload);
       dispatch(setSession(session));
+      persistAuthSession(session);
       return session.user;
     },
     [dispatch]
   );
 
   const logout = useCallback(async () => {
+    const nextRefreshToken = refreshToken ?? tokens?.refreshToken ?? readPersistedAuthSession()?.refreshToken;
     try {
-      await authApi.logout();
+      await authApi.logout(nextRefreshToken ?? undefined, rawClient);
     } finally {
       dispatch(clearSession());
+      clearPersistedAuthSession();
     }
-  }, [dispatch]);
+  }, [dispatch, refreshToken, tokens?.refreshToken]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

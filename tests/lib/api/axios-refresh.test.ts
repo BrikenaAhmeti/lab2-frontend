@@ -52,6 +52,7 @@ describe('axios refresh interceptor', () => {
     let protectedCalls = 0;
     const originalApiAdapter = apiClient.defaults.adapter as AxiosAdapter | undefined;
     const originalRawAdapter = rawClient.defaults.adapter as AxiosAdapter | undefined;
+    const refreshBodies: unknown[] = [];
 
     apiClient.defaults.adapter = async (cfg) => {
       if (String(cfg.url).includes('/api/protected')) {
@@ -66,6 +67,7 @@ describe('axios refresh interceptor', () => {
 
     rawClient.defaults.adapter = async (cfg) => {
       if (String(cfg.url).includes('/api/auth/refresh')) {
+        refreshBodies.push(JSON.parse(String(cfg.data)));
         return makeResponse(cfg, 200, {
           accessToken: 'new_access',
           refreshToken: 'refresh_2',
@@ -78,8 +80,10 @@ describe('axios refresh interceptor', () => {
     const response = await apiClient.get('/api/protected');
 
     expect(protectedCalls).toBe(2);
+    expect(refreshBodies).toEqual([{ refreshToken: 'refresh_1' }]);
     expect(response.data.ok).toBe(true);
     expect(store.getState().auth.accessToken).toBe('new_access');
+    expect(store.getState().auth.refreshToken).toBe('refresh_2');
 
     apiClient.defaults.adapter = originalApiAdapter;
     rawClient.defaults.adapter = originalRawAdapter;
@@ -96,6 +100,7 @@ describe('axios refresh interceptor', () => {
 
     const originalApiAdapter = apiClient.defaults.adapter as AxiosAdapter | undefined;
     const originalRawAdapter = rawClient.defaults.adapter as AxiosAdapter | undefined;
+    const refreshBodies: unknown[] = [];
 
     apiClient.defaults.adapter = async (cfg) => {
       if (String(cfg.url).includes('/api/protected')) {
@@ -106,6 +111,7 @@ describe('axios refresh interceptor', () => {
 
     rawClient.defaults.adapter = async (cfg) => {
       if (String(cfg.url).includes('/api/auth/refresh')) {
+        refreshBodies.push(JSON.parse(String(cfg.data)));
         return Promise.reject(makeAxios401(cfg));
       }
       return makeResponse(cfg, 200, {});
@@ -114,7 +120,65 @@ describe('axios refresh interceptor', () => {
     await expect(apiClient.get('/api/protected')).rejects.toBeTruthy();
 
     expect(store.getState().auth.accessToken).toBeNull();
+    expect(refreshBodies).toEqual([{ refreshToken: 'refresh_1' }]);
     expect(localStorage.getItem('medsphere.auth')).toBeNull();
+
+    apiClient.defaults.adapter = originalApiAdapter;
+    rawClient.defaults.adapter = originalRawAdapter;
+  });
+
+  it('does not start refresh flow for failed login requests', async () => {
+    let refreshCalls = 0;
+    const originalApiAdapter = apiClient.defaults.adapter as AxiosAdapter | undefined;
+    const originalRawAdapter = rawClient.defaults.adapter as AxiosAdapter | undefined;
+
+    apiClient.defaults.adapter = async (cfg) => {
+      if (String(cfg.url).includes('/api/auth/login')) {
+        return Promise.reject(makeAxios401(cfg));
+      }
+      return makeResponse(cfg, 200, {});
+    };
+
+    rawClient.defaults.adapter = async (cfg) => {
+      if (String(cfg.url).includes('/api/auth/refresh')) {
+        refreshCalls += 1;
+      }
+      return makeResponse(cfg, 200, {});
+    };
+
+    await expect(apiClient.post('/api/auth/login', {})).rejects.toBeTruthy();
+
+    expect(refreshCalls).toBe(0);
+
+    apiClient.defaults.adapter = originalApiAdapter;
+    rawClient.defaults.adapter = originalRawAdapter;
+  });
+
+  it('does not retry a failed refresh request with another refresh', async () => {
+    let directRefreshCalls = 0;
+    let interceptorRefreshCalls = 0;
+    const originalApiAdapter = apiClient.defaults.adapter as AxiosAdapter | undefined;
+    const originalRawAdapter = rawClient.defaults.adapter as AxiosAdapter | undefined;
+
+    apiClient.defaults.adapter = async (cfg) => {
+      if (String(cfg.url).includes('/api/auth/refresh')) {
+        directRefreshCalls += 1;
+        return Promise.reject(makeAxios401(cfg));
+      }
+      return makeResponse(cfg, 200, {});
+    };
+
+    rawClient.defaults.adapter = async (cfg) => {
+      if (String(cfg.url).includes('/api/auth/refresh')) {
+        interceptorRefreshCalls += 1;
+      }
+      return makeResponse(cfg, 200, {});
+    };
+
+    await expect(apiClient.post('/api/auth/refresh', {})).rejects.toBeTruthy();
+
+    expect(directRefreshCalls).toBe(1);
+    expect(interceptorRefreshCalls).toBe(0);
 
     apiClient.defaults.adapter = originalApiAdapter;
     rawClient.defaults.adapter = originalRawAdapter;
