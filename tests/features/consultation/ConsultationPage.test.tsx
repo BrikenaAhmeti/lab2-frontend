@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ConsultationPage from '@/features/consultation/pages/ConsultationPage';
+import { aiApi, type AiConsultationConversation, type ConsultationSummary } from '@/lib/api/ai-api';
 import { appointmentsApi, type AppointmentView } from '@/lib/api/appointments-api';
 import { medicalRecordsApi, type MedicalRecordView } from '@/lib/api/medical-records-api';
 import { patientsApi, type PatientRecord } from '@/lib/api/patients-api';
@@ -66,6 +67,21 @@ vi.mock('@/lib/api/prescriptions-api', async () => {
       get: vi.fn(),
       create: vi.fn(),
       void: vi.fn(),
+    },
+  };
+});
+
+vi.mock('@/lib/api/ai-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/ai-api')>('@/lib/api/ai-api');
+
+  return {
+    ...actual,
+    aiApi: {
+      ...actual.aiApi,
+      getConsultation: vi.fn(),
+      transcribeConsultationAudio: vi.fn(),
+      summarizeConsultation: vi.fn(),
+      updateConsultationSummary: vi.fn(),
     },
   };
 });
@@ -137,6 +153,44 @@ const patient: PatientRecord = {
   createdAt: '2030-01-01T09:00:00.000Z',
   updatedAt: '2030-01-01T09:00:00.000Z',
 };
+
+const aiSummary: ConsultationSummary = {
+  chiefComplaint: 'Chest discomfort',
+  historyOfPresentIllness: 'Patient reports intermittent chest discomfort.',
+  examinationFindings: 'Stable exam.',
+  assessmentAndDiagnosis: 'Stable exam',
+  treatmentPlan: 'Continue monitoring',
+  followUpInstructions: 'Return if pain worsens',
+};
+
+const aiReportText = `Chief complaint
+Chest discomfort
+
+History of present illness
+Patient reports intermittent chest discomfort.
+
+Examination findings
+Stable exam.
+
+Assessment and diagnosis
+Stable exam
+
+Treatment plan
+Continue monitoring
+
+Follow-up instructions
+Return if pain worsens`;
+
+function makeAiConversation(overrides: Partial<AiConsultationConversation> = {}): AiConsultationConversation {
+  return {
+    appointmentId: appointment.id,
+    patientId: appointment.patientId,
+    staffId: appointment.staffProfileId,
+    transcription: 'Patient reports intermittent chest discomfort.',
+    summaryStatus: 'draft',
+    ...overrides,
+  };
+}
 
 function makeRecord(overrides: Partial<MedicalRecordView> = {}): MedicalRecordView {
   return {
@@ -256,6 +310,15 @@ describe('ConsultationPage', () => {
       items: [],
       pharmacyQueue: [],
     });
+    vi.mocked(aiApi.getConsultation).mockResolvedValue(null);
+    vi.mocked(aiApi.summarizeConsultation).mockResolvedValue({
+      summary: aiSummary,
+      reportText: aiReportText,
+      conversation: makeAiConversation({ summary: aiSummary, reportText: aiReportText }),
+    });
+    vi.mocked(aiApi.updateConsultationSummary).mockResolvedValue(
+      makeAiConversation({ summary: aiSummary, reportText: aiReportText })
+    );
   });
 
   it('creates a medical record with the backend MS-19 field names', async () => {
@@ -311,6 +374,31 @@ describe('ConsultationPage', () => {
             notes: 'Take after food',
           },
         ],
+      });
+    });
+  });
+
+  it('generates an AI report from the transcript and saves it as the appointment record', async () => {
+    vi.mocked(aiApi.getConsultation).mockResolvedValue(makeAiConversation());
+
+    renderPage();
+
+    expect(await screen.findAllByText('Ada Lovelace')).not.toHaveLength(0);
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate Summary' }));
+
+    await screen.findByText('AI report generated.');
+    fireEvent.click(screen.getByRole('button', { name: 'Save as Record' }));
+
+    await waitFor(() => {
+      expect(medicalRecordsApi.create).toHaveBeenCalledWith({
+        patientId: appointment.patientId,
+        appointmentId: appointment.id,
+        staffProfileId: appointment.staffProfileId,
+        chiefComplaint: 'Chest discomfort',
+        diagnosis: 'Stable exam',
+        treatmentPlan: 'Continue monitoring',
+        notes: aiReportText,
+        followUpInstructions: 'Return if pain worsens',
       });
     });
   });

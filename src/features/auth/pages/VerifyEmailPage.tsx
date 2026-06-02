@@ -5,9 +5,12 @@ import { z } from 'zod';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
-import { authApi } from '@/lib/api/auth-api';
 import ResendVerificationForm from '@/features/auth/components/ResendVerificationForm';
 import { getAuthApiErrorMessage } from '@/features/auth/utils/errors';
+import {
+  patientRegistrationService,
+  resolveVerificationPersonalNumber,
+} from '@/features/auth/services/patientRegistrationService';
 
 type VerificationStatus = 'idle' | 'loading' | 'success' | 'error';
 
@@ -18,14 +21,18 @@ const verificationSchema = z.object({
 
 interface VerifyEmailLocationState {
   email?: string;
+  personalNumber?: string;
 }
 
 export default function VerifyEmailPage() {
   const { t } = useTranslation('common');
   const location = useLocation();
   const [params] = useSearchParams();
-  const stateEmail = (location.state as VerifyEmailLocationState | null)?.email ?? '';
+  const locationState = location.state as VerifyEmailLocationState | null;
+  const stateEmail = locationState?.email ?? '';
   const initialEmail = stateEmail || params.get('email') || '';
+  const initialPersonalNumber =
+    locationState?.personalNumber ?? (initialEmail ? resolveVerificationPersonalNumber(initialEmail) : '') ?? '';
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -58,7 +65,10 @@ export default function VerifyEmailPage() {
     setStatus('loading');
 
     try {
-      await authApi.verifyEmail(validation.data);
+      await patientRegistrationService.verifyEmail({
+        ...validation.data,
+        ...(initialPersonalNumber ? { personalNumber: initialPersonalNumber } : {}),
+      });
       setStatus('success');
     } catch (verifyError) {
       setStatus('error');

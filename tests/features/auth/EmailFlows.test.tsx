@@ -25,6 +25,7 @@ vi.mock('@/lib/api/auth-api', () => ({
 describe('email-based auth flows', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.sessionStorage.clear();
   });
 
   it('shows email-based forgot password messaging and no developer token UI', async () => {
@@ -108,6 +109,46 @@ describe('email-based auth flows', () => {
       });
     });
     expect(await screen.findByLabelText('auth.verificationCode')).toBeInTheDocument();
+  });
+
+  it('carries the personal number into email verification so existing history can be linked', async () => {
+    vi.mocked(authApi.register).mockResolvedValue({
+      success: true,
+      message: '',
+    });
+    vi.mocked(authApi.verifyEmail).mockResolvedValue({
+      success: true,
+      message: '',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/register']}>
+        <Routes>
+          <Route path="/register" element={<PatientRegistrationPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText('auth.firstName'), { target: { value: 'Arta' } });
+    fireEvent.change(screen.getByLabelText('auth.lastName'), { target: { value: 'Krasniqi' } });
+    fireEvent.change(screen.getByLabelText('auth.email'), { target: { value: 'arta@example.com' } });
+    fireEvent.change(screen.getByLabelText('auth.personalNumber'), { target: { value: '1234567890' } });
+    fireEvent.change(screen.getByLabelText('auth.password'), { target: { value: 'UserPassword123!' } });
+    fireEvent.change(screen.getByLabelText('auth.confirmPassword'), { target: { value: 'UserPassword123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.createPatientAccount' }));
+
+    fireEvent.change(await screen.findByLabelText('auth.verificationCode'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.verifyCode' }));
+
+    await waitFor(() => {
+      expect(authApi.verifyEmail).toHaveBeenCalledWith({
+        email: 'arta@example.com',
+        code: '123456',
+        personalNumber: '1234567890',
+      });
+    });
+    expect(window.sessionStorage.getItem('medsphere.patientRegistrationIdentity')).toBeNull();
   });
 
   it('keeps username, phone, date of birth, and gender optional during patient registration', async () => {

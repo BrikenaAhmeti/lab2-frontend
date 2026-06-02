@@ -6,7 +6,7 @@ import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import PasswordRequirementsList from '@/ui/molecules/PasswordRequirementsList';
-import { authApi } from '@/lib/api/auth-api';
+import { patientRegistrationService } from '@/features/auth/services/patientRegistrationService';
 import { getAuthApiErrorMessage } from '@/features/auth/utils/errors';
 import { passwordRequirementKeys, passwordSchema } from '@/features/auth/utils/password';
 
@@ -115,7 +115,7 @@ export default function PatientRegistrationPage() {
 
     try {
       const data = validation.data;
-      await authApi.register({
+      await patientRegistrationService.register({
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -128,7 +128,7 @@ export default function PatientRegistrationPage() {
       });
       window.sessionStorage.removeItem(publicBookingRegistrationKey);
       navigate(`/verify-email?email=${encodeURIComponent(data.email)}`, {
-        state: { email: data.email },
+        state: { email: data.email, personalNumber: data.personalNumber },
       });
     } catch (registrationError) {
       setError(getAuthApiErrorMessage(registrationError, t('auth.registrationFailed')));

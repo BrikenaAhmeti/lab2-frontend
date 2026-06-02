@@ -29,8 +29,8 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const [identifier, setIdentifier] = useState('admin@example.com');
-  const [password, setPassword] = useState('UserPassword123!');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -71,8 +71,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="grid min-h-screen place-items-center px-4">
-      <form onSubmit={onSubmit} className="w-full max-w-md">
+    <div className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-10">
+      <div className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden="true">
+        <img
+          src="/medsphere.png"
+          alt=""
+          className="h-80 w-80 rounded-[2rem] object-cover opacity-10 blur-[1px] grayscale brightness-125 sm:h-[28rem] sm:w-[28rem]"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+      <form onSubmit={onSubmit} className="relative z-10 w-full max-w-md">
         <Card title={t('auth.loginTitle')} subtitle={t('auth.loginSubtitle')}>
           <div className="space-y-4">
             <Input

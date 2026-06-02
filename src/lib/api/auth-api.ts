@@ -116,6 +116,7 @@ export interface ResetPasswordRequest {
 export interface VerifyEmailRequest {
   email: string;
   code: string;
+  personalNumber?: string;
 }
 
 export interface ResendVerificationRequest {

@@ -1,6 +1,71 @@
 import { isAxiosError, type AxiosInstance } from 'axios';
 import { aiApiClient } from './axios';
 
+export interface ConsultationSummary {
+  chiefComplaint: string;
+  historyOfPresentIllness: string;
+  examinationFindings: string;
+  assessmentAndDiagnosis: string;
+  treatmentPlan: string;
+  followUpInstructions: string;
+}
+
+export interface AiConsultationConversation {
+  _id?: string;
+  appointmentId: string;
+  patientId?: string | null;
+  staffId?: string | null;
+  audioFileUrl?: string | null;
+  audioOriginalName?: string | null;
+  audioMimeType?: string | null;
+  audioSizeBytes?: number | null;
+  transcription?: string | null;
+  summary?: ConsultationSummary | null;
+  reportText?: string | null;
+  summaryStatus?: 'draft' | 'approved' | 'discarded';
+  keywords?: string[];
+  models?: {
+    transcription?: string | null;
+    summary?: string | null;
+  };
+  approvedAt?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface TranscriptionView {
+  text: string;
+  model: string;
+  audioFileUrl?: string | null;
+}
+
+export interface ConsultationSummaryResponse {
+  summary: ConsultationSummary;
+  reportText?: string | null;
+  conversation?: AiConsultationConversation | null;
+}
+
+export interface ConsultationTranscribeMetadata {
+  appointmentId?: string;
+  patientId?: string;
+  staffId?: string;
+  fileName?: string;
+}
+
+export interface ConsultationSummaryPayload {
+  appointmentId: string;
+  patientId?: string;
+  staffId?: string;
+  transcription: string;
+  context?: Record<string, unknown>;
+}
+
+export interface UpdateConsultationSummaryPayload {
+  reportText?: string;
+  summary?: Partial<ConsultationSummary>;
+  summaryStatus?: 'draft' | 'approved' | 'discarded';
+}
+
 export interface LabInterpretationView {
   labOrderId: string;
   patientVersion?: string | null;
@@ -51,6 +116,49 @@ function unwrapLabInterpretation(value?: LabInterpretationPayload | LabInterpret
 }
 
 export const aiApi = {
+  transcribeConsultationAudio(
+    audio: Blob,
+    metadata: ConsultationTranscribeMetadata = {},
+    instance?: AxiosInstance
+  ) {
+    const formData = new FormData();
+    const fileName = metadata.fileName ?? 'consultation.webm';
+
+    formData.append('audio', audio, fileName);
+    if (metadata.appointmentId) formData.append('appointmentId', metadata.appointmentId);
+    if (metadata.patientId) formData.append('patientId', metadata.patientId);
+    if (metadata.staffId) formData.append('staffId', metadata.staffId);
+
+    return client(instance)
+      .post<TranscriptionView>('/api/ai/transcribe', formData)
+      .then((response) => response.data);
+  },
+  summarizeConsultation(payload: ConsultationSummaryPayload, instance?: AxiosInstance) {
+    return client(instance)
+      .post<ConsultationSummaryResponse>('/api/ai/summarize', payload)
+      .then((response) => response.data);
+  },
+  getConsultation(appointmentId: string, instance?: AxiosInstance) {
+    return client(instance)
+      .get<AiConsultationConversation>(`/api/ai/consultations/${appointmentId}`)
+      .then((response) => response.data)
+      .catch((error: unknown) => {
+        if (isAxiosError(error) && error.response?.status === 404) {
+          return null;
+        }
+
+        throw error;
+      });
+  },
+  updateConsultationSummary(
+    appointmentId: string,
+    payload: UpdateConsultationSummaryPayload,
+    instance?: AxiosInstance
+  ) {
+    return client(instance)
+      .put<AiConsultationConversation>(`/api/ai/consultations/${appointmentId}/summary`, payload)
+      .then((response) => response.data);
+  },
   getLabInterpretation(labOrderId: string, instance?: AxiosInstance) {
     return client(instance)
       .get<LabInterpretationPayload | LabInterpretationEnvelope>(`/api/ai/lab-results/${labOrderId}/interpretation`)
