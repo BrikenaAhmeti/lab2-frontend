@@ -159,7 +159,7 @@ function SectionHeading({
         </p>
       ) : null}
       {section.title ? (
-        <h2 className={`mt-3 text-3xl font-semibold tracking-normal md:text-4xl ${dark ? 'text-white' : 'text-foreground'}`}>
+        <h2 className={`mt-3 text-2xl font-semibold tracking-normal sm:text-3xl md:text-4xl ${dark ? 'text-white' : 'text-foreground'}`}>
           {section.title}
         </h2>
       ) : null}
@@ -223,13 +223,13 @@ function HeroSection({ section }: { section: CmsSection }) {
     <section className="relative overflow-hidden bg-cobalt-900 text-white">
       <img src={imageUrl} alt="" className="absolute inset-0 h-full w-full object-cover opacity-42" loading="lazy" decoding="async" />
       <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(7,24,52,0.94),rgba(8,48,86,0.76),rgba(10,92,112,0.58))]" />
-      <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-20 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-24">
+      <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:py-16 md:grid-cols-[1.05fr_0.95fr] md:items-center md:py-24">
         <div>
           {contentText(section.content, 'eyebrow') ? (
             <p className="text-xs font-semibold uppercase tracking-normal text-med-200">{contentText(section.content, 'eyebrow')}</p>
           ) : null}
-          {section.title ? <h1 className="mt-4 max-w-3xl text-5xl font-semibold tracking-normal md:text-6xl">{section.title}</h1> : null}
-          {section.subtitle ? <p className="mt-5 max-w-2xl text-xl leading-8 text-white/86">{section.subtitle}</p> : null}
+          {section.title ? <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-normal sm:text-5xl md:text-6xl">{section.title}</h1> : null}
+          {section.subtitle ? <p className="mt-5 max-w-2xl text-lg leading-8 text-white/86 md:text-xl">{section.subtitle}</p> : null}
           {section.body ? <p className="mt-5 max-w-2xl text-base leading-8 text-white/72">{section.body}</p> : null}
           <Actions actions={actions} dark />
           {trustPills.length > 0 ? (

@@ -82,4 +82,41 @@ describe('aiApi', () => {
       })
     );
   });
+
+  it('sends dashboard agent messages to the AI service agent contract', async () => {
+    const post = vi.fn().mockResolvedValue({
+      data: {
+        sessionId: 'agent-session-1',
+        reply: 'Use the dashboard queue first.',
+        outcome: 'in_progress',
+      },
+    });
+    const instance = {
+      post,
+    } as unknown as AxiosInstance;
+
+    await expect(
+      aiApi.sendAgentMessage(
+        {
+          sessionId: 'agent-session-1',
+          message: 'Explain my dashboard',
+          userId: 'doctor-1',
+          patientId: 'patient-1',
+        },
+        instance
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        sessionId: 'agent-session-1',
+        reply: 'Use the dashboard queue first.',
+      })
+    );
+
+    expect(post).toHaveBeenCalledWith('/api/ai/agent/message', {
+      sessionId: 'agent-session-1',
+      message: 'Explain my dashboard',
+      userId: 'doctor-1',
+      patientId: 'patient-1',
+    });
+  });
 });

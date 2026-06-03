@@ -24,6 +24,7 @@ Preferred keys:
 - `VITE_CMS_API_URL`
 - `VITE_CMS_SOCKET_URL`
 - `VITE_AI_API_URL`
+- `VITE_AI_SOCKET_URL`
 - `VITE_API_DEVICE_INFO`
 - `VITE_VAPI_PUBLIC_KEY`
 - `VITE_VAPI_ASSISTANT_ID`
@@ -95,5 +96,6 @@ This repository does not expose Swagger because it is a browser frontend, not an
 
 - The app uses React Query, Redux Toolkit, React Router, Socket.IO client, Tailwind, and Vitest.
 - Notification and chat realtime features require the Notification Service Socket.IO URL.
+- The dashboard AI helper uses `VITE_AI_SOCKET_URL` and sends the authenticated user's current role on every helper message.
 - Voice booking requires Vapi keys when that assistant is enabled.
 - The latest bundle optimization pass lazy-loads auth pages, portal layouts, heavy widgets, report charts, CMS preview/editor panels, and consultation audio tools.

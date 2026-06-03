@@ -1,8 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, MessagesSquare } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
-import Card from '@/ui/atoms/Card';
 import { selectAuthUser } from '@/features/auth/authSelectors';
 import ChatRoomList from '../components/ChatRoomList';
 import MessageComposer from '../components/MessageComposer';
@@ -54,14 +53,32 @@ export default function ChatPage() {
   const loading = sendMessage.isPending || sendAttachment.isPending;
 
   return (
-    <Card title="Messages" subtitle="Internal chat with your care team and staff">
-      <div className="grid min-h-[72vh] overflow-hidden rounded-lg border border-border bg-card lg:grid-cols-[22rem_minmax(0,1fr)]">
-        <aside className="min-h-[18rem] border-b border-border lg:border-b-0 lg:border-r">
-          <div className="border-b border-border px-4 py-3">
-            <h2 className="text-sm font-semibold text-foreground">Conversations</h2>
-            <p className="text-xs text-muted">{rooms.length} rooms</p>
+    <section className="flex min-h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-panel">
+      <header className="flex flex-col gap-3 border-b border-border bg-card px-4 py-4 sm:flex-row sm:items-center sm:justify-between md:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/15">
+            <MessagesSquare className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <h1 className="text-lg font-semibold text-foreground">Messages</h1>
+            <p className="truncate text-sm text-muted">Internal chat with your care team and staff</p>
           </div>
-          <div className="max-h-[66vh] overflow-y-auto">
+        </div>
+        <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted">
+          <span className="h-2 w-2 rounded-full bg-success" />
+          {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}
+        </div>
+      </header>
+
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[22rem_minmax(0,1fr)] lg:grid-rows-none">
+        <aside className="min-h-0 max-h-64 border-b border-border bg-surface/45 lg:max-h-none lg:border-b-0 lg:border-r">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Conversations</h2>
+              <p className="text-xs text-muted">Recent rooms</p>
+            </div>
+          </div>
+          <div className="max-h-52 overflow-y-auto lg:max-h-none">
             <ChatRoomList
               rooms={rooms}
               activeRoomId={activeRoomId}
@@ -73,12 +90,12 @@ export default function ChatPage() {
           </div>
         </aside>
 
-        <section className="flex min-h-[34rem] min-w-0 flex-col">
+        <section className="flex min-h-0 min-w-0 flex-col bg-background/70">
           {activeRoomId && activeRoom ? (
             <>
-              <header className="flex items-center gap-3 border-b border-border px-4 py-3">
-                <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <MessageSquare className="h-5 w-5" />
+              <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
+                  <MessageSquare className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <div className="min-w-0">
                   <h2 className="truncate text-sm font-semibold text-foreground">
@@ -118,12 +135,18 @@ export default function ChatPage() {
               />
             </>
           ) : (
-            <div className="grid flex-1 place-items-center px-4 text-center text-sm text-muted">
-              Select a conversation to start messaging.
+            <div className="grid flex-1 place-items-center px-4 py-12 text-center">
+              <div>
+                <span className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <p className="mt-4 text-sm font-medium text-foreground">Select a conversation</p>
+                <p className="mt-1 text-sm text-muted">Your messages will appear here.</p>
+              </div>
             </div>
           )}
         </section>
       </div>
-    </Card>
+    </section>
   );
 }

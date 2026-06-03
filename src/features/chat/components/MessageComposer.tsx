@@ -44,10 +44,10 @@ export default function MessageComposer({
   };
 
   return (
-    <form className="border-t border-border bg-card p-3" onSubmit={submit}>
+    <form className="border-t border-border bg-card/95 p-3 backdrop-blur" onSubmit={submit}>
       {file && (
-        <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2 text-sm">
-          <span className="min-w-0 truncate">{file.name}</span>
+        <div className="mb-2 flex items-center justify-between gap-3 rounded-lg border border-border bg-surface/80 px-3 py-2 text-sm">
+          <span className="min-w-0 truncate font-medium text-foreground">{file.name}</span>
           <button
             type="button"
             className="grid h-7 w-7 place-items-center rounded-lg text-muted transition hover:bg-card hover:text-foreground"
@@ -60,7 +60,7 @@ export default function MessageComposer({
         </div>
       )}
 
-      <div className="flex items-end gap-2">
+      <div className="flex items-end gap-2 rounded-lg border border-border bg-background p-2 shadow-inner">
         <input
           ref={fileInputRef}
           type="file"
@@ -69,7 +69,7 @@ export default function MessageComposer({
         />
         <button
           type="button"
-          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg border border-border bg-surface text-muted transition hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-surface text-muted transition hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || loading}
           aria-label="Attach file"
@@ -84,13 +84,13 @@ export default function MessageComposer({
           onKeyDown={onKeyDown}
           placeholder="Write a message..."
           disabled={disabled || loading}
-          className="max-h-32 min-h-11 flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
+          className="max-h-32 min-h-11 flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-sm text-foreground outline-none placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-60"
         />
         <Button
           type="submit"
           loading={loading}
           disabled={!canSend}
-          className="h-11 w-11 px-0"
+          className="h-11 w-11 shrink-0 rounded-lg px-0"
           aria-label="Send message"
           title="Send message"
         >

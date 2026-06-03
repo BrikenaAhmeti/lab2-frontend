@@ -158,7 +158,7 @@ function SectionHeading({ eyebrow, title, body }: PublicPageIntroProps) {
   return (
     <div className="max-w-3xl">
       <p className="text-xs font-semibold uppercase text-primary">{eyebrow}</p>
-      <h2 className="mt-3 text-3xl font-semibold tracking-normal text-foreground md:text-4xl">{title}</h2>
+      <h2 className="mt-3 text-2xl font-semibold tracking-normal text-foreground sm:text-3xl md:text-4xl">{title}</h2>
       <p className="mt-4 text-base leading-7 text-muted">{body}</p>
     </div>
   );
@@ -178,15 +178,22 @@ export function PublicPageIntro({ eyebrow, title, body, children }: PublicPageIn
 export function PublicHomeStaticSections() {
   return (
     <>
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#061f47_0%,#0b5f88_54%,#2fb7b4_100%)] text-white">
-        <div className="absolute inset-x-0 bottom-0 h-24 bg-[linear-gradient(180deg,transparent,rgba(255,255,255,0.12))]" />
-        <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-[1.02fr_0.98fr] md:items-center md:py-20">
+      <section className="relative overflow-hidden bg-cobalt-900 text-white">
+        <img
+          src="/images/auth/auth-container.png"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-45"
+          loading="eager"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(6,31,71,0.96),rgba(8,66,96,0.84),rgba(12,105,112,0.62))]" />
+        <div className="relative mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:py-16 md:grid-cols-[1.02fr_0.98fr] md:items-center md:py-20">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm text-white/85">
               <span className="h-2 w-2 rounded-full bg-accent" />
               Digital care coordination
             </div>
-            <h1 className="mt-6 text-5xl font-semibold tracking-normal md:text-6xl">MedSphere</h1>
+            <h1 className="mt-6 text-4xl font-semibold tracking-normal sm:text-5xl md:text-6xl">MedSphere</h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-white/82">
               A calmer way to connect appointments, care teams, services, and patient communication in one modern healthcare experience.
             </p>
@@ -205,7 +212,7 @@ export function PublicHomeStaticSections() {
                 Explore services
               </Link>
             </div>
-            <dl className="mt-10 grid max-w-xl grid-cols-3 gap-4">
+            <dl className="mt-10 grid max-w-xl gap-4 sm:grid-cols-3">
               {trustStats.map((stat) => (
                 <div key={stat.label} className="border-l border-white/20 pl-4">
                   <dt className="text-sm text-white/70">{stat.label}</dt>
@@ -215,7 +222,7 @@ export function PublicHomeStaticSections() {
             </dl>
           </div>
 
-          <div className="rounded-lg border border-white/20 bg-white/95 p-5 text-cobalt-900 shadow-2xl">
+          <div className="rounded-lg border border-white/20 bg-white/95 p-4 text-cobalt-900 shadow-2xl sm:p-5">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <img src="/medsphere.png" alt="" className="h-10 w-10 rounded-lg bg-white object-cover" loading="lazy" decoding="async" />
@@ -227,7 +234,7 @@ export function PublicHomeStaticSections() {
               <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">Live</span>
             </div>
 
-            <div className="mt-6 grid grid-cols-4 gap-2 text-center text-[11px] font-medium text-slate-500">
+            <div className="mt-6 grid grid-cols-2 gap-2 text-center text-[11px] font-medium text-slate-500 sm:grid-cols-4">
               {['Service', 'Date', 'Details', 'Confirm'].map((step, index) => (
                 <div key={step} className="space-y-2">
                   <span className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full ${index < 3 ? 'bg-primary text-white' : 'bg-surface text-muted'}`}>
@@ -279,7 +286,7 @@ export function PublicHomeStaticSections() {
       </section>
 
       <section className="bg-background">
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 md:grid-cols-4">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
           {homeHighlights.map((item) => (
             <article key={item.title} className="rounded-lg border border-border bg-card p-5 shadow-soft">
               <IconTile icon={item.icon} />
@@ -319,7 +326,7 @@ export function PublicHomeStaticSections() {
             title="Care information that feels prepared from the first visit."
             body="Patients can quickly understand common care paths, service types, and next steps before they enter the portal."
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {careAreas.map((item) => (
               <article key={item.title} className="rounded-lg border border-border bg-card p-5">
                 <IconTile icon={item.icon} />

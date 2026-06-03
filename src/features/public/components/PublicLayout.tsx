@@ -30,23 +30,23 @@ export default function PublicLayout({ children, siteSettings }: PublicLayoutPro
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/80 bg-card/90 backdrop-blur-xl">
-        <nav className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-3">
-          <Link to="/" className="flex items-center gap-3">
+        <nav className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <Link to="/" className="flex min-w-0 items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-cobalt-900 p-1.5 shadow-soft">
               <img src="/medsphere.png" alt="" className="h-full w-full rounded-lg bg-white object-cover" loading="lazy" decoding="async" />
             </span>
-            <span>
-              <span className="block text-base font-semibold leading-5 text-foreground">{siteSettings.facilityName}</span>
-              <span className="block text-xs font-medium text-muted">{siteSettings.tagline}</span>
+            <span className="min-w-0">
+              <span className="block truncate text-base font-semibold leading-5 text-foreground">{siteSettings.facilityName}</span>
+              <span className="block truncate text-xs font-medium text-muted">{siteSettings.tagline}</span>
             </span>
           </Link>
-          <div className="flex flex-wrap items-center gap-1 text-sm">
+          <div className="-mx-1 flex max-w-full items-center gap-1 overflow-x-auto px-1 pb-1 text-sm lg:mx-0 lg:pb-0">
             {links.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
                 className={clsx(
-                  'rounded-lg px-3 py-2 font-medium transition',
+                  'shrink-0 rounded-lg px-3 py-2 font-medium transition',
                   isActive(location.pathname, link.to)
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted hover:bg-surface hover:text-foreground'
@@ -55,11 +55,11 @@ export default function PublicLayout({ children, siteSettings }: PublicLayoutPro
                 {link.label}
               </Link>
             ))}
-            <Link className="inline-flex items-center gap-2 rounded-lg px-3 py-2 font-medium text-primary hover:bg-primary/10" to="/login">
+            <Link className="inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 font-medium text-primary hover:bg-primary/10" to="/login">
               <LogIn className="h-4 w-4" aria-hidden="true" />
               <span>Portal</span>
             </Link>
-            <Link className="inline-flex items-center gap-2 rounded-lg bg-cobalt-900 px-3.5 py-2 font-semibold text-white shadow-soft hover:bg-cobalt-800" to="/book-appointment">
+            <Link className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cobalt-900 px-3.5 py-2 font-semibold text-white shadow-soft hover:bg-cobalt-800" to="/book-appointment">
               <CalendarPlus className="h-4 w-4" aria-hidden="true" />
               <span>Book</span>
             </Link>

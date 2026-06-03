@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import clsx from 'clsx';
-import { Check, CheckCheck, Download } from 'lucide-react';
+import { Check, CheckCheck, Download, MessageSquare } from 'lucide-react';
 import Button from '@/ui/atoms/Button';
 import { chatFileUrl, timeLabel } from '../chatFormat';
 import type { ChatMessage } from '../chatTypes';
@@ -40,22 +40,41 @@ export default function MessageThread({
   }, [lastMessageId]);
 
   if (isLoading) {
-    return <div className="grid flex-1 place-items-center text-sm text-muted">Loading messages...</div>;
+    return (
+      <div className="grid flex-1 place-items-center px-4 py-12 text-sm text-muted">
+        <div className="flex items-center gap-2">
+          <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
+          <span>Loading messages...</span>
+        </div>
+      </div>
+    );
   }
 
   if (isError) {
-    return <div className="grid flex-1 place-items-center text-sm text-danger">Messages could not be loaded.</div>;
+    return <div className="grid flex-1 place-items-center px-4 py-12 text-sm text-danger">Messages could not be loaded.</div>;
   }
 
   if (messages.length === 0) {
-    return <div className="grid flex-1 place-items-center text-sm text-muted">Start the conversation.</div>;
+    return (
+      <div className="grid flex-1 place-items-center px-4 py-12 text-center">
+        <div>
+          <span className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-primary/10 text-primary">
+            <MessageSquare className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <p className="mt-4 text-sm font-medium text-foreground">Start the conversation</p>
+          <p className="mt-1 text-sm text-muted">Send a note or attach a file when you are ready.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
+    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4 sm:px-5">
       {hasMore && (
         <div className="text-center">
-          <Button type="button" variant="secondary" size="sm" loading={loadingMore} onClick={onLoadMore}>
+          <Button type="button" variant="secondary" size="sm" className="rounded-lg" loading={loadingMore} onClick={onLoadMore}>
             Load older
           </Button>
         </div>
@@ -73,8 +92,10 @@ export default function MessageThread({
           >
             <div
               className={clsx(
-                'max-w-[82%] rounded-2xl px-4 py-3 shadow-soft md:max-w-[68%]',
-                mine ? 'bg-primary text-primary-foreground' : 'bg-surface text-foreground'
+                'max-w-[88%] overflow-hidden rounded-lg px-4 py-3 shadow-soft md:max-w-[68%]',
+                mine
+                  ? 'bg-primary text-primary-foreground'
+                  : 'border border-border bg-card text-foreground'
               )}
             >
               {message.type === 'image' && fileUrl && (
@@ -98,7 +119,7 @@ export default function MessageThread({
                 </a>
               )}
 
-              <p className="whitespace-pre-wrap text-sm leading-6">{messageLabel(message)}</p>
+              <p className="whitespace-pre-wrap break-words text-sm leading-6">{messageLabel(message)}</p>
               <p
                 className={clsx(
                   'mt-2 flex items-center justify-end gap-1 text-[11px]',
