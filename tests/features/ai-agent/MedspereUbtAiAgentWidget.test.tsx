@@ -72,7 +72,8 @@ describe('MedspereUbtAiAgentWidget', () => {
     renderWidget();
 
     fireEvent.click(screen.getByRole('button', { name: 'Open MedSphere UBT AI Agent' }));
-    expect(screen.getByRole('heading', { name: 'MedSphere UBT AI Agent' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'MedSphere UBT AI Agent' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Chat with us' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'What should I do first today?' })).toBeInTheDocument();
 
     await waitFor(() =>

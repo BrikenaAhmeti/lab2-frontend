@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, ChevronDown, MessageCircle, Send, Sparkles, UserRound } from 'lucide-react';
+import { ChevronDown, MessageCircle, Send, UserRound } from 'lucide-react';
 import { io, type Socket } from 'socket.io-client';
 import clsx from 'clsx';
 import { useAppSelector } from '@/app/hooks';
@@ -422,8 +422,14 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
                     className={clsx('flex items-end gap-2', message.role === 'user' ? 'justify-end' : 'justify-start')}
                   >
                     {message.role === 'assistant' ? (
-                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                        <Bot className="h-4 w-4" aria-hidden="true" />
+                      <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white p-1 shadow-soft ring-1 ring-slate-200">
+                        <img
+                          src="/medsphere.png"
+                          alt=""
+                          className="h-full w-full rounded-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
                       </span>
                     ) : null}
                     <p
@@ -462,8 +468,14 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
             })}
             {isSending && (
               <div className="flex items-end gap-2">
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-                  <Sparkles className="h-4 w-4" aria-hidden="true" />
+                <span className="grid h-8 w-8 shrink-0 place-items-center overflow-hidden rounded-full bg-white p-1 shadow-soft ring-1 ring-slate-200">
+                  <img
+                    src="/medsphere.png"
+                    alt=""
+                    className="h-full w-full rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                 </span>
                 <div className="flex items-center gap-1 rounded-lg bg-[#f0f3f8] px-3 py-3 text-slate-500 ring-1 ring-slate-200">
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
