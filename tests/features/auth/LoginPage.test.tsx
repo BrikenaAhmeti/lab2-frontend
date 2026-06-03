@@ -1,4 +1,4 @@
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { AxiosError, AxiosHeaders } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -36,17 +36,11 @@ function forbiddenError(message: string) {
   );
 }
 
-function VerificationRouteProbe() {
-  const location = useLocation();
-  return <div data-testid="verification-location">{`${location.pathname}${location.search}`}</div>;
-}
-
-function renderLogin() {
+function renderLogin(initialEntry = '/login') {
   return render(
-    <MemoryRouter initialEntries={['/login']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/verify-email" element={<VerificationRouteProbe />} />
         <Route path="/admin" element={<div>admin-portal</div>} />
         <Route path="/doctor" element={<div>doctor-portal</div>} />
         <Route path="/nurse" element={<div>nurse-portal</div>} />
@@ -101,16 +95,14 @@ describe('LoginPage', () => {
     expect(await screen.findByText(portalText)).toBeInTheDocument();
   });
 
-  it('sends inactive patient accounts to the verification-code screen', async () => {
+  it('keeps inactive patient accounts on login and points them to their emailed link', async () => {
     mocks.login.mockRejectedValue(forbiddenError('Account inactive. Please verify your email.'));
 
     renderLogin();
     fillLogin();
     fireEvent.click(screen.getByRole('button', { name: 'auth.signIn' }));
 
-    expect(await screen.findByTestId('verification-location')).toHaveTextContent(
-      '/verify-email?email=admin%40example.com'
-    );
+    expect(await screen.findByText('auth.verifyEmailLinkBeforeLogin')).toBeInTheDocument();
   });
 
   it('starts blank and hides demo account shortcuts', () => {
@@ -119,6 +111,27 @@ describe('LoginPage', () => {
     expect(screen.getByLabelText('auth.loginIdentifier')).toHaveValue('');
     expect(screen.getByLabelText('auth.password')).toHaveValue('');
     expect(screen.queryByText('auth.demoAccounts')).not.toBeInTheDocument();
+    expect(screen.queryByText('auth.patientLogin')).not.toBeInTheDocument();
+    expect(screen.queryByText('auth.staffLogin')).not.toBeInTheDocument();
+  });
+
+  it('links back to the public site and public booking page', () => {
+    renderLogin();
+
+    expect(screen.getByRole('link', { name: 'auth.backToWebsite' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'auth.bookAppointment' })).toHaveAttribute('href', '/book-appointment');
+  });
+
+  it('links new patients to registration', () => {
+    renderLogin();
+
+    expect(screen.getByRole('link', { name: 'auth.registerAsPatient' })).toHaveAttribute('href', '/register');
+  });
+
+  it('shows confirmation after an email verification link returns to login', () => {
+    renderLogin('/login?verified=1');
+
+    expect(screen.getByText('auth.emailVerifiedCanLogin')).toBeInTheDocument();
   });
 
   it('submits a username when the credential is not an email address', async () => {

@@ -113,11 +113,17 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface VerifyEmailRequest {
+export interface VerifyEmailTokenRequest {
+  token: string;
+}
+
+export interface VerifyEmailCodeRequest {
   email: string;
   code: string;
   personalNumber?: string;
 }
+
+export type VerifyEmailRequest = VerifyEmailTokenRequest | VerifyEmailCodeRequest;
 
 export interface ResendVerificationRequest {
   email: string;
