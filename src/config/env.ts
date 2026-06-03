@@ -39,6 +39,9 @@ export const env = {
     (import.meta.env.VITE_CMS_SOCKET_URL as string) ||
     cmsApiUrl,
   AI_API_URL: aiApiUrl,
+  AI_SOCKET_URL:
+    (import.meta.env.VITE_AI_SOCKET_URL as string) ||
+    aiApiUrl,
   VAPI_PUBLIC_KEY: import.meta.env.VITE_VAPI_PUBLIC_KEY as string | undefined,
   VAPI_ASSISTANT_ID: import.meta.env.VITE_VAPI_ASSISTANT_ID as string | undefined,
 };

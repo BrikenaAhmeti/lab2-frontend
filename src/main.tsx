@@ -21,7 +21,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <QueryClientProvider client={queryClient}>
           <App />
-          <ReactQueryDevtools initialIsOpen={false} />
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
         </QueryClientProvider>
       </AuthProvider>
     </Provider>

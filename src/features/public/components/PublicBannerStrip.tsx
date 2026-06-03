@@ -11,11 +11,11 @@ export default function PublicBannerStrip() {
 
   return (
     <section className="border-b border-white/10 bg-cobalt-900 text-white" aria-label="Announcements">
-      <div className="mx-auto grid max-w-6xl gap-3 px-4 py-5 md:grid-cols-2 lg:grid-cols-3">
+      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 py-4 md:mx-auto md:grid md:max-w-6xl md:grid-cols-2 md:py-5 lg:grid-cols-3">
         {banners.map((banner) => (
-          <article key={banner.id} className="flex min-h-32 gap-4 rounded-lg border border-white/12 bg-white/10 p-4 shadow-soft backdrop-blur">
+          <article key={banner.id} className="flex min-h-28 min-w-[18rem] gap-4 rounded-lg border border-white/12 bg-white/10 p-4 shadow-soft backdrop-blur md:min-h-32 md:min-w-0">
             {banner.imageUrl ? (
-              <img src={banner.imageUrl} alt="" className="h-20 w-20 shrink-0 rounded-lg object-cover ring-1 ring-white/20" loading="lazy" decoding="async" />
+              <img src={banner.imageUrl} alt="" className="h-16 w-16 shrink-0 rounded-lg bg-white/10 object-cover ring-1 ring-white/20 sm:h-20 sm:w-20" loading="eager" decoding="async" />
             ) : null}
             <div className="min-w-0">
               <h2 className="text-sm font-semibold text-white">{banner.title}</h2>

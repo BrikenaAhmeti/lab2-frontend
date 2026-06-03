@@ -200,7 +200,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
 
   return (
     <>
-      <aside className="hidden h-screen w-72 shrink-0 overflow-hidden border-r border-[#0b345f] bg-[#06264a] lg:sticky lg:top-0 lg:block">{content}</aside>
+      <aside className="hidden h-[100dvh] w-72 shrink-0 overflow-hidden border-r border-[#0b345f] bg-[#06264a] lg:sticky lg:top-0 lg:block">{content}</aside>
       <div className={clsx('fixed inset-0 z-40 lg:hidden', sidebarOpen ? 'block' : 'hidden')}>
         <button
           type="button"
@@ -208,7 +208,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
           className="absolute inset-0 bg-foreground/30"
           onClick={() => dispatch(closeSidebar())}
         />
-        <aside className="relative h-full w-72 border-r border-[#0b345f] shadow-panel">{content}</aside>
+        <aside className="relative h-full w-[min(18rem,calc(100vw-2rem))] border-r border-[#0b345f] shadow-panel">{content}</aside>
       </div>
     </>
   );

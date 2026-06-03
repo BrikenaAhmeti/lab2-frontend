@@ -76,6 +76,21 @@ export interface LabInterpretationView {
   generatedAt?: string | null;
 }
 
+export interface AiAgentMessagePayload {
+  sessionId?: string;
+  message: string;
+  userId?: string;
+  patientId?: string;
+}
+
+export interface AiAgentMessageResponse {
+  sessionId: string;
+  reply: string;
+  outcome?: 'in_progress' | 'booked' | 'abandoned' | 'referred';
+  appointmentId?: string;
+  session?: unknown;
+}
+
 type LabInterpretationPayload = LabInterpretationView & {
   patientInterpretation?: string | null;
   patientFriendlyVersion?: string | null;
@@ -170,5 +185,10 @@ export const aiApi = {
 
         throw error;
       });
+  },
+  sendAgentMessage(payload: AiAgentMessagePayload, instance?: AxiosInstance) {
+    return client(instance)
+      .post<AiAgentMessageResponse>('/api/ai/agent/message', payload)
+      .then((response) => response.data);
   },
 };

@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
-import { MessageSquare } from 'lucide-react';
 import Badge from '@/ui/atoms/Badge';
 import { previewText, roomTitle, timeLabel } from '../chatFormat';
 import type { ChatRoom } from '../chatTypes';
@@ -12,6 +11,13 @@ interface ChatRoomListProps {
   basePath: string;
   isLoading?: boolean;
   isError?: boolean;
+}
+
+function initials(value: string) {
+  const parts = value.split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? 'M';
+  const second = parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1];
+  return `${first ?? ''}${second ?? ''}`.toUpperCase();
 }
 
 export default function ChatRoomList({
@@ -38,28 +44,29 @@ export default function ChatRoomList({
     <ul className="divide-y divide-border">
       {rooms.map((room) => {
         const active = room.id === activeRoomId;
+        const title = roomTitle(room, currentUserId);
 
         return (
           <li key={room.id}>
             <Link
               to={`${basePath}/${room.id}`}
               className={clsx(
-                'flex gap-3 px-4 py-3 transition hover:bg-surface focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring',
+                'flex gap-3 px-4 py-3 transition hover:bg-card focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ring',
                 active && 'bg-primary/10'
               )}
             >
               <span
                 className={clsx(
-                  'grid h-10 w-10 shrink-0 place-items-center rounded-lg',
-                  active ? 'bg-primary text-primary-foreground' : 'bg-surface text-primary'
+                  'grid h-10 w-10 shrink-0 place-items-center rounded-lg text-sm font-semibold',
+                  active ? 'bg-primary text-primary-foreground shadow-soft' : 'bg-card text-primary ring-1 ring-border'
                 )}
               >
-                <MessageSquare className="h-5 w-5" />
+                {initials(title)}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex items-start justify-between gap-3">
                   <span className="truncate text-sm font-semibold text-foreground">
-                    {roomTitle(room, currentUserId)}
+                    {title}
                   </span>
                   <time className="shrink-0 text-xs text-muted" dateTime={room.lastMessageAt ?? room.createdAt}>
                     {timeLabel(room.lastMessageAt ?? room.createdAt)}
