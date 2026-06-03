@@ -26,7 +26,7 @@ export default function ServiceCatalogFilters({
         id="service-catalog-search"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="Search services"
+        placeholder="Search clinical services"
       />
       <label htmlFor="service-catalog-department" className="block space-y-1.5">
         <span className="text-sm font-medium text-foreground">Department</span>

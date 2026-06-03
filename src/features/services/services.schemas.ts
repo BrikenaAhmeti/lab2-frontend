@@ -22,7 +22,7 @@ export const serviceFormSchema = z.object({
     .number({ error: 'Duration must be a positive whole number' })
     .int('Duration must be a positive whole number')
     .positive('Duration must be a positive whole number'),
-  defaultPrice: z.number({ error: 'Price must be zero or greater' }).min(0, 'Price must be zero or greater'),
+  defaultPrice: z.number({ error: 'Estimated fee must be zero or greater' }).min(0, 'Estimated fee must be zero or greater'),
   isActive: z.boolean().optional(),
   sortOrder: z
     .number({ error: 'Sort order must be zero or greater' })

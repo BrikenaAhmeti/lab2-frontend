@@ -233,7 +233,12 @@ export interface UserRecord {
   roles: string[];
 }
 
-let mockUsers: UserRecord[] = [];
+interface CreateUserResponse {
+  message: string;
+  user: UserRecord;
+}
+
+const mockUsers: UserRecord[] = [];
 
 export const usersApi = {
   async list(search: string, instance?: AxiosInstance) {
@@ -248,19 +253,8 @@ export const usersApi = {
     }
   },
   async createUser(payload: CreateUserPayload, instance?: AxiosInstance) {
-    try {
-      return await client(instance).post<UserRecord>('/api/auth/admin/users', payload).then((r) => r.data);
-    } catch {
-      const created: UserRecord = {
-        id: crypto.randomUUID(),
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        email: payload.email,
-        phone: payload.phone,
-        roles: payload.roles,
-      };
-      mockUsers = [created, ...mockUsers];
-      return created;
-    }
+    return client(instance)
+      .post<CreateUserResponse>('/api/auth/admin/users', payload)
+      .then((r) => r.data.user);
   },
 };

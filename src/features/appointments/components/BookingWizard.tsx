@@ -34,10 +34,10 @@ import StaffStep from './StaffStep';
 import VoiceBookingPanel from './VoiceBookingPanel';
 import { formatAppointmentDate, getTodayInputValue } from './appointmentFormat';
 
-type BookingStep = 'Your Details' | 'Department' | 'Service' | 'Staff' | 'Slot' | 'Confirm';
+type BookingStep = 'Your Details' | 'Department' | 'Clinical Service' | 'Care Provider' | 'Slot' | 'Confirm';
 
-const portalSteps: BookingStep[] = ['Department', 'Service', 'Staff', 'Slot', 'Confirm'];
-const publicSteps: BookingStep[] = ['Your Details', 'Department', 'Service', 'Staff', 'Slot', 'Confirm'];
+const portalSteps: BookingStep[] = ['Department', 'Clinical Service', 'Care Provider', 'Slot', 'Confirm'];
+const publicSteps: BookingStep[] = ['Your Details', 'Department', 'Clinical Service', 'Care Provider', 'Slot', 'Confirm'];
 const publicBookingRegistrationKey = 'medsphere.publicBookingPatient';
 
 interface BookingWizardProps {
@@ -60,7 +60,7 @@ function downloadAppointmentCalendar(appointment: AppointmentView) {
   const description = [
     `Patient: ${appointment.patient.name}`,
     `Department: ${appointment.department.name}`,
-    `Staff: ${appointment.staff?.displayName ?? 'Staff member'}`,
+    `Doctor or care provider: ${appointment.staff?.displayName ?? 'Care provider'}`,
     appointment.notes ? `Notes: ${appointment.notes}` : '',
   ]
     .filter(Boolean)
@@ -159,8 +159,8 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   const canMoveNext = useMemo(() => {
     if (currentStep === 'Your Details') return hasValidPublicPatient;
     if (currentStep === 'Department') return Boolean(department);
-    if (currentStep === 'Service') return Boolean(service);
-    if (currentStep === 'Staff') return Boolean(staff);
+    if (currentStep === 'Clinical Service') return Boolean(service);
+    if (currentStep === 'Care Provider') return Boolean(staff);
     if (currentStep === 'Slot') return Boolean(slot);
 
     if (isPublic) {
@@ -306,12 +306,12 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
                 <dd className="font-medium text-foreground">{bookedAppointment.department.name}</dd>
               </div>
               <div>
-                <dt className="text-muted">Service</dt>
+                <dt className="text-muted">Clinical service</dt>
                 <dd className="font-medium text-foreground">{bookedAppointment.service.name}</dd>
               </div>
               <div>
-                <dt className="text-muted">Staff</dt>
-                <dd className="font-medium text-foreground">{bookedAppointment.staff?.displayName ?? 'Staff member'}</dd>
+                <dt className="text-muted">Doctor or care provider</dt>
+                <dd className="font-medium text-foreground">{bookedAppointment.staff?.displayName ?? 'Care provider'}</dd>
               </div>
               <div>
                 <dt className="text-muted">Date and time</dt>
@@ -384,7 +384,7 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
       <section className="panel p-5" aria-labelledby="manual-booking-title">
         <div className="mb-4">
           <h3 id="manual-booking-title" className="text-base font-semibold text-foreground">
-            {mode === 'receptionist' ? 'Book Appointment for Patient' : 'Book an Appointment'}
+            {mode === 'receptionist' ? 'Book Appointment for Patient' : 'Book Patient Appointment'}
           </h3>
           <p className="mt-1 text-sm text-muted">{`Step ${stepIndex + 1} of ${steps.length}: ${currentStep}`}</p>
         </div>
@@ -427,12 +427,12 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
             />
           ) : null}
 
-          {currentStep === 'Service' ? (
+          {currentStep === 'Clinical Service' ? (
             <ServiceStep
               services={servicesQuery.data ?? []}
               selectedId={service?.id}
               loading={servicesQuery.isLoading}
-              error={servicesQuery.isError ? getApiErrorMessage(servicesQuery.error, 'Services could not be loaded') : undefined}
+              error={servicesQuery.isError ? getApiErrorMessage(servicesQuery.error, 'Clinical services could not be loaded') : undefined}
               onSelect={(nextService) => {
                 setService(nextService);
                 resetAfterService();
@@ -440,12 +440,12 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
             />
           ) : null}
 
-          {currentStep === 'Staff' ? (
+          {currentStep === 'Care Provider' ? (
             <StaffStep
               staff={staffQuery.data ?? []}
               selectedId={staff?.id}
               loading={staffQuery.isLoading}
-              error={staffQuery.isError ? getApiErrorMessage(staffQuery.error, 'Staff could not be loaded') : undefined}
+              error={staffQuery.isError ? getApiErrorMessage(staffQuery.error, 'Care providers could not be loaded') : undefined}
               onSelect={(nextStaff) => {
                 setStaff(nextStaff);
                 resetAfterStaff();

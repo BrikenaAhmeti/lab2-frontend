@@ -41,13 +41,13 @@ export default function PublicServicesPage() {
   return (
     <PublicPageShell
       slug="services"
-      fallbackTitle="Services"
-      fallbackBody="Browse active medical services by department."
+      fallbackTitle="Clinical Services"
+      fallbackBody="Browse active clinical services by department."
     >
       <PublicPageIntro
-        eyebrow="Services"
-        title="Understand care options before choosing a time."
-        body="Filter available services by department and review what each care path usually includes before booking."
+        eyebrow="Clinical services"
+        title="Understand care options before choosing an appointment time."
+        body="Filter available clinical services by department and review what each care path usually includes before booking."
       >
         <Link
           to="/register"
@@ -61,7 +61,7 @@ export default function PublicServicesPage() {
         <section className="bg-background">
           <div className="mx-auto max-w-6xl px-4 py-12">
             <div className="mb-5 grid gap-3 md:grid-cols-[1fr_240px]">
-              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search services..." />
+              <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search clinical services..." />
               <select
                 value={departmentId}
                 onChange={(event) => selectDepartment(event.target.value)}
@@ -76,7 +76,7 @@ export default function PublicServicesPage() {
 
             {servicesQuery.isLoading ? (
               <div className="rounded-lg border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
-                Loading services...
+                Loading clinical services...
               </div>
             ) : null}
 
@@ -95,7 +95,7 @@ export default function PublicServicesPage() {
                         <dd className="font-medium text-foreground">{service.defaultDurationMinutes} min</dd>
                       </div>
                       <div>
-                        <dt className="text-muted">Price</dt>
+                        <dt className="text-muted">Estimated fee</dt>
                         <dd className="font-medium text-foreground">{price(service.defaultPrice)}</dd>
                       </div>
                     </dl>

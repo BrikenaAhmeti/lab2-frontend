@@ -28,10 +28,10 @@ function ServiceCatalogTable({
       <table className="min-w-full text-left text-sm">
         <thead className="bg-surface text-muted">
           <tr>
-            <th className="px-4 py-3 font-medium">Name</th>
+            <th className="px-4 py-3 font-medium">Clinical service</th>
             <th className="px-4 py-3 font-medium">Department</th>
             <th className="px-4 py-3 font-medium">Duration</th>
-            <th className="px-4 py-3 font-medium">Price</th>
+            <th className="px-4 py-3 font-medium">Estimated fee</th>
             <th className="px-4 py-3 font-medium">Active</th>
             <th className="px-4 py-3 font-medium">Actions</th>
           </tr>

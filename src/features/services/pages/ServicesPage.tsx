@@ -84,7 +84,7 @@ export default function ServicesPage() {
   }
 
   const servicesErrorMessage = servicesQuery.isError
-    ? getApiErrorMessage(servicesQuery.error, 'Services could not be loaded')
+    ? getApiErrorMessage(servicesQuery.error, 'Clinical services could not be loaded')
     : '';
 
   const openImportWizard = useCallback(() => setShowImportWizard(true), []);
@@ -92,7 +92,7 @@ export default function ServicesPage() {
   const goPreviousPage = useCallback(() => setPage((currentValue) => Math.max(1, currentValue - 1)), []);
   const goNextPage = useCallback(() => setPage((currentValue) => currentValue + 1), []);
   const handleImportCompleted = useCallback(() => {
-    setFeedback({ type: 'success', message: 'Services imported successfully' });
+    setFeedback({ type: 'success', message: 'Clinical services imported successfully' });
     void servicesQuery.refetch();
   }, [servicesQuery.refetch]);
 
@@ -128,15 +128,15 @@ export default function ServicesPage() {
     try {
       if (editingService) {
         await updateMutation.mutateAsync({ id: editingService.id, payload });
-        setFeedback({ type: 'success', message: 'Service updated successfully' });
+        setFeedback({ type: 'success', message: 'Clinical service updated successfully' });
       } else {
         await createMutation.mutateAsync(payload);
-        setFeedback({ type: 'success', message: 'Service created successfully' });
+        setFeedback({ type: 'success', message: 'Clinical service created successfully' });
       }
 
       closeFormModal();
     } catch (error) {
-      setFormError(getApiErrorMessage(error, 'Service could not be saved'));
+      setFormError(getApiErrorMessage(error, 'Clinical service could not be saved'));
     }
   }, [createMutation, editingService, updateMutation, closeFormModal]);
 
@@ -150,10 +150,10 @@ export default function ServicesPage() {
 
     try {
       await deleteMutation.mutateAsync(serviceToDelete.id);
-      setFeedback({ type: 'success', message: 'Service deleted successfully' });
+      setFeedback({ type: 'success', message: 'Clinical service deleted successfully' });
       setServiceToDelete(null);
     } catch (error) {
-      setDeleteError(getApiErrorMessage(error, 'Service could not be deleted'));
+      setDeleteError(getApiErrorMessage(error, 'Clinical service could not be deleted'));
     }
   }, [deleteMutation, serviceToDelete]);
 
@@ -162,8 +162,8 @@ export default function ServicesPage() {
       <Breadcrumbs items={organizationBreadcrumbs('Service Catalog')} />
 
       <Card
-        title="Service Catalog"
-        subtitle="Manage department services and procedures"
+        title="Clinical Service Catalog"
+        subtitle="Manage department clinical services and procedures"
         actions={
           canManage ? (
             <div className="flex flex-wrap justify-end gap-2">
@@ -177,7 +177,7 @@ export default function ServicesPage() {
                 Import
               </Button>
               <Button size="sm" onClick={openCreateModal}>
-                Add Service
+                Add Clinical Service
               </Button>
             </div>
           ) : null
@@ -202,8 +202,8 @@ export default function ServicesPage() {
 
           {!servicesQuery.isLoading && !servicesQuery.isError && rows.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
-              <p className="font-medium text-foreground">No services found</p>
-              <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new service.</p>
+              <p className="font-medium text-foreground">No clinical services found</p>
+              <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new clinical service.</p>
             </div>
           ) : null}
 

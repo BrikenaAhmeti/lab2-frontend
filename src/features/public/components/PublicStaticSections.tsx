@@ -227,7 +227,7 @@ export function PublicHomeStaticSections() {
               <div className="flex items-center gap-3">
                 <img src="/medsphere.png" alt="" className="h-10 w-10 rounded-lg bg-white object-cover" loading="lazy" decoding="async" />
                 <div>
-                  <p className="text-sm font-semibold">Book an Appointment</p>
+                <p className="text-sm font-semibold">Book a Patient Appointment</p>
                   <p className="text-xs text-slate-500">Smart scheduling assistant</p>
                 </div>
               </div>
@@ -235,7 +235,7 @@ export function PublicHomeStaticSections() {
             </div>
 
             <div className="mt-6 grid grid-cols-2 gap-2 text-center text-[11px] font-medium text-slate-500 sm:grid-cols-4">
-              {['Service', 'Date', 'Details', 'Confirm'].map((step, index) => (
+              {['Clinical service', 'Date', 'Patient details', 'Confirm'].map((step, index) => (
                 <div key={step} className="space-y-2">
                   <span className={`mx-auto flex h-7 w-7 items-center justify-center rounded-full ${index < 3 ? 'bg-primary text-white' : 'bg-surface text-muted'}`}>
                     {index + 1}
@@ -403,9 +403,9 @@ export function PublicServicesStaticSections() {
     <section className="bg-card">
       <div className="mx-auto max-w-6xl px-4 py-12">
         <SectionHeading
-          eyebrow="Service planning"
-          title="A clearer path from service discovery to appointment booking."
-          body="Service information is organized around time, team fit, and the steps patients need before confirming a visit."
+          eyebrow="Clinical service planning"
+          title="A clearer path from clinical service discovery to appointment booking."
+          body="Clinical service information is organized around time, team fit, and the steps patients need before confirming a visit."
         />
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {serviceGuide.map((item) => (

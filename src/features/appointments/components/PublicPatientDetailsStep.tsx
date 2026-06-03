@@ -34,6 +34,8 @@ const requiredMessages: Record<PublicPatientDetailsField, string> = {
 
 export function validatePublicPatientDetails(details: PublicPatientDetails) {
   const errors: Partial<Record<PublicPatientDetailsField, string>> = {};
+  const phoneDigits = details.phone.replace(/\D/g, '');
+  const birthDate = details.dateOfBirth.trim() ? new Date(`${details.dateOfBirth.trim()}T00:00:00`) : null;
 
   (Object.keys(requiredMessages) as PublicPatientDetailsField[]).forEach((field) => {
     if (!details[field].trim()) {
@@ -43,6 +45,29 @@ export function validatePublicPatientDetails(details: PublicPatientDetails) {
 
   if (details.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email.trim())) {
     errors.email = 'Enter a valid email address.';
+  }
+
+  if (details.phone.trim() && phoneDigits.length < 7) {
+    errors.phone = 'Enter a valid phone number.';
+  }
+
+  if (details.personalNumber.trim() && details.personalNumber.replace(/\D/g, '').length < 5) {
+    errors.personalNumber = 'Enter a valid personal number.';
+  }
+
+  if (details.dateOfBirth.trim()) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!birthDate || Number.isNaN(birthDate.getTime())) {
+      errors.dateOfBirth = 'Enter a valid date of birth.';
+    } else if (birthDate > today) {
+      errors.dateOfBirth = 'Date of birth cannot be in the future.';
+    }
+  }
+
+  if (details.gender.trim() && !['female', 'male', 'other'].includes(details.gender.trim())) {
+    errors.gender = 'Select a valid gender option.';
   }
 
   return errors;

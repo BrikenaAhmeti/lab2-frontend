@@ -13,7 +13,7 @@ interface StaffStepProps {
 
 export default function StaffStep({ staff, selectedId, loading, error, onSelect }: StaffStepProps) {
   if (loading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading staff...</div>;
+    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading doctors and care providers...</div>;
   }
 
   if (error) {
@@ -23,7 +23,7 @@ export default function StaffStep({ staff, selectedId, loading, error, onSelect 
   if (staff.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center text-sm text-muted">
-        No public staff members are available for this department.
+        No doctors or care providers are available for this department.
       </div>
     );
   }

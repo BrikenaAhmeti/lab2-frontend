@@ -64,7 +64,7 @@ export default function AppointmentDetailModal({ appointment, showClinicalReport
             <dd className="font-medium text-foreground">{`${appointment.durationMinutes} minutes`}</dd>
           </div>
           <div>
-            <dt className="text-muted">Price</dt>
+            <dt className="text-muted">Estimated fee</dt>
             <dd className="font-medium text-foreground">{`EUR ${Number(appointment.basePrice).toFixed(2)}`}</dd>
           </div>
         </dl>

@@ -37,11 +37,11 @@ export default function VoiceBookingPanel({
   );
   const isCallActive = callStatus === 'connecting' || callStatus === 'listening';
   const statusLabel = {
-    idle: 'Ready for a voice booking',
+    idle: 'Ready for a patient appointment call',
     connecting: 'Starting secure call',
     listening: 'Listening for appointment details',
     ended: 'Call ended',
-    error: 'Voice setup needs attention',
+    error: 'Assistant setup needs attention',
   }[callStatus];
 
   useEffect(() => {
@@ -76,13 +76,13 @@ export default function VoiceBookingPanel({
       if (!isConfigured) {
         setCallStatus('error');
         setVoiceError(
-          'Voice booking is prepared, but Vapi is not connected yet. Add VITE_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID when the assistant is ready.'
+          'MedSphere AI Assistant is prepared, but voice credentials are not connected yet. Add VITE_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID when the assistant is ready.'
         );
         return;
       }
 
       setCallStatus('error');
-      setVoiceError('Vapi credentials were found, but the browser call handler is not connected yet.');
+      setVoiceError('Voice credentials were found, but the MedSphere AI Assistant call handler is not connected yet.');
     }, 700);
   };
 
@@ -105,9 +105,9 @@ export default function VoiceBookingPanel({
           </span>
           <div>
             <h2 id="voice-booking-title" className="text-base font-semibold text-foreground">
-              AI voice booking
+              MedSphere AI Assistant
             </h2>
-            <p className="text-sm text-muted">Vapi call access</p>
+            <p className="text-sm text-muted">Patient appointment call</p>
           </div>
         </div>
         <Badge variant={isConfigured ? 'success' : 'warning'}>{isConfigured ? 'Ready' : 'Setup'}</Badge>
@@ -128,7 +128,7 @@ export default function VoiceBookingPanel({
           <span>{statusLabel}</span>
         </div>
         <p className="mt-2 text-center text-xs text-muted">
-          {selectedContextCount > 0 ? `${selectedContextCount} booking details selected` : 'No booking details selected'}
+          {selectedContextCount > 0 ? `${selectedContextCount} appointment details selected` : 'No appointment details selected'}
         </p>
       </div>
 
@@ -152,12 +152,12 @@ export default function VoiceBookingPanel({
             leftIcon={<PhoneCall className="h-4 w-4" aria-hidden="true" />}
             onClick={startVoiceBooking}
           >
-            Start AI call
+            Start patient call
           </Button>
         )}
         <div className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm text-muted">
           <Keyboard className="h-4 w-4 text-primary" aria-hidden="true" />
-          <span>Manual booking</span>
+          <span>Manual patient booking</span>
         </div>
       </div>
 

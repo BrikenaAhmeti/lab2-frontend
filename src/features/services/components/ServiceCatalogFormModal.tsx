@@ -64,7 +64,7 @@ export default function ServiceCatalogFormModal({
   return (
     <div className="fixed inset-0 z-20 grid place-items-center bg-black/40 p-4">
       <div className="panel w-full max-w-2xl p-5">
-        <h3 className="text-lg font-semibold text-foreground">{service ? 'Edit service' : 'Add service'}</h3>
+        <h3 className="text-lg font-semibold text-foreground">{service ? 'Edit clinical service' : 'Add clinical service'}</h3>
         <form className="mt-4 space-y-4" onSubmit={handleSubmit(onSubmit)}>
           <div className="grid gap-3 md:grid-cols-2">
             <label htmlFor="service-department-id" className="block space-y-1.5">
@@ -86,7 +86,7 @@ export default function ServiceCatalogFormModal({
             </label>
             <Input
               id="service-name"
-              label="Name"
+              label="Clinical service name"
               disabled={loading}
               error={errors.name?.message}
               {...register('name')}
@@ -101,7 +101,7 @@ export default function ServiceCatalogFormModal({
             />
             <Input
               id="service-price"
-              label="Price"
+              label="Estimated fee"
               type="number"
               step="0.01"
               disabled={loading}
@@ -145,7 +145,7 @@ export default function ServiceCatalogFormModal({
               Cancel
             </Button>
             <Button type="submit" loading={loading} disabled={noDepartments}>
-              {service ? 'Save changes' : 'Create service'}
+              {service ? 'Save changes' : 'Create clinical service'}
             </Button>
           </div>
         </form>

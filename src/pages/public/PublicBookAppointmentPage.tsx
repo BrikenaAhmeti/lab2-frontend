@@ -6,13 +6,13 @@ export default function PublicBookAppointmentPage() {
   return (
     <PublicPageShell
       slug="book-appointment"
-      fallbackTitle="Book an Appointment"
-      fallbackBody="Choose a service, pick an available time, and share your contact details so the care team can confirm your visit."
+      fallbackTitle="Book a Patient Appointment"
+      fallbackBody="Choose a clinical service, pick an available time, and share patient details so the care team can confirm the visit."
     >
       <PublicPageIntro
         eyebrow="Appointments"
-        title="Choose a service, pick a time, and share the details once."
-        body="A focused booking flow helps patients move from service selection to confirmation with less friction."
+        title="Book a patient visit with the right care team."
+        body="Patients can choose a department, clinical service, doctor or care provider, and available time before confirming."
       />
       <section className="bg-background">
         <div className="mx-auto max-w-6xl px-4 py-10">

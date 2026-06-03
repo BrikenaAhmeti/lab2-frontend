@@ -86,11 +86,11 @@ export default function ConfirmStep({
           <dd className="font-medium text-foreground">{department?.name ?? '-'}</dd>
         </div>
         <div>
-          <dt className="text-muted">Service</dt>
+          <dt className="text-muted">Clinical service</dt>
           <dd className="font-medium text-foreground">{service?.name ?? '-'}</dd>
         </div>
         <div>
-          <dt className="text-muted">Staff</dt>
+          <dt className="text-muted">Doctor or care provider</dt>
           <dd className="font-medium text-foreground">{staff ? getStaffName(staff) : '-'}</dd>
         </div>
         <div>
@@ -109,7 +109,7 @@ export default function ConfirmStep({
           value={notes}
           onChange={(event) => onNotesChange(event.target.value)}
           className="min-h-24 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
-          placeholder="Optional notes for the care team"
+          placeholder="Optional notes for the care team, such as visit reason or accessibility needs"
         />
       </label>
     </div>
