@@ -77,20 +77,39 @@ interface MedspereUbtAiAgentWidgetProps {
 const replyTimeoutMs = 20000;
 
 const fallbackSuggestedPrompts = [
-  'Explain my dashboard',
-  'What should I check first?',
-  'Why can I not see Reports?',
+  'How do I book an appointment?',
+  "Why can't I see billing?",
+  'How do I update my profile?',
 ];
 
 const suggestedPromptsByRole: Record<string, string[]> = {
-  'Super Admin': ['Why can I not see Roles?', 'Where do I check low stock?', "Where do I check today's revenue?"],
-  Admin: ['Where do I check low stock?', "Where do I check today's revenue?", 'Where are reports?'],
-  Receptionist: ['How do I check in a patient?', 'How do appointments start?', 'How do I find a patient?'],
-  Doctor: ['What should I do first today?', 'Where do I create prescriptions?', 'Can AI fill my medical record?'],
-  Nurse: ['Where do I enter triage notes?', 'Can I edit medical records?', 'Why can I not see patients from another department?'],
-  'Lab Technician': ['Where do I enter results?', 'What happens after I complete results?', 'Can AI interpret results?'],
-  Pharmacist: ['Where do I see pending prescriptions?', 'How do I mark a medication out of stock?', 'Can I change the prescription?'],
-  Patient: ['How do I book an appointment?', 'Where are my lab results?', 'Where can I see my prescriptions?'],
+  'Super Admin': ["Why can't I see CMS?", 'How do I add a new service?', 'How do I handle low stock?'],
+  Admin: ["Why can't I see CMS?", 'How do I add a new service?', 'How do I handle low stock?'],
+  Receptionist: ['How do appointments start?', 'When can I mark no-show?', 'How do I book for a walk-in?'],
+  Doctor: ['What should I do first today?', "Why can't I edit a record?", 'How do I use the AI report?'],
+  Nurse: ['Where do I start?', 'Can I edit medical records?', "Why can't I see all patients?"],
+  'Lab Technician': ['How do I complete a lab order?', "Why can't I complete this order?", 'Who sees the results after completion?'],
+  Pharmacist: ['Where do I see prescriptions?', 'How do I mark medicine out of stock?', "Why can't I fulfill this prescription?"],
+  Patient: ['How do I see my lab results?', 'Can I edit my medical record?', 'How do I cancel my appointment?'],
+};
+
+const openingMessageByRole: Record<string, string> = {
+  'Super Admin':
+    'Hi, I can help with facility management: dashboard, users, departments, services, staff, patients, inventory, billing, reports, CMS, settings, feedback, contact inbox, profile, and sessions.',
+  Admin:
+    'Hi, I can help with facility management: dashboard, users, departments, services, staff, patients, inventory, billing, reports, CMS, settings, feedback, contact inbox, profile, and sessions.',
+  Receptionist:
+    'Hi, I can help with front-desk tasks: today\'s schedule, booking, check-in, no-show, patient registration, billing support, and messages.',
+  Doctor:
+    'Hi, I can help with your Doctor Portal: today\'s consultations, patient context, records, prescriptions, lab reviews, AI summaries, and messages.',
+  Nurse:
+    'Hi, I can help with your Nurse Portal: department queue, patient preparation, care handoff, messages, profile, and sessions.',
+  'Lab Technician':
+    'Hi, I can help with your Lab Portal: lab queues, order status, result entry, flags, completed results, and messages.',
+  Pharmacist:
+    'Hi, I can help with the Pharmacy Portal: queue, prescription details, dispensing, out-of-stock handling, fulfillment, and messages.',
+  Patient:
+    'Hi, I can help you use your Patient Portal: appointments, lab results, prescriptions, billing, messages, profile, and sessions.',
 };
 
 const portalRoleByTitle: Record<string, string> = {
@@ -113,6 +132,17 @@ function createMessage(role: AgentMessageRole, content: string): AgentMessage {
     role,
     content,
   };
+}
+
+function chunkAssistantReply(content: string) {
+  const chunkSize = content.length > 280 ? 6 : content.length > 140 ? 4 : 3;
+  const chunks: string[] = [];
+
+  for (let index = 0; index < content.length; index += chunkSize) {
+    chunks.push(content.slice(index, index + chunkSize));
+  }
+
+  return chunks.length ? chunks : [''];
 }
 
 function getUserRoles(user: AuthUser | null) {
@@ -153,6 +183,14 @@ function getSuggestedPrompts(role?: string) {
   return suggestedPromptsByRole[role] ?? fallbackSuggestedPrompts;
 }
 
+function getOpeningMessage(role?: string) {
+  if (!role) {
+    return 'Hi, I can help you use MedSphere: appointments, lab results, prescriptions, billing, messages, profile, and sessions.';
+  }
+
+  return openingMessageByRole[role] ?? 'Hi, I can help you use your MedSphere portal.';
+}
+
 export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiAgentWidgetProps) {
   const accessToken = useAppSelector(selectAccessToken);
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
@@ -161,24 +199,24 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
   const [input, setInput] = useState('');
   const [sessionId, setSessionId] = useState<string>();
   const [isSending, setIsSending] = useState(false);
+  const [isRevealing, setIsRevealing] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<AgentMessage[]>(() => [
-    createMessage(
-      'assistant',
-      'Hi there. I am the MedSphere AI assistant. How can I help with your dashboard today?'
-    ),
+    createMessage('assistant', getOpeningMessage()),
   ]);
   const messageListRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket<DashboardHelperServerEvents, DashboardHelperClientEvents> | null>(null);
   const sessionIdRef = useRef<string | undefined>(undefined);
   const isSendingRef = useRef(false);
   const replyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const revealTimeoutsRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const portalLabel = useMemo(() => portalTitle.replace(' Portal', ''), [portalTitle]);
   const dashboardRole = useMemo(() => resolveDashboardHelperRole(user, portalTitle), [portalTitle, user]);
   const roleSuggestedPrompts = useMemo(() => getSuggestedPrompts(dashboardRole), [dashboardRole]);
   const showStarterPrompts = messages.length === 1 && messages[0]?.role === 'assistant';
-  const canSend = input.trim().length > 0 && !isSending && isAuthenticated && Boolean(accessToken) && isConnected;
+  const isBusy = isSending || isRevealing;
+  const canSend = input.trim().length > 0 && !isBusy && isAuthenticated && Boolean(accessToken) && isConnected;
 
   useEffect(() => {
     sessionIdRef.current = sessionId;
@@ -189,8 +227,19 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
   }, [isSending]);
 
   useEffect(() => {
+    setMessages((current) => {
+      if (current.length !== 1 || current[0]?.role !== 'assistant') {
+        return current;
+      }
+
+      return [{ ...current[0], content: getOpeningMessage(dashboardRole) }];
+    });
+  }, [dashboardRole]);
+
+  useEffect(() => {
     return () => {
       clearReplyTimeout();
+      clearRevealTimers();
     };
   }, []);
 
@@ -200,9 +249,45 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
     replyTimeoutRef.current = null;
   }
 
+  function clearRevealTimers() {
+    revealTimeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+    revealTimeoutsRef.current = [];
+  }
+
+  function revealAssistantMessage(content: string) {
+    const assistantMessage = createMessage('assistant', '');
+    const chunks = chunkAssistantReply(content);
+    let visibleContent = '';
+
+    clearRevealTimers();
+    setIsSending(false);
+    setIsRevealing(true);
+    setMessages((current) => [...current, assistantMessage]);
+
+    chunks.forEach((chunk, index) => {
+      const timeout = setTimeout(() => {
+        visibleContent += chunk;
+        setMessages((current) =>
+          current.map((message) =>
+            message.id === assistantMessage.id ? { ...message, content: visibleContent } : message
+          )
+        );
+
+        if (index === chunks.length - 1) {
+          revealTimeoutsRef.current = [];
+          setIsRevealing(false);
+        }
+      }, 18 * (index + 1));
+
+      revealTimeoutsRef.current.push(timeout);
+    });
+  }
+
   function failPendingMessage(message: string) {
     clearReplyTimeout();
+    clearRevealTimers();
     setIsSending(false);
+    setIsRevealing(false);
     setMessages((current) => {
       if (current.at(-1)?.role === 'assistant' && current.at(-1)?.content === message) {
         return current;
@@ -264,8 +349,7 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
     socket.on('dashboard-helper:message', (payload) => {
       clearReplyTimeout();
       setSessionId(payload.sessionId);
-      setIsSending(false);
-      setMessages((current) => [...current, createMessage('assistant', payload.content)]);
+      revealAssistantMessage(payload.content);
     });
 
     socket.on('dashboard-helper:error', (payload) => {
@@ -273,7 +357,9 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
       if (payload.sessionId) {
         setSessionId(payload.sessionId);
       }
+      clearRevealTimers();
       setIsSending(false);
+      setIsRevealing(false);
       setMessages((current) => [
         ...current,
         createMessage('assistant', payload.message || 'I could not reach the AI service right now.'),
@@ -302,13 +388,13 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
     }
 
     messageList.scrollTop = messageList.scrollHeight;
-  }, [isOpen, messages, isSending]);
+  }, [isOpen, messages, isSending, isRevealing]);
 
   function sendMessage(messageText: string) {
     const trimmed = messageText.trim();
     const socket = socketRef.current;
 
-    if (!trimmed || isSending) return;
+    if (!trimmed || isBusy) return;
 
     if (!isAuthenticated || !accessToken || !socket) {
       setMessages((current) => [
@@ -455,7 +541,7 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
                           key={prompt}
                           type="button"
                           className="block w-full border-t border-slate-200 px-3 py-2 text-center text-sm font-medium text-[#1387ff] transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-                          disabled={isSending || !isConnected}
+                          disabled={isBusy || !isConnected}
                           onClick={() => sendMessage(prompt)}
                         >
                           {prompt}
