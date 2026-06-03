@@ -15,7 +15,7 @@ export default function PatientBillingPage() {
 
       {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
 
-      <Card title="My Billing" subtitle="Billing history and downloadable PDF statements">
+      <Card title="My Billing" subtitle="Billing history with MedSphere PDF statement previews">
         <PatientBillingPanel patientId={patientId} />
       </Card>
     </div>

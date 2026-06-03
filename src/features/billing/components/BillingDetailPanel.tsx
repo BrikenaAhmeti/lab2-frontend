@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Download } from 'lucide-react';
+import { PdfDocumentPanel, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import { formatCurrency } from '@/utils/formatters/currency';
@@ -22,15 +24,6 @@ interface BillingDetailPanelProps {
   onSave: (payload: UpdateBillingPayload) => Promise<void>;
   onRecordPayment: () => void;
   onDownloadPdf: (billing: BillingView) => void;
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-medium uppercase text-muted">{label}</p>
-      <p className="mt-1 text-sm text-foreground">{value}</p>
-    </div>
-  );
 }
 
 export default function BillingDetailPanel({
@@ -98,44 +91,55 @@ export default function BillingDetailPanel({
   };
 
   return (
-    <aside className="space-y-4 rounded-xl border border-border bg-card p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">{billing.billingNumber}</h2>
-          <p className="mt-1 text-sm text-muted">{billing.patient.name}</p>
-        </div>
-        <BillingStatusBadge status={billing.status} />
-      </div>
-
-      <div className="grid gap-3 md:grid-cols-2">
-        <Field label="Issued" value={formatBillingDate(billing.issuedAt)} />
-        <Field label="Due" value={formatBillingDate(billing.dueDate)} />
-        <Field label="Total" value={formatCurrency(Number(billing.totalAmount))} />
-        <Field label="Outstanding" value={formatCurrency(Number(billing.outstandingAmount))} />
-      </div>
-
-      <div className="overflow-hidden rounded-xl border border-border">
-        <table className="min-w-full text-left text-sm">
-          <thead className="bg-surface text-muted">
-            <tr>
-              <th className="px-3 py-2 font-medium">Line item</th>
-              <th className="px-3 py-2 font-medium">Qty</th>
-              <th className="px-3 py-2 font-medium">Unit</th>
-              <th className="px-3 py-2 font-medium">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {billing.items.map((item) => (
-              <tr key={item.id} className="border-t border-border">
-                <td className="px-3 py-2">{item.description}</td>
-                <td className="px-3 py-2">{item.quantity}</td>
-                <td className="px-3 py-2">{formatCurrency(Number(item.unitPrice))}</td>
-                <td className="px-3 py-2">{formatCurrency(Number(item.totalPrice))}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <aside className="space-y-4">
+      <PdfDocumentPanel
+        documentLabel="Billing Statement PDF"
+        title={billing.billingNumber}
+        subtitle={billing.patient.name}
+        accent={Number(billing.outstandingAmount) > 0 ? 'amber' : 'green'}
+        status={<BillingStatusBadge status={billing.status} />}
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            leftIcon={<Download size={16} />}
+            onClick={() => onDownloadPdf(billing)}
+          >
+            Download PDF
+          </Button>
+        }
+        meta={[
+          { label: 'Issued', value: formatBillingDate(billing.issuedAt) },
+          { label: 'Due', value: formatBillingDate(billing.dueDate) },
+          { label: 'Total', value: formatCurrency(Number(billing.totalAmount)) },
+          { label: 'Outstanding', value: formatCurrency(Number(billing.outstandingAmount)) },
+        ]}
+      >
+        <PdfSection title="Line items" accent="blue">
+          <div className="overflow-hidden rounded-lg border border-border">
+            <table className="min-w-full text-left text-sm">
+              <thead className="bg-surface text-muted">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Line item</th>
+                  <th className="px-3 py-2 font-medium">Qty</th>
+                  <th className="px-3 py-2 font-medium">Unit</th>
+                  <th className="px-3 py-2 font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {billing.items.map((item) => (
+                  <tr key={item.id} className="border-t border-border">
+                    <td className="px-3 py-2">{item.description}</td>
+                    <td className="px-3 py-2">{item.quantity}</td>
+                    <td className="px-3 py-2">{formatCurrency(Number(item.unitPrice))}</td>
+                    <td className="px-3 py-2">{formatCurrency(Number(item.totalPrice))}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </PdfSection>
+      </PdfDocumentPanel>
 
       {editable ? (
         <section className="space-y-3 rounded-xl border border-border p-4">
@@ -240,9 +244,6 @@ export default function BillingDetailPanel({
       {actionMessage ? <FeedbackMessage type="success" message={actionMessage} /> : null}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="button" variant="secondary" onClick={() => onDownloadPdf(billing)}>
-          Download PDF
-        </Button>
         {payable ? (
           <Button type="button" onClick={onRecordPayment}>
             Record Payment

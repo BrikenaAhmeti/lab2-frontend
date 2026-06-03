@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
+import { PdfDocumentPanel, PdfInfoGrid, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import { resolvePatientId } from '@/features/appointments/hooks/useAppointments';
 import { getConsultationErrorMessage, usePrescriptions } from '@/features/consultation/hooks/useConsultation';
 import { prescriptionsApi, type PrescriptionView } from '@/lib/api/prescriptions-api';
@@ -50,7 +52,7 @@ export default function PatientPrescriptionsPage() {
 
       {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
 
-      <Card title="Prescriptions" subtitle="Read-only medication history and downloadable prescription PDFs">
+      <Card title="Prescriptions" subtitle="Read-only medication history with MedSphere prescription PDFs">
         <div className="space-y-3">
           {prescriptionsQuery.isLoading ? <PatientPortalLoadingState>Loading prescriptions...</PatientPortalLoadingState> : null}
           {prescriptionsQuery.isError ? (
@@ -65,43 +67,60 @@ export default function PatientPrescriptionsPage() {
           ) : null}
 
           {prescriptions.map((prescription) => (
-            <article key={prescription.id} className="rounded-xl border border-border p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant={prescriptionTone(prescription.status)}>
-                      {formatPatientPortalStatus(prescription.status)}
+            <PdfDocumentPanel
+              key={prescription.id}
+              documentLabel="Prescription PDF"
+              title={`Prescription - ${formatPatientPortalDate(prescription.issuedAt)}`}
+              subtitle={prescription.staff.displayName}
+              accent="blue"
+              status={
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Badge variant={prescriptionTone(prescription.status)}>
+                    {formatPatientPortalStatus(prescription.status)}
+                  </Badge>
+                  {prescription.pharmacyStatus ? (
+                    <Badge variant={pharmacyTone(prescription.pharmacyStatus)}>
+                      {formatPatientPortalStatus(prescription.pharmacyStatus)}
                     </Badge>
-                    {prescription.pharmacyStatus ? (
-                      <Badge variant={pharmacyTone(prescription.pharmacyStatus)}>
-                        {formatPatientPortalStatus(prescription.pharmacyStatus)}
-                      </Badge>
-                    ) : null}
-                  </div>
-                  <h2 className="mt-2 font-semibold text-foreground">{`Issued ${formatPatientPortalDate(prescription.issuedAt)}`}</h2>
-                  <p className="mt-1 text-sm text-muted">{prescription.staff.displayName}</p>
+                  ) : null}
                 </div>
+              }
+              actions={
                 <Button
                   type="button"
                   size="sm"
                   variant="secondary"
+                  leftIcon={<Download size={16} />}
                   loading={downloadId === prescription.id}
                   onClick={() => downloadPdf(prescription)}
                 >
                   Download PDF
                 </Button>
-              </div>
-
-              <div className="mt-4 grid gap-3 md:grid-cols-2">
-                {prescription.items.map((item) => (
-                  <div key={item.id} className="rounded-lg border border-border bg-surface/50 p-3">
-                    <p className="font-medium text-foreground">{item.medicationName}</p>
-                    <p className="mt-1 text-sm text-muted">{`${item.dosage} - ${item.frequency}`}</p>
-                    {item.durationInstructions ? <p className="mt-1 text-sm text-muted">{item.durationInstructions}</p> : null}
-                  </div>
-                ))}
-              </div>
-            </article>
+              }
+              meta={[
+                { label: 'Prescriber', value: prescription.staff.displayName },
+                { label: 'Issued', value: formatPatientPortalDate(prescription.issuedAt) },
+                { label: 'Expires', value: formatPatientPortalDate(prescription.expiresAt) },
+                { label: 'Diagnosis', value: prescription.medicalRecord?.diagnosis },
+              ]}
+            >
+              <PdfSection title="Medication items" accent="blue">
+                <div className="grid gap-3 md:grid-cols-2">
+                  {prescription.items.map((item) => (
+                    <div key={item.id} className="rounded-lg border border-border bg-surface/50 p-3">
+                      <p className="font-medium text-foreground">{item.medicationName}</p>
+                      <p className="mt-1 text-sm text-muted">{`${item.dosage} - ${item.frequency}`}</p>
+                      {item.durationInstructions ? <p className="mt-1 text-sm text-muted">{item.durationInstructions}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              </PdfSection>
+              {prescription.notes ? (
+                <PdfSection title="Clinical notes" accent="teal">
+                  <PdfInfoGrid items={[{ label: 'Notes', value: prescription.notes }]} />
+                </PdfSection>
+              ) : null}
+            </PdfDocumentPanel>
           ))}
         </div>
       </Card>

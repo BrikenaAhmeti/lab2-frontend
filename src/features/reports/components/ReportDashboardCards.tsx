@@ -1,8 +1,16 @@
 import { memo, useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
+import { CalendarCheck, DollarSign, FlaskConical, PackageSearch } from 'lucide-react';
 import { reportsApi, type ReportFilters, type ReportType } from '@/lib/api/reports-api';
 import { reportsQueryKey } from '@/features/reports/hooks/useReports';
 import { formatReportValue, reportSnapshotRange } from '@/features/reports/reportConfig';
+
+const snapshotStyles = [
+  { Icon: CalendarCheck, bar: 'bg-med-500', icon: 'bg-med-500 text-white' },
+  { Icon: DollarSign, bar: 'bg-cobalt-500', icon: 'bg-cobalt-500 text-white' },
+  { Icon: PackageSearch, bar: 'bg-warning', icon: 'bg-warning text-white' },
+  { Icon: FlaskConical, bar: 'bg-accent', icon: 'bg-accent text-accent-foreground' },
+];
 
 interface SnapshotConfig {
   key: string;
@@ -65,13 +73,22 @@ function ReportDashboardCards({ enabled }: { enabled: boolean }) {
       {snapshots.map((snapshot, index) => {
         const result = results[index];
         const metric = result.data?.summary.find((item) => item.label === snapshot.metric) ?? result.data?.summary[0];
+        const { Icon, bar, icon } = snapshotStyles[index] ?? snapshotStyles[0];
 
         return (
-          <article key={snapshot.key} className="panel p-4">
-            <p className="text-xs font-medium uppercase text-muted">{snapshot.title}</p>
-            <p className="mt-2 text-2xl font-semibold text-foreground">
-              {result.isLoading ? '...' : result.isError ? '-' : formatReportValue(metric?.value ?? null)}
-            </p>
+          <article key={snapshot.key} className="panel overflow-hidden">
+            <div className={`h-1 ${bar}`} aria-hidden="true" />
+            <div className="flex items-start justify-between gap-3 p-4">
+              <div>
+                <p className="text-xs font-medium uppercase text-muted">{snapshot.title}</p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {result.isLoading ? '...' : result.isError ? '-' : formatReportValue(metric?.value ?? null)}
+                </p>
+              </div>
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${icon}`}>
+                <Icon size={18} aria-hidden="true" />
+              </span>
+            </div>
           </article>
         );
       })}

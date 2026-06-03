@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
+import { Download } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
+import { PdfDocumentPanel, PdfInfoGrid, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import { resolvePatientId } from '@/features/appointments/hooks/useAppointments';
 import { getConsultationErrorMessage, useMedicalRecords } from '@/features/consultation/hooks/useConsultation';
 import { medicalRecordsApi, type MedicalRecordView } from '@/lib/api/medical-records-api';
@@ -10,15 +12,6 @@ import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import { PatientPortalEmptyState, PatientPortalLoadingState } from '../components/PatientPortalStates';
 import { downloadPatientPdf, formatPatientPortalDate } from '../components/patientPortalFormat';
-
-function Field({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div>
-      <p className="text-xs font-medium uppercase text-muted">{label}</p>
-      <p className="mt-1 text-sm text-foreground">{value || '-'}</p>
-    </div>
-  );
-}
 
 function fileName(record: MedicalRecordView) {
   return `medical-record-${record.id}.pdf`;
@@ -53,7 +46,7 @@ export default function PatientMedicalRecordsPage() {
 
       {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
 
-      <Card title="Medical Records" subtitle="Finalized consultation records with read-only details">
+      <Card title="Medical Records" subtitle="Finalized consultation PDFs with MedSphere document previews">
         <div className="space-y-3">
           {recordsQuery.isLoading ? <PatientPortalLoadingState>Loading medical records...</PatientPortalLoadingState> : null}
           {recordsQuery.isError ? (
@@ -68,39 +61,64 @@ export default function PatientMedicalRecordsPage() {
           ) : null}
 
           {records.map((record) => (
-            <article key={record.id} className="rounded-xl border border-border p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant="success">Finalized</Badge>
-                    <Badge>{record.department.name}</Badge>
-                  </div>
-                  <h2 className="mt-2 font-semibold text-foreground">{record.diagnosis || 'Consultation record'}</h2>
-                  <p className="mt-1 text-sm text-muted">{formatPatientPortalDate(record.createdAt)}</p>
+            <PdfDocumentPanel
+              key={record.id}
+              documentLabel="Medical Record PDF"
+              title={record.diagnosis || 'Consultation record'}
+              subtitle={formatPatientPortalDate(record.createdAt)}
+              accent="teal"
+              status={
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Badge variant="success">Finalized</Badge>
+                  <Badge>{record.department.name}</Badge>
                 </div>
+              }
+              actions={
                 <Button
                   type="button"
                   size="sm"
                   variant="secondary"
+                  leftIcon={<Download size={16} />}
                   loading={downloadId === record.id}
                   onClick={() => downloadPdf(record)}
                 >
                   Download PDF
                 </Button>
-              </div>
+              }
+              meta={[
+                { label: 'Doctor', value: record.staff.displayName },
+                { label: 'Department', value: record.department.name },
+                { label: 'Appointment', value: formatPatientPortalDate(record.appointment?.scheduledAt) },
+                { label: 'Record ID', value: record.id },
+              ]}
+            >
+              <PdfSection title="Clinical summary" accent="teal">
+                <PdfInfoGrid
+                  columns="two"
+                  items={[
+                    { label: 'Chief complaint', value: record.chiefComplaint },
+                    { label: 'Diagnosis', value: record.diagnosis },
+                    { label: 'Follow-up', value: record.followUpInstructions },
+                  ]}
+                />
+              </PdfSection>
 
-              <details className="mt-4 rounded-lg border border-border bg-surface/50 p-3">
+              <details className="rounded-lg border border-border bg-surface/50 p-3">
                 <summary className="cursor-pointer text-sm font-medium text-foreground">View details</summary>
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  <Field label="Doctor" value={record.staff.displayName} />
-                  <Field label="Chief complaint" value={record.chiefComplaint} />
-                  <Field label="Diagnosis" value={record.diagnosis} />
-                  <Field label="Treatment plan" value={record.treatmentPlan} />
-                  <Field label="Follow-up" value={record.followUpInstructions} />
-                  <Field label="Notes" value={record.notes} />
-                </div>
+                <PdfInfoGrid
+                  className="mt-4"
+                  columns="two"
+                  items={[
+                    { label: 'Doctor', value: record.staff.displayName },
+                    { label: 'Chief complaint', value: record.chiefComplaint },
+                    { label: 'Diagnosis', value: record.diagnosis },
+                    { label: 'Treatment plan', value: record.treatmentPlan },
+                    { label: 'Follow-up', value: record.followUpInstructions },
+                    { label: 'Notes', value: record.notes },
+                  ]}
+                />
               </details>
-            </article>
+            </PdfDocumentPanel>
           ))}
         </div>
       </Card>

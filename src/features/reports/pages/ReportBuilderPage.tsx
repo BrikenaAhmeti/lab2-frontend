@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react';
 import { Download, FileSpreadsheet, FileText, Save } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
+import { PdfDocumentPanel, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import Forbidden from '@/components/common/Forbidden';
 import { hasPermission } from '@/features/auth/utils/permission';
 import ReportDashboardCards from '@/features/reports/components/ReportDashboardCards';
@@ -13,6 +14,7 @@ import {
   createReportFilters,
   defaultGroupBy,
   filtersFromTemplate,
+  formatOptionLabel,
   reportTypeLabels,
   toReportQueryFilters,
   toTemplateParameters,
@@ -66,10 +68,6 @@ export default function ReportBuilderPage() {
   const generateMutation = useGenerateReport();
   const exportMutation = useExportReport();
   const saveTemplateMutation = useSaveReportTemplate();
-
-  if (!canGenerate) {
-    return <Forbidden />;
-  }
 
   const openTemplateModal = useCallback(() => {
     setTemplateError('');
@@ -161,6 +159,13 @@ export default function ReportBuilderPage() {
 
   const templates = templatesQuery.data?.items ?? [];
   const optionsError = departmentsQuery.isError || staffQuery.isError || servicesQuery.isError;
+  const generatedAtLabel = report
+    ? new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.generatedAt))
+    : '';
+
+  if (!canGenerate) {
+    return <Forbidden />;
+  }
 
   return (
     <div className="space-y-4">
@@ -186,7 +191,7 @@ export default function ReportBuilderPage() {
                 </Button>
                 <Button
                   type="button"
-                  variant="secondary"
+                  variant="primary"
                   size="sm"
                   leftIcon={<FileText size={16} />}
                   loading={exportMutation.isPending}
@@ -234,26 +239,47 @@ export default function ReportBuilderPage() {
           </Card>
 
           <Card
-            title={report?.title ?? 'Preview'}
-            subtitle={report ? `Generated ${new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(report.generatedAt))}` : undefined}
+            title="PDF Preview"
+            subtitle={report ? `${report.title} - generated ${generatedAtLabel}` : 'Generate a report to preview the branded PDF layout'}
           >
             {generateMutation.isPending ? <TableSkeleton rows={5} columns={4} /> : null}
 
             {!generateMutation.isPending && !report ? (
-              <div className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
-                No report generated yet.
+              <div className="rounded-lg border border-dashed border-primary/30 bg-surface/60 px-4 py-8 text-center text-sm text-muted">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg border border-primary/20 bg-card">
+                  <FileText size={22} className="text-primary" aria-hidden="true" />
+                </div>
+                <p className="font-medium text-foreground">No report generated yet.</p>
+                <p className="mt-1">The MedSphere PDF preview will appear here after generation.</p>
               </div>
             ) : null}
 
             {!generateMutation.isPending && report ? (
-              <div className="space-y-4">
-                <ReportSummaryStrip summary={report.summary} />
-                <span className="sr-only">Chart preview</span>
-                <Suspense fallback={<Skeleton className="h-72" />}>
-                  <ReportChart report={report} />
-                </Suspense>
-                <ReportDataTable rows={report.rows} />
-              </div>
+              <PdfDocumentPanel
+                documentLabel="Report PDF"
+                title={report.title}
+                subtitle={`Generated ${generatedAtLabel}`}
+                accent={report.type === 'financial' ? 'blue' : report.type === 'inventory' ? 'amber' : 'teal'}
+                meta={[
+                  { label: 'Report type', value: reportTypeLabels[report.type] },
+                  { label: 'Grouped by', value: formatOptionLabel(report.groupBy) },
+                  { label: 'Rows', value: report.rows.length },
+                  { label: 'Format', value: 'PDF export' },
+                ]}
+              >
+                <PdfSection title="Summary" accent="teal">
+                  <ReportSummaryStrip summary={report.summary} />
+                </PdfSection>
+                <PdfSection title="Visualization" accent="blue">
+                  <span className="sr-only">Chart preview</span>
+                  <Suspense fallback={<Skeleton className="h-72" />}>
+                    <ReportChart report={report} />
+                  </Suspense>
+                </PdfSection>
+                <PdfSection title="Data table" accent="green">
+                  <ReportDataTable rows={report.rows} />
+                </PdfSection>
+              </PdfDocumentPanel>
             ) : null}
           </Card>
         </div>
