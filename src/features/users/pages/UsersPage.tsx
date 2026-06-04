@@ -20,6 +20,7 @@ import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 const roleOptions = ['Super Admin', 'Admin', 'Doctor', 'Nurse', 'Lab Technician', 'Pharmacist', 'Receptionist', 'Patient'];
 const doctorRole = 'Doctor';
 const doctorStaffWarning = 'Doctor user was created, but staff profile creation failed.';
+const doctorStaffPermissionWarning = 'Doctor user creation requires staff:manage permission to create the staff profile.';
 
 const initialForm = {
   firstName: '',
@@ -83,6 +84,22 @@ function getStatusCode(error: unknown) {
   return error instanceof AxiosError ? error.response?.status : undefined;
 }
 
+function getApiErrorMessage(error: unknown, fallback: string) {
+  if (error instanceof AxiosError) {
+    const message = (error.response?.data as { message?: unknown } | undefined)?.message;
+
+    if (typeof message === 'string' && message.trim()) {
+      return message;
+    }
+
+    if (Array.isArray(message) && message.length > 0) {
+      return message.join(', ');
+    }
+  }
+
+  return fallback;
+}
+
 function normalizeRoleKey(value: string) {
   return value.trim().toLowerCase().replace(/[\s_-]+/g, '');
 }
@@ -96,6 +113,7 @@ export default function UsersPage() {
   const canManageUsers =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
+  const canManageStaff = hasAnyPermission(permissions, ['staff:manage'], 'all');
 
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -149,10 +167,11 @@ export default function UsersPage() {
     retry: false,
   });
 
-  const doctorPositionType = useMemo(
-    () => staffPositionTypesQuery.data?.items.find((item) => normalizeRoleKey(item.defaultRoleKey) === 'doctor'),
+  const doctorPositionTypeOptions = useMemo(
+    () => (staffPositionTypesQuery.data?.items ?? []).filter((item) => normalizeRoleKey(item.defaultRoleKey) === 'doctor'),
     [staffPositionTypesQuery.data?.items],
   );
+  const doctorPositionType = doctorPositionTypeOptions[0];
 
   useEffect(() => {
     if (!isDoctorUser || form.staffPositionTypeId || !doctorPositionType) {
@@ -170,19 +189,20 @@ export default function UsersPage() {
       const created = await usersApi.createUser(createUserPayload());
       let staffProfileCreated = false;
       let staffProfileFailed = false;
+      let staffProfileErrorMessage = '';
 
       if (form.roles.includes(doctorRole)) {
         try {
           await staffApi.create({
             userId: created.user.id,
-            staffPositionTypeId: form.staffPositionTypeId,
-            employeeCode: form.employeeCode,
+            staffPositionTypeId: form.staffPositionTypeId.trim(),
+            employeeCode: form.employeeCode.trim(),
             specialization: form.specialization.trim() || undefined,
             employmentStatus: 'ACTIVE',
             isPublicProfile: true,
             departments: [
               {
-                departmentId: form.departmentId,
+                departmentId: form.departmentId.trim(),
                 isPrimary: true,
               },
             ],
@@ -191,12 +211,13 @@ export default function UsersPage() {
         } catch (error) {
           console.error('Doctor staff profile creation failed', error);
           staffProfileFailed = true;
+          staffProfileErrorMessage = getApiErrorMessage(error, doctorStaffWarning);
         }
       }
 
-      return { created, staffProfileCreated, staffProfileFailed };
+      return { created, staffProfileCreated, staffProfileFailed, staffProfileErrorMessage };
     },
-    onSuccess: async ({ staffProfileCreated, staffProfileFailed }) => {
+    onSuccess: async ({ staffProfileCreated, staffProfileFailed, staffProfileErrorMessage }) => {
       await queryClient.invalidateQueries({ queryKey: ['users'] });
       if (staffProfileCreated) {
         await queryClient.invalidateQueries({ queryKey: ['staff'] });
@@ -204,7 +225,9 @@ export default function UsersPage() {
       }
       setFeedback({
         type: staffProfileFailed ? 'warning' : 'success',
-        message: staffProfileFailed ? doctorStaffWarning : t('auth.userCreatedSuccess'),
+        message: staffProfileFailed
+          ? `${doctorStaffWarning} ${staffProfileErrorMessage}`
+          : t('auth.userCreatedSuccess'),
       });
       setShowModal(false);
       setForm(initialForm);
@@ -213,7 +236,9 @@ export default function UsersPage() {
       const status = getStatusCode(error);
       setFeedback({
         type: 'error',
-        message: status === 403 ? t('auth.forbiddenDescription') : t('auth.userCreateFailed'),
+        message: status === 403
+          ? t('auth.forbiddenDescription')
+          : getApiErrorMessage(error, t('auth.userCreateFailed')),
       });
     },
   });
@@ -227,11 +252,11 @@ export default function UsersPage() {
     [departmentsQuery.data?.items],
   );
   const staffPositionTypeOptions = useMemo(
-    () => (staffPositionTypesQuery.data?.items ?? []).map((positionType) => ({
+    () => doctorPositionTypeOptions.map((positionType) => ({
       value: positionType.id,
       label: positionType.name,
     })),
-    [staffPositionTypesQuery.data?.items],
+    [doctorPositionTypeOptions],
   );
 
   if (!canManageUsers) {
@@ -315,6 +340,10 @@ export default function UsersPage() {
         onClose={() => setShowModal(false)}
         onSubmit={() => {
           setFeedback(null);
+          if (isDoctorUser && !canManageStaff) {
+            setFeedback({ type: 'error', message: doctorStaffPermissionWarning });
+            return;
+          }
           if (!validation.success) {
             setFeedback({ type: 'error', message: t('auth.fixFormErrors') });
             return;

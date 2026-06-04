@@ -233,37 +233,13 @@ export interface CreateUserResponse {
   user: UserRecord;
 }
 
-let mockUsers: UserRecord[] = [];
-
 export const usersApi = {
-  async list(search: string, instance?: AxiosInstance) {
-    try {
-      return await client(instance)
-        .get<UserRecord[]>('/api/users', { params: search ? { search } : undefined })
-        .then((r) => r.data);
-    } catch {
-      const q = search.trim().toLowerCase();
-      if (!q) return mockUsers;
-      return mockUsers.filter((u) => `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(q));
-    }
+  list(search: string, instance?: AxiosInstance) {
+    return client(instance)
+      .get<UserRecord[]>('/api/users', { params: search ? { search } : undefined })
+      .then((r) => r.data);
   },
-  async createUser(payload: CreateUserPayload, instance?: AxiosInstance) {
-    try {
-      return await client(instance).post<CreateUserResponse>('/api/auth/admin/users', payload).then((r) => r.data);
-    } catch {
-      const created: UserRecord = {
-        id: crypto.randomUUID(),
-        firstName: payload.firstName,
-        lastName: payload.lastName,
-        email: payload.email,
-        phone: payload.phone,
-        roles: payload.roles,
-      };
-      mockUsers = [created, ...mockUsers];
-      return {
-        message: 'User account created successfully.',
-        user: created,
-      };
-    }
+  createUser(payload: CreateUserPayload, instance?: AxiosInstance) {
+    return client(instance).post<CreateUserResponse>('/api/auth/admin/users', payload).then((r) => r.data);
   },
 };

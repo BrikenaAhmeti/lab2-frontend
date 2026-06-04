@@ -61,3 +61,4 @@ typings/
 .serverless/
 .dynamodb/
 .tern-port
+node_modules
