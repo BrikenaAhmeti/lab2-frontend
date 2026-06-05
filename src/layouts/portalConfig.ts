@@ -43,6 +43,7 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/admin/inventory', label: 'Inventory', requiredPermissions: ['inventory:read'] },
           { to: '/admin/billing', label: 'Billing', requiredPermissions: ['billing:read', 'billing:read:all'] },
           { to: '/admin/reports', label: 'Reports', requiredPermissions: ['reports:generate'] },
+          { to: '/admin/voice-ai', label: 'Voice AI Logs', requiredPermissions: ['audit_logs:read'] },
           {
             to: '/admin/search',
             label: 'Advanced Search',

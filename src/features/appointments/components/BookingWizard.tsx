@@ -136,6 +136,10 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   const bookMutation = useBookAppointment();
   const publicBookMutation = usePublicBookAppointment();
   const actionLoading = bookMutation.isPending || publicBookMutation.isPending;
+  const liveSlots = useMemo(
+    () => (slotsQuery.data?.slots ?? []).filter((availableSlot) => new Date(availableSlot.start).getTime() > now),
+    [now, slotsQuery.data?.slots]
+  );
 
   const activePatientId = mode === 'receptionist' ? selectedPatient?.id : mode === 'patient' ? patientId : undefined;
   const expiresInSeconds = useMemo(() => {
@@ -155,6 +159,13 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
       setSlotSelectedAt(null);
     }
   }, [expiresInSeconds, slot]);
+
+  useEffect(() => {
+    if (slot && !liveSlots.some((availableSlot) => availableSlot.start === slot.start)) {
+      setSlot(null);
+      setSlotSelectedAt(null);
+    }
+  }, [liveSlots, slot]);
 
   const canMoveNext = useMemo(() => {
     if (currentStep === 'Your Details') return hasValidPublicPatient;
@@ -456,7 +467,7 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
           {currentStep === 'Slot' ? (
             <SlotStep
               date={date}
-              slots={slotsQuery.data?.slots ?? []}
+              slots={liveSlots}
               selectedSlot={slot}
               expiresInSeconds={expiresInSeconds}
               loading={slotsQuery.isLoading}

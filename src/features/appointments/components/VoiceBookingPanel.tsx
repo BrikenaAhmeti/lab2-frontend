@@ -5,6 +5,7 @@ import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import type { BookingMode } from '../hooks/useAppointments';
+import type Vapi from '@vapi-ai/web';
 
 interface VoiceBookingPanelProps {
   mode: BookingMode;
@@ -30,6 +31,7 @@ export default function VoiceBookingPanel({
   const [voiceError, setVoiceError] = useState('');
   const [callStatus, setCallStatus] = useState<CallStatus>('idle');
   const connectionTimer = useRef<number | null>(null);
+  const vapiRef = useRef<Vapi | null>(null);
   const isConfigured = Boolean(env.VAPI_PUBLIC_KEY && env.VAPI_ASSISTANT_ID);
   const selectedContextCount = useMemo(
     () => [patientId, departmentId, serviceCatalogId, staffProfileId, scheduledAt].filter(Boolean).length,
@@ -49,15 +51,60 @@ export default function VoiceBookingPanel({
       if (connectionTimer.current) {
         window.clearTimeout(connectionTimer.current);
       }
+
+      const vapi = vapiRef.current;
+      if (vapi) {
+        vapi.removeAllListeners();
+        void vapi.stop().catch(() => undefined);
+        vapiRef.current = null;
+      }
     };
   }, []);
 
-  const startVoiceBooking = () => {
+  const getVapi = async () => {
+    if (vapiRef.current) {
+      return vapiRef.current;
+    }
+
+    const { default: VapiClient } = await import('@vapi-ai/web');
+    const vapi = new VapiClient(env.VAPI_PUBLIC_KEY!);
+
+    vapi.on('call-start', () => {
+      setCallStatus('listening');
+      setVoiceError('');
+    });
+    vapi.on('call-end', () => {
+      setCallStatus('ended');
+    });
+    vapi.on('error', () => {
+      setCallStatus('error');
+      setVoiceError('The voice call could not continue. Please try again or use manual booking.');
+    });
+    vapi.on('call-start-failed', () => {
+      setCallStatus('error');
+      setVoiceError('The voice call could not start. Please check the assistant setup and browser microphone permission.');
+    });
+
+    vapiRef.current = vapi;
+    return vapi;
+  };
+
+  const startVoiceBooking = async () => {
     if (connectionTimer.current) {
       window.clearTimeout(connectionTimer.current);
+      connectionTimer.current = null;
     }
 
     setVoiceError('');
+
+    if (!isConfigured) {
+      setCallStatus('error');
+      setVoiceError(
+        'MedSphere AI Assistant needs VITE_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID before voice calls can start.'
+      );
+      return;
+    }
+
     setCallStatus('connecting');
 
     const detail = {
@@ -72,18 +119,14 @@ export default function VoiceBookingPanel({
 
     window.dispatchEvent(new CustomEvent('medsphere:vapi-booking-requested', { detail }));
 
-    connectionTimer.current = window.setTimeout(() => {
-      if (!isConfigured) {
-        setCallStatus('error');
-        setVoiceError(
-          'MedSphere AI Assistant is prepared, but voice credentials are not connected yet. Add VITE_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID when the assistant is ready.'
-        );
-        return;
-      }
-
+    try {
+      const vapi = await getVapi();
+      await vapi.start(env.VAPI_ASSISTANT_ID);
+      setCallStatus((current) => (current === 'connecting' ? 'listening' : current));
+    } catch {
       setCallStatus('error');
-      setVoiceError('Voice credentials were found, but the MedSphere AI Assistant call handler is not connected yet.');
-    }, 700);
+      setVoiceError('The voice call could not start. Please check microphone permission and assistant setup.');
+    }
   };
 
   const endVoiceBooking = () => {
@@ -94,6 +137,7 @@ export default function VoiceBookingPanel({
 
     setCallStatus('ended');
     setVoiceError('');
+    void vapiRef.current?.stop().catch(() => undefined);
   };
 
   return (

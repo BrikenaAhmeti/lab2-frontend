@@ -124,11 +124,11 @@ const staff: StaffRecord = {
 const slots: AvailableSlotsResponse = {
   staffProfileId: 'staff-1',
   serviceId: 'service-1',
-  date: '2026-05-20',
+  date: '2030-05-20',
   slots: [
     {
-      start: '2026-05-20T09:00:00.000Z',
-      end: '2026-05-20T09:30:00.000Z',
+      start: '2030-05-20T09:00:00.000Z',
+      end: '2030-05-20T09:30:00.000Z',
       startTime: '09:00',
       endTime: '09:30',
       durationMinutes: 30,
@@ -144,8 +144,8 @@ const appointment: AppointmentView = {
   staffProfileId: 'staff-1',
   status: 'SCHEDULED',
   appointmentType: 'IN_PERSON',
-  scheduledAt: '2026-05-20T09:00:00.000Z',
-  endAt: '2026-05-20T09:30:00.000Z',
+  scheduledAt: '2030-05-20T09:00:00.000Z',
+  endAt: '2030-05-20T09:30:00.000Z',
   durationMinutes: 30,
   basePrice: 40,
   notes: 'Bring records',
@@ -294,7 +294,7 @@ describe('BookingWizard', () => {
         patientId: 'patient-1',
         serviceCatalogId: 'service-1',
         staffProfileId: 'staff-1',
-        scheduledAt: '2026-05-20T09:00:00.000Z',
+        scheduledAt: '2030-05-20T09:00:00.000Z',
         notes: 'Bring records',
       });
     });
@@ -329,7 +329,7 @@ describe('BookingWizard', () => {
         },
         serviceCatalogId: 'service-1',
         staffProfileId: 'staff-1',
-        scheduledAt: '2026-05-20T09:00:00.000Z',
+        scheduledAt: '2030-05-20T09:00:00.000Z',
         notes: 'New patient website request',
       });
     });

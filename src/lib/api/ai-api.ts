@@ -91,6 +91,58 @@ export interface AiAgentMessageResponse {
   session?: unknown;
 }
 
+export interface VapiCallLogMessage {
+  role: string;
+  message: string;
+  time?: number | null;
+  endTime?: number | null;
+  secondsFromStart?: number | null;
+  duration?: number | null;
+  speakerLabel?: string | null;
+}
+
+export interface VapiCallRecordingUrls {
+  stereoUrl?: string | null;
+  monoCombinedUrl?: string | null;
+  assistantUrl?: string | null;
+  customerUrl?: string | null;
+  videoUrl?: string | null;
+  legacyRecordingUrl?: string | null;
+}
+
+export interface VapiCallLogView {
+  id: string;
+  type?: string | null;
+  status?: string | null;
+  assistantId?: string | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+  startedAt?: string | null;
+  endedAt?: string | null;
+  endedReason?: string | null;
+  durationSeconds?: number | null;
+  cost?: number | null;
+  summary?: string | null;
+  transcript?: string | null;
+  messages: VapiCallLogMessage[];
+  recordingUrls: VapiCallRecordingUrls;
+  logUrl?: string | null;
+  pcapUrl?: string | null;
+}
+
+export interface VapiCallListResponse {
+  assistantId?: string | null;
+  count: number;
+  calls: VapiCallLogView[];
+}
+
+export interface VapiArtifactLogResponse {
+  callId: string;
+  logUrl: string;
+  contentType: string;
+  body: unknown;
+}
+
 type LabInterpretationPayload = LabInterpretationView & {
   patientInterpretation?: string | null;
   patientFriendlyVersion?: string | null;
@@ -189,6 +241,21 @@ export const aiApi = {
   sendAgentMessage(payload: AiAgentMessagePayload, instance?: AxiosInstance) {
     return client(instance)
       .post<AiAgentMessageResponse>('/api/ai/agent/message', payload)
+      .then((response) => response.data);
+  },
+  listVapiCalls(params: { limit?: number; assistantId?: string } = {}, instance?: AxiosInstance) {
+    return client(instance)
+      .get<VapiCallListResponse>('/api/ai/vapi/calls', { params })
+      .then((response) => response.data);
+  },
+  getVapiCall(callId: string, instance?: AxiosInstance) {
+    return client(instance)
+      .get<VapiCallLogView>(`/api/ai/vapi/calls/${callId}`)
+      .then((response) => response.data);
+  },
+  getVapiCallLog(callId: string, instance?: AxiosInstance) {
+    return client(instance)
+      .get<VapiArtifactLogResponse>(`/api/ai/vapi/calls/${callId}/log`)
       .then((response) => response.data);
   },
 };
