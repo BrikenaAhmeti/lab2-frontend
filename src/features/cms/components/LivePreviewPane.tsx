@@ -6,6 +6,7 @@ import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import { cmsQueryKeys, usePublicCmsPage } from '@/features/cms/hooks/useCms';
 import type { CmsPage, CmsSection } from '@/lib/api/cms-api';
 import { env } from '@/config/env';
+import { safeHref, safeImageSrc } from '@/utils/safeUrl';
 
 interface LivePreviewPaneProps {
   page: CmsPage | undefined;
@@ -34,9 +35,11 @@ function SectionPreview({ section }: { section: CmsSection }) {
   const items = contentItems(section.content);
 
   if (section.type === 'HERO') {
+    const imageUrl = safeImageSrc(section.imageUrl);
+
     return (
       <section className="overflow-hidden rounded-xl border border-border bg-surface">
-        {section.imageUrl ? <img src={section.imageUrl} alt="" className="h-40 w-full object-cover" loading="lazy" decoding="async" /> : null}
+        {imageUrl ? <img src={imageUrl} alt="" className="h-40 w-full object-cover" loading="lazy" decoding="async" /> : null}
         <div className="p-4">
           <h3 className="text-2xl font-semibold text-foreground">{section.title}</h3>
           {section.subtitle ? <p className="mt-2 text-sm text-muted">{section.subtitle}</p> : null}
@@ -94,7 +97,7 @@ function SectionPreview({ section }: { section: CmsSection }) {
 
   if (section.type === 'CTA') {
     const buttonLabel = textValue(content, 'buttonLabel') || 'Open';
-    const linkUrl = textValue(content, 'linkUrl');
+    const linkUrl = safeHref(textValue(content, 'linkUrl'));
 
     return (
       <section className="rounded-xl border border-border bg-primary/10 p-4">
@@ -112,12 +115,14 @@ function SectionPreview({ section }: { section: CmsSection }) {
     );
   }
 
+  const imageUrl = safeImageSrc(section.imageUrl);
+
   return (
     <section className="rounded-xl border border-border bg-background p-4">
       <h3 className="text-lg font-semibold text-foreground">{section.title}</h3>
       {section.subtitle ? <p className="mt-1 text-sm text-muted">{section.subtitle}</p> : null}
       {section.body ? <p className="mt-3 whitespace-pre-line text-sm leading-6 text-foreground">{section.body}</p> : null}
-      {section.imageUrl ? <img src={section.imageUrl} alt="" className="mt-3 max-h-48 w-full rounded-lg object-cover" loading="lazy" decoding="async" /> : null}
+      {imageUrl ? <img src={imageUrl} alt="" className="mt-3 max-h-48 w-full rounded-lg object-cover" loading="lazy" decoding="async" /> : null}
     </section>
   );
 }

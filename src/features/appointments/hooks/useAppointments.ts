@@ -22,7 +22,7 @@ export const appointmentQueryKey = {
   all: ['appointments'] as const,
   departments: ['appointments', 'departments'] as const,
   services: (departmentId: string) => ['appointments', 'services', departmentId] as const,
-  staff: (departmentId: string) => ['appointments', 'staff', departmentId] as const,
+  staff: (departmentId?: string) => ['appointments', 'staff', departmentId || 'all'] as const,
   slots: (staffId: string, serviceId: string, date: string) =>
     ['appointments', 'slots', staffId, serviceId, date] as const,
   list: (params: AppointmentListParams) => [...appointmentQueryKey.all, 'list', params] as const,
@@ -59,17 +59,20 @@ export function useAppointmentServices(departmentId: string, publicAccess = fals
   });
 }
 
-export function useAppointmentStaff(departmentId: string, publicAccess = false) {
+export function useAppointmentStaff(departmentId?: string, publicAccess = false) {
+  const normalizedDepartmentId = departmentId?.trim();
+
   return useQuery({
-    queryKey: publicAccess ? [...appointmentQueryKey.staff(departmentId), 'public'] : appointmentQueryKey.staff(departmentId),
+    queryKey: publicAccess
+      ? [...appointmentQueryKey.staff(normalizedDepartmentId), 'public']
+      : appointmentQueryKey.staff(normalizedDepartmentId),
     queryFn: async () => {
       const response = await staffApi.publicList(
-        { page: 1, limit: 100, departmentId },
+        { page: 1, limit: 100, ...(normalizedDepartmentId ? { departmentId: normalizedDepartmentId } : {}) },
         publicAccess ? publicCoreApiClient : undefined
       );
       return response.items;
     },
-    enabled: Boolean(departmentId),
     retry: false,
   });
 }

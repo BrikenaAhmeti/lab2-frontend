@@ -35,6 +35,7 @@ import type { CmsSection } from '@/lib/api/cms-api';
 import { usePublicStaffList } from '@/features/staff/hooks/useStaff';
 import PublicDoctorCard from './PublicDoctorCard';
 import { isDoctorProfile } from '../utils/publicStaffPresentation';
+import { safeHref, safeImageSrc } from '@/utils/safeUrl';
 
 type ContentMap = Record<string, unknown>;
 
@@ -180,7 +181,7 @@ function Actions({ actions, dark = false }: { actions: ContentMap[]; dark?: bool
     <div className="mt-8 flex flex-wrap gap-3">
       {actions.map((action, index) => {
         const label = text(action.label) ?? 'Learn more';
-        const href = text(action.href) ?? '#';
+        const href = safeHref(text(action.href)) ?? '#';
         const isPrimary = text(action.style) !== 'secondary';
 
         return (
@@ -207,7 +208,7 @@ function Actions({ actions, dark = false }: { actions: ContentMap[]; dark?: bool
 }
 
 function HeroSection({ section }: { section: CmsSection }) {
-  const imageUrl = section.imageUrl || '/medsphere-logo.png';
+  const imageUrl = safeImageSrc(section.imageUrl) || '/medsphere-logo.png';
   const content = isMap(section.content) ? section.content : {};
   const actions = asArray(section.content, 'actions');
   const trustPills = Array.isArray(content.trustPills) ? content.trustPills.map(text).filter(Boolean) : [];
@@ -317,7 +318,7 @@ function ServiceCardsSection({ section }: { section: CmsSection }) {
         {services.map((service, index) => (
           <a
             key={`${text(service.title) ?? index}`}
-            href={text(service.href) ?? '/services'}
+            href={safeHref(text(service.href)) ?? '/services'}
             className="group rounded-lg border border-border bg-card p-5 shadow-panel transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-soft"
           >
             <div className="flex items-start justify-between gap-4">
@@ -519,6 +520,8 @@ function LocationPanelSection({ section }: { section: CmsSection }) {
 }
 
 function SectionText({ section }: { section: CmsSection }) {
+  const imageUrl = safeImageSrc(section.imageUrl);
+
   if (!section.title && !section.subtitle && !section.body) {
     return null;
   }
@@ -527,8 +530,8 @@ function SectionText({ section }: { section: CmsSection }) {
     <SectionShell>
       <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
         <SectionHeading section={section} />
-        {section.imageUrl ? (
-          <img src={section.imageUrl} alt="" className="h-80 w-full rounded-lg object-cover shadow-panel" loading="lazy" decoding="async" />
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="h-80 w-full rounded-lg object-cover shadow-panel" loading="lazy" decoding="async" />
         ) : null}
       </div>
     </SectionShell>

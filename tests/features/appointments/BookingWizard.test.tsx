@@ -118,7 +118,15 @@ const staff: StaffRecord = {
   bio: 'Patient-facing doctor',
   employmentStatus: 'ACTIVE',
   positionType: { id: 'position-1', name: 'Doctor' },
-  departments: [{ id: 'assignment-1', departmentId: 'department-1', department: { id: 'department-1', name: 'Cardiology', isActive: true } }],
+  departments: [
+    {
+      id: 'assignment-1',
+      departmentId: 'department-1',
+      isPrimary: true,
+      unassignedAt: null,
+      department: { id: 'department-1', name: 'Cardiology', isActive: true },
+    },
+  ],
 };
 
 const slots: AvailableSlotsResponse = {
@@ -214,22 +222,34 @@ function renderPublicWizard() {
 }
 
 async function moveToConfirmStep() {
-  fireEvent.click(await screen.findByRole('button', { name: /cardiology/i }));
+  expect(await screen.findByText('Department: Cardiology')).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
   fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
+  fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+  await screen.findByLabelText('Notes');
+}
+
+async function movePublicToConfirmStep() {
+  expect(await screen.findByText('Department: Cardiology')).toBeInTheDocument();
   fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+  fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
   fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-}
 
-async function movePublicToConfirmStep() {
+  await screen.findByLabelText(/first name/i);
+
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByText('Please complete the required patient details before choosing an appointment.')).toBeInTheDocument();
+  expect(screen.getByText('Please complete the required patient details before confirming the appointment.')).toBeInTheDocument();
 
   fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Arta' } });
   fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Krasniqi' } });
@@ -240,17 +260,7 @@ async function movePublicToConfirmStep() {
   fireEvent.change(screen.getByLabelText(/gender/i), { target: { value: 'female' } });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
-  fireEvent.click(await screen.findByRole('button', { name: /cardiology/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await screen.findByLabelText('Notes');
 }
 
 describe('BookingWizard', () => {

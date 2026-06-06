@@ -95,7 +95,7 @@ export default function PublicPatientDetailsStep({
   return (
     <div className="space-y-4">
       {submitted && Object.keys(errors).length > 0 ? (
-        <FeedbackMessage type="error" message="Please complete the required patient details before choosing an appointment." />
+        <FeedbackMessage type="error" message="Please complete the required patient details before confirming the appointment." />
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">

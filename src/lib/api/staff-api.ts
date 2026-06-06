@@ -27,6 +27,7 @@ export interface StaffDepartment {
   name?: string;
   departmentId?: string;
   isPrimary?: boolean;
+  unassignedAt?: string | null;
   department?: {
     id: string;
     name: string;
