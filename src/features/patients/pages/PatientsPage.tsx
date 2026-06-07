@@ -173,7 +173,7 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
 
     try {
       const patient = await createMutation.mutateAsync(toPatientPayload(values));
-      setFeedback('Patient registered successfully');
+      setFeedback('Patient registered. MedSphere sent the password and email confirmation link.');
       setShowRegisterModal(false);
       setPage(1);
       void patient;

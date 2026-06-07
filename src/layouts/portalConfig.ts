@@ -58,7 +58,6 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/admin/messages', label: 'Messages' },
           { to: '/admin/feedback', label: 'Feedback', requiredPermissions: ['feedback:read', 'feedback:read:all'] },
           { to: '/admin/contact', label: 'Contact Inbox', requiredPermissions: ['contact:read', 'contact:read:all'] },
-          { to: '/admin/users', label: 'Users', requiredPermissions: ['users:read'] },
         ],
       },
       {

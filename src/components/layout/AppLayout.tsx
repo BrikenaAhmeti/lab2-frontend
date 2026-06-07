@@ -20,7 +20,6 @@ const navItems = [
     labelKey: 'auth.navStaffPositionTypes',
     requiresOrganizationAdmin: true,
   },
-  { to: '/dashboard/users', labelKey: 'auth.navUsers', requiresUserAdmin: true },
   { to: '/dashboard/doctor', labelKey: 'auth.navDoctor' },
   { to: '/dashboard/nurse', labelKey: 'auth.navNurse' },
   { to: '/dashboard/lab', labelKey: 'auth.navLab' },
@@ -36,9 +35,6 @@ export default function AppLayout() {
   const user = useAppSelector((state) => state.auth.user);
   const roles = user?.roles ?? [];
   const permissions = user?.permissions ?? [];
-  const canManageUsers =
-    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
-    hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
   const canAccessOrganizationSetup =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(
@@ -57,10 +53,6 @@ export default function AppLayout() {
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
   const visibleNavItems = navItems.filter((item) => {
-    if (item.requiresUserAdmin) {
-      return canManageUsers;
-    }
-
     if (item.requiresOrganizationAdmin) {
       return canAccessOrganizationSetup;
     }

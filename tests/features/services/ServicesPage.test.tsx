@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ServicesPage from '@/features/services/pages/ServicesPage';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/features/auth/authSlice';
+import { dataExchangeApi, downloadFile } from '@/lib/api/data-exchange-api';
 import { departmentsApi } from '@/lib/api/departments-api';
 import { servicesApi } from '@/lib/api/services-api';
 
@@ -30,6 +31,19 @@ vi.mock('@/lib/api/services-api', () => ({
     remove: vi.fn(),
   },
 }));
+
+vi.mock('@/lib/api/data-exchange-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/data-exchange-api')>('@/lib/api/data-exchange-api');
+
+  return {
+    ...actual,
+    downloadFile: vi.fn(),
+    dataExchangeApi: {
+      ...actual.dataExchangeApi,
+      exportFile: vi.fn(),
+    },
+  };
+});
 
 const departmentsResponse = {
   items: [
@@ -153,6 +167,10 @@ describe('ServicesPage', () => {
     vi.clearAllMocks();
     vi.mocked(departmentsApi.list).mockResolvedValue(departmentsResponse);
     vi.mocked(servicesApi.list).mockResolvedValue(servicesResponse);
+    vi.mocked(dataExchangeApi.exportFile).mockResolvedValue({
+      blob: new Blob(['service data']),
+      filename: 'service-catalog.csv',
+    });
   });
 
   it('blocks users without services read access', () => {
@@ -274,5 +292,34 @@ describe('ServicesPage', () => {
     expect(
       await screen.findByText('Service cannot be deactivated while active appointments reference it')
     ).toBeInTheDocument();
+  });
+
+  it('exports the service catalog with the selected filters', async () => {
+    setUserSession(['services:read', 'services:manage:all']);
+
+    renderServicesPage();
+
+    expect(await screen.findByText('Initial Consultation')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'skin' } });
+    fireEvent.change(screen.getByLabelText('Department'), {
+      target: { value: '22222222-2222-4222-8222-222222222222' },
+    });
+    fireEvent.change(screen.getByLabelText('Active status'), { target: { value: 'inactive' } });
+    fireEvent.click(screen.getByRole('button', { name: /export/i }));
+
+    await waitFor(() =>
+      expect(dataExchangeApi.exportFile).toHaveBeenCalledWith('service-catalog', 'csv', {
+        filters: {
+          search: 'skin',
+          departmentId: '22222222-2222-4222-8222-222222222222',
+          isActive: false,
+        },
+      })
+    );
+    expect(downloadFile).toHaveBeenCalledWith({
+      blob: expect.any(Blob),
+      filename: 'service-catalog.csv',
+    });
   });
 });

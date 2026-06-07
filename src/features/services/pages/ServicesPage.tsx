@@ -3,6 +3,7 @@ import { Upload } from 'lucide-react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
 import LazyImportWizard from '@/components/import/LazyImportWizard';
 import {
   getApiErrorMessage,
@@ -63,6 +64,14 @@ export default function ServicesPage() {
       isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     }),
     [activeFilter, departmentId, limit, page, search]
+  );
+  const exportFilters = useMemo(
+    () => ({
+      search: search.trim() || undefined,
+      departmentId: departmentId || undefined,
+      isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+    }),
+    [activeFilter, departmentId, search]
   );
 
   const servicesQuery = useServiceCatalogList(listParams);
@@ -174,22 +183,25 @@ export default function ServicesPage() {
         title="Clinical Service Catalog"
         subtitle="Manage department clinical services and procedures"
         actions={
-          canManage ? (
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                leftIcon={<Upload className="h-4 w-4" />}
-                onClick={openImportWizard}
-              >
-                Import
-              </Button>
-              <Button size="sm" onClick={openCreateModal}>
-                Add Clinical Service
-              </Button>
-            </div>
-          ) : null
+          <div className="flex flex-wrap justify-end gap-2">
+            <ExportButton entity="service-catalog" filters={exportFilters} />
+            {canManage ? (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Upload className="h-4 w-4" />}
+                  onClick={openImportWizard}
+                >
+                  Import
+                </Button>
+                <Button size="sm" onClick={openCreateModal}>
+                  Add Clinical Service
+                </Button>
+              </>
+            ) : null}
+          </div>
         }
       >
         <div className="space-y-4">

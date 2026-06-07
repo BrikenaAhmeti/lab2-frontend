@@ -21,12 +21,14 @@ export default function ServiceCatalogFilters({
   onStatusChange,
 }: ServiceCatalogFiltersProps) {
   return (
-    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_180px]">
+    <div className="grid items-end gap-3 lg:grid-cols-[minmax(18rem,1fr)_minmax(12rem,14rem)_minmax(10rem,12rem)]">
       <Input
         id="service-catalog-search"
+        label="Search"
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
         placeholder="Search clinical services"
+        className="h-11"
       />
       <label htmlFor="service-catalog-department" className="block space-y-1.5">
         <span className="text-sm font-medium text-foreground">Department</span>
@@ -34,7 +36,7 @@ export default function ServiceCatalogFilters({
           id="service-catalog-department"
           value={departmentId}
           onChange={(event) => onDepartmentChange(event.target.value)}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           <option value="">All departments</option>
           {departments.map((department) => (
@@ -50,7 +52,7 @@ export default function ServiceCatalogFilters({
           id="service-catalog-status"
           value={isActive}
           onChange={(event) => onStatusChange(event.target.value as 'all' | 'active' | 'inactive')}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className="h-11 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
         >
           <option value="all">All</option>
           <option value="active">Active</option>

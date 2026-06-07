@@ -39,6 +39,17 @@ describe('dataExchangeApi', () => {
     expect(file.filename).toBe('patients-2026-05-29.csv');
   });
 
+  it('downloads service catalog exports from the backend data exchange route', async () => {
+    const instance = mockClient();
+
+    await dataExchangeApi.exportFile('service-catalog', 'xlsx', instance);
+
+    expect(instance.get).toHaveBeenCalledWith('/api/export/service-catalog', {
+      params: { format: 'xlsx' },
+      responseType: 'blob',
+    });
+  });
+
   it('sends excluded export fields as a backend query parameter', async () => {
     const instance = mockClient();
 

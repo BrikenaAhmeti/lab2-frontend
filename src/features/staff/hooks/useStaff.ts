@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { departmentsApi } from '@/lib/api/departments-api';
 import { staffPositionTypesApi } from '@/lib/api/staff-position-types-api';
-import { staffApi, type ScheduleExceptionPayload, type StaffListParams, type StaffSchedule } from '@/lib/api/staff-api';
+import { staffApi, type ScheduleExceptionPayload, type StaffListParams, type StaffPayload, type StaffSchedule } from '@/lib/api/staff-api';
 
 export const staffQueryKey = {
   all: ['staff'] as const,
@@ -54,6 +54,18 @@ export function useStaffPositionTypeOptions() {
     queryFn: async () => {
       const response = await staffPositionTypesApi.list({ isActive: true });
       return response.items;
+    },
+  });
+}
+
+export function useCreateStaff() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: StaffPayload) => staffApi.create(payload),
+    onSuccess: async (staff) => {
+      await queryClient.invalidateQueries({ queryKey: staffQueryKey.all });
+      queryClient.setQueryData(staffQueryKey.detail(staff.id), staff);
     },
   });
 }

@@ -91,6 +91,31 @@ export interface StaffListResponse {
   };
 }
 
+export interface StaffPayload {
+  userId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  username?: string | null;
+  phone?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  personalNumber?: string | null;
+  staffPositionTypeId: string;
+  employeeCode: string;
+  specialization?: string | null;
+  licenseNumber?: string | null;
+  employmentStatus?: string;
+  hireDate?: string | null;
+  bio?: string | null;
+  isPublicProfile?: boolean;
+  departmentIds?: string[];
+  departments?: Array<{
+    departmentId: string;
+    isPrimary?: boolean;
+  }>;
+}
+
 export interface StaffSchedule {
   dayOfWeek: number;
   isWorking: boolean;
@@ -130,6 +155,9 @@ export const staffApi = {
   },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);
+  },
+  create(payload: StaffPayload, instance?: AxiosInstance) {
+    return client(instance).post<StaffRecord>('/api/staff', payload).then((response) => response.data);
   },
   deactivate(id: string, instance?: AxiosInstance) {
     return client(instance).delete<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);

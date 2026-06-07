@@ -2,7 +2,15 @@ import { AxiosError, type AxiosInstance, type AxiosResponse } from 'axios';
 import { coreApiClient } from './axios';
 
 export const exchangeFormats = ['csv', 'xlsx', 'json'] as const;
-export const exportEntities = ['patients', 'appointments', 'lab-results', 'inventory-items', 'billings', 'audit-logs'] as const;
+export const exportEntities = [
+  'patients',
+  'appointments',
+  'lab-results',
+  'inventory-items',
+  'billings',
+  'audit-logs',
+  'service-catalog',
+] as const;
 export const importEntities = ['patients', 'inventory-items', 'lab-tests', 'service-catalog', 'staff'] as const;
 export const importModes = ['strict', 'lenient'] as const;
 

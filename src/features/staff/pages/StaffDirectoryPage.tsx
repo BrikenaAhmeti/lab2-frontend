@@ -1,19 +1,21 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
+  useCreateStaff,
   useDeactivateStaff,
   useStaffDepartments,
   useStaffList,
   useStaffPositionTypeOptions,
 } from '@/features/staff/hooks/useStaff';
 import DeactivateStaffDialog from '@/features/staff/components/DeactivateStaffDialog';
+import StaffCreateModal, { type StaffCreateFormValues } from '@/features/staff/components/StaffCreateModal';
 import StaffDirectoryTable from '@/features/staff/components/StaffDirectoryTable';
-import type { StaffRecord } from '@/lib/api/staff-api';
+import type { StaffPayload, StaffRecord } from '@/lib/api/staff-api';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
@@ -39,9 +41,12 @@ export default function StaffDirectoryPage() {
   const [positionTypeId, setPositionTypeId] = useState('');
   const [status, setStatus] = useState<StaffStatus>('all');
   const [staffToDeactivate, setStaffToDeactivate] = useState<StaffRecord | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [deactivateError, setDeactivateError] = useState('');
   const [feedback, setFeedback] = useState('');
+  const createMutation = useCreateStaff();
   const deactivateMutation = useDeactivateStaff();
   const canManage =
     hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, ['staff:manage'], 'any');
@@ -69,6 +74,15 @@ export default function StaffDirectoryPage() {
 
   const openImportWizard = useCallback(() => setShowImportWizard(true), []);
   const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const openCreateModal = useCallback(() => {
+    setCreateError('');
+    setFeedback('');
+    setShowCreateModal(true);
+  }, []);
+  const closeCreateModal = useCallback(() => {
+    setCreateError('');
+    setShowCreateModal(false);
+  }, []);
   const closeDeactivateDialog = useCallback(() => {
     setDeactivateError('');
     setStaffToDeactivate(null);
@@ -77,6 +91,41 @@ export default function StaffDirectoryPage() {
     setFeedback('Staff imported successfully');
     void staffQuery.refetch();
   }, [staffQuery.refetch]);
+
+  const toStaffPayload = useCallback((values: StaffCreateFormValues): StaffPayload => {
+    const text = (value: string) => value.trim() || null;
+
+    return {
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
+      email: values.email.trim(),
+      phone: text(values.phone),
+      dateOfBirth: text(values.dateOfBirth),
+      gender: text(values.gender),
+      personalNumber: text(values.personalNumber),
+      staffPositionTypeId: values.staffPositionTypeId,
+      employeeCode: values.employeeCode.trim(),
+      specialization: text(values.specialization),
+      licenseNumber: text(values.licenseNumber),
+      hireDate: text(values.hireDate),
+      bio: text(values.bio),
+      isPublicProfile: values.isPublicProfile,
+      departmentIds: values.departmentIds,
+    };
+  }, []);
+
+  const handleCreateStaff = useCallback(async (values: StaffCreateFormValues) => {
+    setCreateError('');
+    setFeedback('');
+
+    try {
+      await createMutation.mutateAsync(toStaffPayload(values));
+      setFeedback('Staff member added. MedSphere sent the password and email confirmation link.');
+      setShowCreateModal(false);
+    } catch (error) {
+      setCreateError(getApiErrorMessage(error, 'Staff member could not be added'));
+    }
+  }, [createMutation, toStaffPayload]);
 
   const confirmDeactivate = useCallback(async () => {
     if (!staffToDeactivate) return;
@@ -102,15 +151,25 @@ export default function StaffDirectoryPage() {
         subtitle="Search staff profiles and open schedule management"
         actions={
           canManage ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              leftIcon={<Upload className="h-4 w-4" />}
-              onClick={openImportWizard}
-            >
-              Import
-            </Button>
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                type="button"
+                size="sm"
+                leftIcon={<Plus className="h-4 w-4" />}
+                onClick={openCreateModal}
+              >
+                Add staff
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                leftIcon={<Upload className="h-4 w-4" />}
+                onClick={openImportWizard}
+              >
+                Import
+              </Button>
+            </div>
           ) : null
         }
       >
@@ -165,6 +224,15 @@ export default function StaffDirectoryPage() {
         </div>
       </Card>
 
+      <StaffCreateModal
+        open={showCreateModal}
+        error={createError}
+        loading={createMutation.isPending}
+        departments={departmentsQuery.data ?? []}
+        positionTypes={positionTypesQuery.data ?? []}
+        onClose={closeCreateModal}
+        onSubmit={handleCreateStaff}
+      />
       <DeactivateStaffDialog
         staff={staffToDeactivate}
         error={deactivateError}

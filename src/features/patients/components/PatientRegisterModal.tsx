@@ -58,6 +58,12 @@ function validatePatient(values: PatientFormValues) {
     errors.lastName = 'Last name is required';
   }
 
+  if (!values.email.trim()) {
+    errors.email = 'Email is required';
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) {
+    errors.email = 'Enter a valid email';
+  }
+
   if (!values.personalNumber.trim()) {
     errors.personalNumber = 'Personal number is required';
   }
@@ -147,7 +153,9 @@ export default function PatientRegisterModal({
             label="Email"
             type="email"
             value={values.email}
+            required
             onChange={(event) => update('email', event.target.value)}
+            error={fieldErrors.email}
             autoComplete="email"
           />
           <Input
