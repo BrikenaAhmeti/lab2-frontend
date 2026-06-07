@@ -89,6 +89,7 @@ export default function BannerFormModal({
               id="cms-banner-start-date"
               label="Start Date"
               value={startDate}
+              timeLabel="Start time"
               disabled={loading}
               error={errors.startDate?.message}
               onChange={(value) => setValue('startDate', value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
@@ -98,6 +99,7 @@ export default function BannerFormModal({
               label="End Date"
               value={endDate}
               defaultTime="23:59"
+              timeLabel="End time"
               disabled={loading}
               error={errors.endDate?.message}
               onChange={(value) => setValue('endDate', value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}

@@ -446,12 +446,19 @@ export default function SessionsPage() {
                   ))}
                 </select>
               </label>
-              <CalendarDateTimePicker label="From" id="session-log-from" value={filters.from} onChange={(value) => updateFilter('from', value)} />
+              <CalendarDateTimePicker
+                label="From"
+                id="session-log-from"
+                value={filters.from}
+                timeLabel="From time"
+                onChange={(value) => updateFilter('from', value)}
+              />
               <CalendarDateTimePicker
                 label="To"
                 id="session-log-to"
                 value={filters.to}
                 defaultTime="23:59"
+                timeLabel="To time"
                 onChange={(value) => updateFilter('to', value)}
               />
               <label className="space-y-1 text-xs font-medium text-muted">

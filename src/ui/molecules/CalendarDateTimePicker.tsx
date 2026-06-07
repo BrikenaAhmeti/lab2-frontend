@@ -11,6 +11,7 @@ export interface CalendarDateTimePickerProps {
   error?: string;
   helperText?: string;
   defaultTime?: string;
+  timeLabel?: string;
   onChange: (value: string) => void;
 }
 
@@ -37,6 +38,7 @@ export default function CalendarDateTimePicker({
   error,
   helperText,
   defaultTime = '00:00',
+  timeLabel = `${label} time`,
   onChange,
 }: CalendarDateTimePickerProps) {
   const { date, time } = splitDateTime(value);
@@ -55,7 +57,7 @@ export default function CalendarDateTimePicker({
       />
       <Input
         id={timeId}
-        label="Time"
+        label={timeLabel}
         type="time"
         value={time}
         disabled={disabled || !date}

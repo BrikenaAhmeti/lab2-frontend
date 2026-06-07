@@ -12,6 +12,7 @@ interface MessageThreadProps {
   isError?: boolean;
   hasMore?: boolean;
   loadingMore?: boolean;
+  typingLabel?: string;
   onLoadMore: () => void;
 }
 
@@ -28,6 +29,7 @@ export default function MessageThread({
   isError = false,
   hasMore = false,
   loadingMore = false,
+  typingLabel,
   onLoadMore,
 }: MessageThreadProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -37,7 +39,7 @@ export default function MessageThread({
     if (typeof bottomRef.current?.scrollIntoView === 'function') {
       bottomRef.current.scrollIntoView({ block: 'end' });
     }
-  }, [lastMessageId]);
+  }, [lastMessageId, typingLabel]);
 
   if (isLoading) {
     return (
@@ -65,6 +67,7 @@ export default function MessageThread({
           </span>
           <p className="mt-4 text-sm font-medium text-foreground">Start the conversation</p>
           <p className="mt-1 text-sm text-muted">Send a note or attach a file when you are ready.</p>
+          {typingLabel ? <p className="mt-3 text-xs font-medium text-primary">{typingLabel}</p> : null}
         </div>
       </div>
     );
@@ -133,6 +136,18 @@ export default function MessageThread({
           </article>
         );
       })}
+      {typingLabel ? (
+        <div className="flex justify-start">
+          <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted shadow-soft">
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:150ms]" />
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary [animation-delay:300ms]" />
+            </span>
+            {typingLabel}
+          </div>
+        </div>
+      ) : null}
       <div ref={bottomRef} />
     </div>
   );

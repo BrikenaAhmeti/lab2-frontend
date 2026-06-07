@@ -22,6 +22,7 @@ interface DateModeFilterProps {
   label: string;
   value: DateModeFilterValue;
   className?: string;
+  panelAlign?: 'left' | 'right';
   disabled?: boolean;
   placeholder?: string;
   minDate?: string;
@@ -90,6 +91,7 @@ export default function DateModeFilter({
   label,
   value,
   className,
+  panelAlign = 'right',
   disabled,
   placeholder = 'Any date',
   minDate,
@@ -182,7 +184,10 @@ export default function DateModeFilter({
       {open ? (
         <section
           id={panelId}
-          className="absolute right-0 top-[calc(100%+0.5rem)] z-40 w-[min(30rem,calc(100vw-2rem))] rounded-xl border border-border bg-card p-3 shadow-panel"
+          className={clsx(
+            'absolute top-[calc(100%+0.5rem)] z-40 w-[min(30rem,calc(100vw-2rem))] rounded-xl border border-border bg-card p-3 shadow-panel',
+            panelAlign === 'left' ? 'left-0' : 'right-0'
+          )}
           role="dialog"
           aria-labelledby={labelId}
         >

@@ -78,6 +78,21 @@ describe('MS-53 API helpers', () => {
     });
   });
 
+  it('passes contact inbox search and received date filters to the backend', async () => {
+    const instance = mockClient();
+    const params = {
+      page: 1,
+      limit: 25,
+      search: 'Ada',
+      createdAtFrom: '2026-05-26',
+      createdAtTo: '2026-05-26',
+    };
+
+    await contactApi.list(params, instance);
+
+    expect(instance.get).toHaveBeenCalledWith('/api/contact', { params });
+  });
+
   it('queries completed appointments without feedback for the patient prompt', async () => {
     const instance = mockClient();
     const params = { page: 1, limit: 3, status: 'COMPLETED' as const, hasNoFeedback: true };

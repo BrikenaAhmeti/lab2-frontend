@@ -2,6 +2,7 @@ import { Suspense, lazy, type ReactNode } from 'react';
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
+import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
 import RoleGuard from '@/features/auth/guards/RoleGuard';
 import RoleRedirect from './RoleRedirect';
 
@@ -98,6 +99,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: lazyRoute(<PublicHomePage />),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/public',
@@ -161,6 +163,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <PrivateRoute />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: '/role-redirect',
@@ -330,5 +333,6 @@ export const router = createBrowserRouter([
   {
     path: '*',
     element: <Navigate to="/" replace />,
+    errorElement: <RouteErrorBoundary />,
   },
 ]);
