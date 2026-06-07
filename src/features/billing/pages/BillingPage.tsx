@@ -3,7 +3,13 @@ import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import ExportButton from '@/components/export/ExportButton';
 import { hasAnyPermission, hasAnyRole, hasPermission } from '@/features/auth/utils/permission';
-import { billingApi, type BillingStatus, type BillingView, type RecordPaymentPayload, type UpdateBillingPayload } from '@/lib/api/billing-api';
+import {
+  billingApi,
+  type BillingStatus,
+  type BillingView,
+  type MarkBillingPaidPayload,
+  type UpdateBillingPayload,
+} from '@/lib/api/billing-api';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
@@ -13,7 +19,7 @@ import { formatCurrency } from '@/utils/formatters/currency';
 import BillingDetailPanel from '@/features/billing/components/BillingDetailPanel';
 import BillingFilters from '@/features/billing/components/BillingFilters';
 import BillingTable from '@/features/billing/components/BillingTable';
-import PaymentModal from '@/features/billing/components/PaymentModal';
+import MarkPaidModal from '@/features/billing/components/MarkPaidModal';
 import {
   dateRangeFromInput,
   getBillingPdfFileName,
@@ -24,7 +30,7 @@ import {
   useBillingDetail,
   useBillingList,
   useBillingStats,
-  useRecordBillingPayment,
+  useMarkBillingPaid,
   useUpdateBilling,
 } from '@/features/billing/hooks/useBillings';
 
@@ -59,12 +65,16 @@ function canReadBilling(permissions: string[], roles: string[]) {
   );
 }
 
+function canManageBilling(permissions: string[], roles: string[]) {
+  return hasAnyRole(roles, ['Admin', 'Super Admin', 'Receptionist']) || hasPermission(permissions, 'billing:manage', 'all');
+}
+
 export default function BillingPage({ portal }: BillingPageProps) {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
   const canRead = canReadBilling(permissions, roles);
-  const canManage = hasPermission(permissions, 'billing:manage', 'all');
+  const canManage = canManageBilling(permissions, roles);
   const root = portal === 'admin' ? '/admin' : '/receptionist';
   const label = portal === 'admin' ? 'Admin' : 'Receptionist';
 
@@ -75,10 +85,10 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(defaultPageSize);
   const [selectedId, setSelectedId] = useState('');
-  const [paymentBilling, setPaymentBilling] = useState<BillingView | null>(null);
+  const [markPaidBilling, setMarkPaidBilling] = useState<BillingView | null>(null);
   const [actionError, setActionError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
-  const [paymentError, setPaymentError] = useState('');
+  const [markPaidError, setMarkPaidError] = useState('');
 
   const listParams = useMemo(
     () => ({
@@ -101,7 +111,7 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const weekStats = useBillingStats(weekRange, canRead);
   const monthStats = useBillingStats(monthRange, canRead);
   const updateMutation = useUpdateBilling();
-  const paymentMutation = useRecordBillingPayment();
+  const markPaidMutation = useMarkBillingPaid();
 
   const rows = useMemo(() => billingsQuery.data?.items ?? [], [billingsQuery.data?.items]);
   const paginationMeta = billingsQuery.data?.meta;
@@ -143,19 +153,19 @@ export default function BillingPage({ portal }: BillingPageProps) {
     }
   };
 
-  const recordPayment = async (payload: RecordPaymentPayload) => {
-    if (!paymentBilling) return;
-    setPaymentError('');
+  const markPaid = async (payload: MarkBillingPaidPayload) => {
+    if (!markPaidBilling) return;
+    setMarkPaidError('');
     setActionError('');
     setActionMessage('');
 
     try {
-      const updated = await paymentMutation.mutateAsync({ id: paymentBilling.id, payload });
+      const updated = await markPaidMutation.mutateAsync({ id: markPaidBilling.id, payload });
       setSelectedId(updated.id);
-      setPaymentBilling(null);
-      setActionMessage('Payment recorded successfully.');
+      setMarkPaidBilling(null);
+      setActionMessage('Billing marked as paid.');
     } catch (error) {
-      setPaymentError(getBillingApiErrorMessage(error, 'Payment could not be recorded'));
+      setMarkPaidError(getBillingApiErrorMessage(error, 'Billing could not be marked as paid'));
     }
   };
 
@@ -226,10 +236,16 @@ export default function BillingPage({ portal }: BillingPageProps) {
               rows={rows}
               selectedId={selectedBilling?.id ?? ''}
               loading={detailQuery.isFetching}
+              canManage={canManage}
+              markingId={markPaidMutation.isPending ? markPaidBilling?.id ?? '' : ''}
               onSelect={(billing) => {
                 setSelectedId(billing.id);
                 setActionError('');
                 setActionMessage('');
+              }}
+              onMarkPaid={(billing) => {
+                setMarkPaidError('');
+                setMarkPaidBilling(billing);
               }}
             />
           ) : null}
@@ -248,13 +264,15 @@ export default function BillingPage({ portal }: BillingPageProps) {
         </div>
       </Card>
 
-      <PaymentModal
-        open={Boolean(paymentBilling)}
-        outstandingAmount={Number(paymentBilling?.outstandingAmount ?? 0)}
-        loading={paymentMutation.isPending}
-        errorMessage={paymentError}
-        onClose={() => setPaymentBilling(null)}
-        onSubmit={recordPayment}
+      <MarkPaidModal
+        open={Boolean(markPaidBilling)}
+        billingNumber={markPaidBilling?.billingNumber ?? ''}
+        patientName={markPaidBilling?.patient.name ?? ''}
+        outstandingAmount={Number(markPaidBilling?.outstandingAmount ?? 0)}
+        loading={markPaidMutation.isPending}
+        errorMessage={markPaidError}
+        onClose={() => setMarkPaidBilling(null)}
+        onSubmit={markPaid}
       />
 
       <Modal
@@ -278,9 +296,9 @@ export default function BillingPage({ portal }: BillingPageProps) {
             actionError={actionError}
             actionMessage={actionMessage}
             onSave={saveBilling}
-            onRecordPayment={() => {
-              setPaymentError('');
-              setPaymentBilling(selectedBilling);
+            onMarkPaid={() => {
+              setMarkPaidError('');
+              setMarkPaidBilling(selectedBilling);
             }}
             onDownloadPdf={downloadPdf}
           />

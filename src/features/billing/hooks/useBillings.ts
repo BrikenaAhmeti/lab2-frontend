@@ -4,7 +4,7 @@ import {
   billingApi,
   type BillingListParams,
   type BillingStatsParams,
-  type RecordPaymentPayload,
+  type MarkBillingPaidPayload,
   type UpdateBillingPayload,
 } from '@/lib/api/billing-api';
 
@@ -56,11 +56,11 @@ export function useUpdateBilling() {
   });
 }
 
-export function useRecordBillingPayment() {
+export function useMarkBillingPaid() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: RecordPaymentPayload }) => billingApi.recordPayment(id, payload),
+    mutationFn: ({ id, payload }: { id: string; payload: MarkBillingPaidPayload }) => billingApi.markPaid(id, payload),
     onSuccess: async (billing) => {
       queryClient.setQueryData(billingQueryKey.detail(billing.id), billing);
       await queryClient.invalidateQueries({ queryKey: billingQueryKey.all });

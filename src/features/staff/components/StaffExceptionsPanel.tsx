@@ -55,7 +55,7 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
   };
 
   if (exceptionsQuery.isLoading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading exceptions...</div>;
+    return <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted shadow-panel">Loading exceptions...</div>;
   }
 
   if (exceptionsQuery.isError) {
@@ -63,7 +63,7 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-border p-4">
+    <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-panel">
       <h3 className="text-base font-semibold text-foreground">Schedule exceptions</h3>
       {error ? <FeedbackMessage type="error" message={error} /> : null}
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { CheckCircle2, Download } from 'lucide-react';
 import { PdfDocumentPanel, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import Button from '@/ui/atoms/Button';
 import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
@@ -33,7 +33,7 @@ interface BillingDetailPanelProps {
   actionError: string;
   actionMessage: string;
   onSave: (payload: UpdateBillingPayload) => Promise<void>;
-  onRecordPayment: () => void;
+  onMarkPaid: () => void;
   onDownloadPdf: (billing: BillingView) => void;
 }
 
@@ -44,7 +44,7 @@ export default function BillingDetailPanel({
   actionError,
   actionMessage,
   onSave,
-  onRecordPayment,
+  onMarkPaid,
   onDownloadPdf,
 }: BillingDetailPanelProps) {
   const [taxAmount, setTaxAmount] = useState('0');
@@ -346,8 +346,8 @@ export default function BillingDetailPanel({
 
       <div className="flex flex-wrap gap-2">
         {payable ? (
-          <Button type="button" onClick={onRecordPayment}>
-            Record Payment
+          <Button type="button" leftIcon={<CheckCircle2 size={16} />} onClick={onMarkPaid}>
+            Mark Paid
           </Button>
         ) : null}
       </div>

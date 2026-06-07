@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { configureStore } from '@reduxjs/toolkit';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -17,7 +17,7 @@ vi.mock('@/lib/api/billing-api', async () => {
       list: vi.fn(),
       get: vi.fn(),
       update: vi.fn(),
-      recordPayment: vi.fn(),
+      markPaid: vi.fn(),
       stats: vi.fn(),
       downloadPdf: vi.fn(),
     },
@@ -146,8 +146,13 @@ describe('BillingPage', () => {
       },
     });
     vi.mocked(billingApi.update).mockResolvedValue(makeBilling({ subtotal: 95, totalAmount: 95, outstandingAmount: 95 }));
-    vi.mocked(billingApi.recordPayment).mockResolvedValue(
-      makeBilling({ status: 'PARTIALLY_PAID', amountPaid: 25, outstandingAmount: 55 })
+    vi.mocked(billingApi.markPaid).mockResolvedValue(
+      makeBilling({
+        status: 'PAID',
+        amountPaid: 80,
+        outstandingAmount: 0,
+        paidAt: '2026-05-21T12:00:00.000Z',
+      })
     );
     Object.defineProperty(window.URL, 'createObjectURL', { value: vi.fn(() => 'blob:billing'), writable: true });
     Object.defineProperty(window.URL, 'revokeObjectURL', { value: vi.fn(), writable: true });
@@ -156,7 +161,7 @@ describe('BillingPage', () => {
     });
   });
 
-  it('edits line items and records payments using the MS-29 backend contract', async () => {
+  it('edits line items and keeps mark paid as the only payment action in the billing details', async () => {
     renderBillingPage();
 
     expect(await screen.findByText('BILL-20260521-E61720AB')).toBeInTheDocument();
@@ -194,22 +199,53 @@ describe('BillingPage', () => {
         })
       );
     });
+    expect(screen.queryByRole('button', { name: 'Record Payment' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Mark Paid' }).length).toBeGreaterThan(0);
+  });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Record Payment' }));
-    fireEvent.change(screen.getByLabelText('Amount'), { target: { value: '25' } });
-    fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: 'CARD' } });
-    fireEvent.change(screen.getByLabelText('Reference number'), { target: { value: ' CARD-001 ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save payment' }));
+  it('marks a billing record as paid from the billing details', async () => {
+    renderBillingPage();
+
+    expect(await screen.findByText('BILL-20260521-E61720AB')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    const billingDialog = await screen.findByRole('dialog', { name: 'Billing statement' });
+
+    fireEvent.click(within(billingDialog).getByRole('button', { name: 'Mark Paid' }));
+    expect(await screen.findByRole('dialog', { name: 'Mark billing paid' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: 'BANK_TRANSFER' } });
+    fireEvent.change(screen.getByLabelText('Reference number'), { target: { value: ' SETTLED-001 ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm paid' }));
 
     await waitFor(() => {
-      expect(billingApi.recordPayment).toHaveBeenCalledWith('b14d4f97-281c-41b5-b6f4-215c4c620878', {
-        amount: 25,
-        paymentMethod: 'CARD',
-        referenceNumber: 'CARD-001',
+      expect(billingApi.markPaid).toHaveBeenCalledWith('b14d4f97-281c-41b5-b6f4-215c4c620878', {
+        paymentMethod: 'BANK_TRANSFER',
+        referenceNumber: 'SETTLED-001',
         notes: null,
       });
     });
-    expect(await screen.findByText('Payment recorded successfully.')).toBeInTheDocument();
+    expect(await screen.findByText('Billing marked as paid.')).toBeInTheDocument();
+  });
+
+  it('marks a billing record as paid from the table row', async () => {
+    renderBillingPage();
+
+    expect(await screen.findByText('BILL-20260521-E61720AB')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Mark Paid' }));
+    expect(await screen.findByRole('dialog', { name: 'Mark billing paid' })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Payment method'), { target: { value: 'CARD' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm paid' }));
+
+    await waitFor(() => {
+      expect(billingApi.markPaid).toHaveBeenCalledWith('b14d4f97-281c-41b5-b6f4-215c4c620878', {
+        paymentMethod: 'CARD',
+        referenceNumber: null,
+        notes: null,
+      });
+    });
   });
 
   it('sends patient search and calendar date filters to the billing backend', async () => {

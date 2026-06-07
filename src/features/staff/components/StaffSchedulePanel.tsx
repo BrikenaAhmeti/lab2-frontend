@@ -50,7 +50,7 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
   };
 
   if (schedulesQuery.isLoading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading schedule...</div>;
+    return <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted shadow-panel">Loading schedule...</div>;
   }
 
   if (schedulesQuery.isError) {
@@ -58,7 +58,7 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-border p-4">
+    <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-panel">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground">Weekly schedule</h3>
         <Button type="button" loading={saveMutation.isPending} onClick={saveSchedules}>Save schedule</Button>

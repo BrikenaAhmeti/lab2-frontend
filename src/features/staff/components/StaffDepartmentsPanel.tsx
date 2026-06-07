@@ -45,7 +45,7 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
   };
 
   return (
-    <section className="space-y-4 rounded-xl border border-border p-4">
+    <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-panel">
       <h3 className="text-base font-semibold text-foreground">Department assignments</h3>
       {error ? <FeedbackMessage type="error" message={error} /> : null}
 

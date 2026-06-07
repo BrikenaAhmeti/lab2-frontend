@@ -17,7 +17,6 @@ vi.mock('@/lib/api/billing-api', async () => {
       list: vi.fn(),
       get: vi.fn(),
       update: vi.fn(),
-      recordPayment: vi.fn(),
       stats: vi.fn(),
       downloadPdf: vi.fn(),
     },

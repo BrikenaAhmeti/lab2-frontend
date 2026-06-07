@@ -123,9 +123,8 @@ export interface UpdateBillingPayload {
   }>;
 }
 
-export interface RecordPaymentPayload {
-  amount: number;
-  paymentMethod: PaymentMethod;
+export interface MarkBillingPaidPayload {
+  paymentMethod?: PaymentMethod;
   referenceNumber?: string | null;
   notes?: string | null;
 }
@@ -146,9 +145,9 @@ export const billingApi = {
   update(id: string, payload: UpdateBillingPayload, instance?: AxiosInstance) {
     return client(instance).put<BillingView>(`/api/billings/${id}`, payload).then((response) => response.data);
   },
-  recordPayment(id: string, payload: RecordPaymentPayload, instance?: AxiosInstance) {
+  markPaid(id: string, payload: MarkBillingPaidPayload = {}, instance?: AxiosInstance) {
     return client(instance)
-      .post<BillingView>(`/api/billings/${id}/payments`, payload)
+      .post<BillingView>(`/api/billings/${id}/mark-paid`, payload)
       .then((response) => response.data);
   },
   stats(params: BillingStatsParams, instance?: AxiosInstance) {
