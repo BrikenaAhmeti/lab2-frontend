@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
 import { hasAnyPermission } from '@/features/auth/utils/permission';
 import InventoryAlertsPanel from '@/features/inventory/components/InventoryAlertsPanel';
 import InventoryCategoriesPanel from '@/features/inventory/components/InventoryCategoriesPanel';
@@ -29,6 +30,11 @@ import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
+import {
+  dateModeFilterToRange,
+  emptyDateModeFilterValue,
+  type DateModeFilterValue,
+} from '@/ui/molecules/DateModeFilter';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import Pagination from '@/ui/molecules/Pagination';
 
@@ -52,7 +58,7 @@ export default function InventoryPage() {
   const [categoryId, setCategoryId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [belowReorderLevel, setBelowReorderLevel] = useState(false);
-  const [expiringSoonDays, setExpiringSoonDays] = useState('');
+  const [expiryFilter, setExpiryFilter] = useState<DateModeFilterValue>(emptyDateModeFilterValue);
   const [activeFilter, setActiveFilter] = useState<ActiveStatus>('active');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(defaultPageSize);
@@ -63,6 +69,7 @@ export default function InventoryPage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [transactionItem, setTransactionItem] = useState<InventoryItem | null>(null);
   const [historyItem, setHistoryItem] = useState<InventoryItem | null>(null);
+  const expiryRange = useMemo(() => dateModeFilterToRange(expiryFilter), [expiryFilter]);
 
   const listParams = useMemo(
     () => ({
@@ -72,12 +79,25 @@ export default function InventoryPage() {
       categoryId: categoryId || undefined,
       departmentId: departmentId || undefined,
       belowReorderLevel: belowReorderLevel || undefined,
-      expiringSoonDays: expiringSoonDays ? Number(expiringSoonDays) : undefined,
+      expiryFrom: expiryRange.from,
+      expiryTo: expiryRange.to,
       isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
       sortBy: 'name' as const,
       sortDirection: 'asc' as const,
     }),
-    [activeFilter, belowReorderLevel, categoryId, departmentId, expiringSoonDays, limit, page, search]
+    [activeFilter, belowReorderLevel, categoryId, departmentId, expiryRange.from, expiryRange.to, limit, page, search]
+  );
+  const exportFilters = useMemo(
+    () => ({
+      search: search.trim() || undefined,
+      categoryId: categoryId || undefined,
+      departmentId: departmentId || undefined,
+      belowReorderLevel: belowReorderLevel || undefined,
+      expiryFrom: expiryRange.from,
+      expiryTo: expiryRange.to,
+      isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+    }),
+    [activeFilter, belowReorderLevel, categoryId, departmentId, expiryRange.from, expiryRange.to, search]
   );
 
   const itemsQuery = useInventoryItems(listParams);
@@ -97,7 +117,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, categoryId, departmentId, belowReorderLevel, expiringSoonDays, activeFilter]);
+  }, [search, categoryId, departmentId, belowReorderLevel, expiryRange.from, expiryRange.to, activeFilter]);
 
   useEffect(() => {
     if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
@@ -203,10 +223,15 @@ export default function InventoryPage() {
         title="Inventory"
         subtitle="Manage stock, categories, transactions, and alerts"
         actions={
-          activeTab === 'items' && canManage ? (
-            <Button type="button" size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={openCreateModal}>
-              Add Item
-            </Button>
+          activeTab === 'items' ? (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <ExportButton entity="inventory-items" filters={exportFilters} />
+              {canManage ? (
+                <Button type="button" size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={openCreateModal}>
+                  Add Item
+                </Button>
+              ) : null}
+            </div>
           ) : null
         }
       >
@@ -236,7 +261,7 @@ export default function InventoryPage() {
                 categoryId={categoryId}
                 departmentId={departmentId}
                 belowReorderLevel={belowReorderLevel}
-                expiringSoonDays={expiringSoonDays}
+                expiryFilter={expiryFilter}
                 isActive={activeFilter}
                 categories={categories}
                 departments={departments}
@@ -244,7 +269,7 @@ export default function InventoryPage() {
                 onCategoryChange={setCategoryId}
                 onDepartmentChange={setDepartmentId}
                 onBelowReorderLevelChange={setBelowReorderLevel}
-                onExpiringSoonDaysChange={setExpiringSoonDays}
+                onExpiryFilterChange={setExpiryFilter}
                 onStatusChange={setActiveFilter}
               />
 

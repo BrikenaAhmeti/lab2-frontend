@@ -57,7 +57,6 @@ const BillingPage = lazy(() => import('@/features/billing/pages/BillingPage'));
 const PatientBillingPage = lazy(() => import('@/features/billing/pages/PatientBillingPage'));
 const ReportBuilderPage = lazy(() => import('@/features/reports/pages/ReportBuilderPage'));
 const AdvancedSearchPage = lazy(() => import('@/features/search/pages/AdvancedSearchPage'));
-const VapiCallLogsPage = lazy(() => import('@/features/vapi/pages/VapiCallLogsPage'));
 const PatientLabResultsPage = lazy(() => import('@/features/patient-portal/pages/PatientLabResultsPage'));
 const PatientPrescriptionsPage = lazy(() => import('@/features/patient-portal/pages/PatientPrescriptionsPage'));
 const PatientMedicalRecordsPage = lazy(() => import('@/features/patient-portal/pages/PatientMedicalRecordsPage'));
@@ -193,7 +192,7 @@ export const router = createBrowserRouter([
           { path: 'inventory', element: lazyRoute(<InventoryPage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
           { path: 'reports', element: lazyRoute(<ReportBuilderPage />) },
-          { path: 'voice-ai', element: lazyRoute(<VapiCallLogsPage />) },
+          { path: 'voice-ai', element: <Navigate to="/admin/sessions?tab=voice-ai" replace /> },
           { path: 'search', element: <Navigate to="/admin/search/patients" replace /> },
           { path: 'search/:resource', element: lazyRoute(<AdvancedSearchPage />) },
           { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="admin" />) },

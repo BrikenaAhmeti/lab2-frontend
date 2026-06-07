@@ -115,4 +115,34 @@ describe('ProfilePage', () => {
 
     expect(await screen.findByText('auth.changePasswordSuccess auth.otherSessionsSignedOut')).toBeInTheDocument();
   });
+
+  it('uses a gender select when updating profile details', async () => {
+    vi.mocked(profileApi.me).mockResolvedValue({
+      id: '1',
+      email: 'admin@example.com',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      phone: '',
+      dateOfBirth: '',
+      gender: 'female',
+      avatarFileId: '',
+    });
+
+    renderProfilePage();
+
+    const gender = await screen.findByLabelText('auth.gender');
+    expect(gender).toBeInstanceOf(HTMLSelectElement);
+    await waitFor(() => expect(gender).toHaveValue('female'));
+
+    fireEvent.change(gender, { target: { value: 'male' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.saveProfile' }));
+
+    await waitFor(() =>
+      expect(profileApi.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          gender: 'male',
+        })
+      )
+    );
+  });
 });

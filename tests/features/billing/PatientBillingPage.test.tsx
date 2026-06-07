@@ -95,8 +95,11 @@ function renderPatientBillingPage() {
 }
 
 describe('PatientBillingPage', () => {
+  let downloadedFileName = '';
+
   beforeEach(() => {
     vi.clearAllMocks();
+    downloadedFileName = '';
     vi.mocked(billingApi.list).mockResolvedValue({
       items: [billing],
       meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
@@ -104,13 +107,15 @@ describe('PatientBillingPage', () => {
     vi.mocked(billingApi.downloadPdf).mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
     Object.defineProperty(window.URL, 'createObjectURL', { value: vi.fn(() => 'blob:billing'), writable: true });
     Object.defineProperty(window.URL, 'revokeObjectURL', { value: vi.fn(), writable: true });
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      downloadedFileName = this.download;
+    });
   });
 
   it('loads patient billing history and downloads the backend PDF statement', async () => {
     renderPatientBillingPage();
 
-    expect(await screen.findByText('BILL-20260521-E61720AB')).toBeInTheDocument();
+    expect(await screen.findByText('Invoice BILL-20260521-E61720AB')).toBeInTheDocument();
     expect(billingApi.list).toHaveBeenCalledWith({ page: 1, limit: 50, patientId: 'patient-1' });
     expect(screen.getAllByText('Paid').length).toBeGreaterThan(0);
 
@@ -119,5 +124,6 @@ describe('PatientBillingPage', () => {
     await waitFor(() => {
       expect(billingApi.downloadPdf).toHaveBeenCalledWith('billing-1');
     });
+    expect(downloadedFileName).toBe('arta-krasniqi-2026-05-21-bill-20260521-e61720ab.pdf');
   });
 });

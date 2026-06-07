@@ -193,8 +193,10 @@ export default function InventoryCategoriesPanel({ canManage }: InventoryCategor
   return (
     <section className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_180px]">
-          <Input id="inventory-category-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search categories" />
+        <div className="grid flex-1 items-end gap-3 md:grid-cols-[minmax(14rem,1fr)_180px]">
+          <div className="self-end">
+            <Input id="inventory-category-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search categories" />
+          </div>
           <label htmlFor="inventory-category-status" className="block space-y-1.5">
             <span className="text-sm font-medium text-foreground">Active</span>
             <select id="inventory-category-status" value={activeFilter} onChange={(event) => setActiveFilter(event.target.value as ActiveStatus)} className={selectClass}>

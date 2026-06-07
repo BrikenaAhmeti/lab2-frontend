@@ -16,8 +16,12 @@ export interface FileDownload {
   filename: string;
 }
 
+export type ExportFilterValue = string | number | boolean | null | undefined;
+export type ExportFilters = Record<string, ExportFilterValue>;
+
 export interface ExportFileOptions {
   excludeFields?: string[];
+  filters?: ExportFilters;
 }
 
 export interface ImportRowError {
@@ -83,6 +87,12 @@ function toFileDownload(response: AxiosResponse<Blob>): FileDownload {
   };
 }
 
+function cleanExportParams(params: Record<string, ExportFilterValue>) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  );
+}
+
 export function downloadFile(file: FileDownload) {
   const url = window.URL.createObjectURL(file.blob);
   const link = document.createElement('a');
@@ -106,10 +116,11 @@ export const dataExchangeApi = {
 
     return client(resolvedInstance)
       .get<Blob>(`/api/export/${entity}`, {
-        params: {
+        params: cleanExportParams({
+          ...options?.filters,
           format,
           excludeFields: options?.excludeFields?.length ? options.excludeFields.join(',') : undefined,
-        },
+        }),
         responseType: 'blob',
       })
       .then(toFileDownload);

@@ -66,4 +66,16 @@ describe('ExportButton', () => {
       expect(dataExchangeApi.exportFile).toHaveBeenCalledWith('patients', 'csv', { excludeFields: ['userId'] });
     });
   });
+
+  it('passes selected filters to the export endpoint when configured', async () => {
+    renderExportButton({ entity: 'inventory-items', filters: { search: 'aspirin', isActive: true } });
+
+    fireEvent.click(screen.getByRole('button', { name: /export/i }));
+
+    await waitFor(() => {
+      expect(dataExchangeApi.exportFile).toHaveBeenCalledWith('inventory-items', 'csv', {
+        filters: { search: 'aspirin', isActive: true },
+      });
+    });
+  });
 });

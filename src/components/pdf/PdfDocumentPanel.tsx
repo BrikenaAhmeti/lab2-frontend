@@ -12,6 +12,8 @@ export interface PdfInfoItem {
 interface PdfDocumentPanelProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
   title: ReactNode;
   documentLabel: string;
+  brandName?: ReactNode;
+  issuerDetails?: ReactNode[];
   subtitle?: ReactNode;
   meta?: PdfInfoItem[];
   actions?: ReactNode;
@@ -42,6 +44,8 @@ function presentValue(value: ReactNode) {
 export function PdfDocumentPanel({
   title,
   documentLabel,
+  brandName = 'MedSphere',
+  issuerDetails = [],
   subtitle,
   meta = [],
   actions,
@@ -67,9 +71,16 @@ export function PdfDocumentPanel({
               <img src="/medsphere.png" alt="" className="h-full w-full rounded-md object-cover" loading="lazy" decoding="async" />
             </span>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-normal text-primary">MedSphere</p>
+              <p className="text-xs font-semibold uppercase tracking-normal text-primary">{brandName}</p>
               <h3 className="mt-1 break-words text-lg font-semibold text-foreground">{title}</h3>
               {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
+              {issuerDetails.length > 0 ? (
+                <div className="mt-2 space-y-0.5 text-xs leading-5 text-muted">
+                  {issuerDetails.map((detail, index) => (
+                    <p key={index}>{detail}</p>
+                  ))}
+                </div>
+              ) : null}
             </div>
           </div>
 

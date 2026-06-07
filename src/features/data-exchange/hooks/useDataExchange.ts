@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import {
   dataExchangeApi,
   type ExchangeFormat,
+  type ExportFilters,
   type ExportFileOptions,
   type ExportEntity,
   type ImportEntity,
@@ -15,8 +16,18 @@ export const dataExchangeQueryKey = {
 
 export function useExportFile() {
   return useMutation({
-    mutationFn: ({ entity, format, excludeFields }: { entity: ExportEntity; format: ExchangeFormat } & ExportFileOptions) => {
-      const options = excludeFields?.length ? { excludeFields } : undefined;
+    mutationFn: ({ entity, format, excludeFields, filters }: { entity: ExportEntity; format: ExchangeFormat } & ExportFileOptions) => {
+      const hasFilters = filters
+        ? Object.values(filters).some((value) => value !== undefined && value !== null && value !== '')
+        : false;
+      const options =
+        excludeFields?.length || hasFilters
+          ? {
+              ...(excludeFields?.length ? { excludeFields } : {}),
+              ...(hasFilters ? { filters: filters as ExportFilters } : {}),
+            }
+          : undefined;
+
       return options ? dataExchangeApi.exportFile(entity, format, options) : dataExchangeApi.exportFile(entity, format);
     },
     retry: false,

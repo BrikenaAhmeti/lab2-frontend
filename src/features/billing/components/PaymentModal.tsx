@@ -81,7 +81,7 @@ export default function PaymentModal({
   };
 
   return (
-    <div className="fixed inset-0 z-20 grid place-items-center bg-black/40 p-4">
+    <div className="fixed inset-0 z-30 grid place-items-center bg-black/40 p-4">
       <div className="panel w-full max-w-lg p-5">
         <h3 className="text-lg font-semibold text-foreground">Record payment</h3>
         <form className="mt-4 space-y-4" onSubmit={handleSubmit(submit)}>

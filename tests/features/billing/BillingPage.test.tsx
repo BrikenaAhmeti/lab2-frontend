@@ -121,14 +121,18 @@ function renderBillingPage() {
 }
 
 describe('BillingPage', () => {
+  let downloadedFileName = '';
+
   beforeEach(() => {
     vi.clearAllMocks();
+    downloadedFileName = '';
     const billing = makeBilling();
     vi.mocked(billingApi.list).mockResolvedValue({
       items: [billing],
       meta: { page: 1, limit: 10, total: 1, totalPages: 1 },
     });
     vi.mocked(billingApi.get).mockResolvedValue(billing);
+    vi.mocked(billingApi.downloadPdf).mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
     vi.mocked(billingApi.stats).mockResolvedValue({
       totalRevenue: 80,
       outstanding: 80,
@@ -145,6 +149,11 @@ describe('BillingPage', () => {
     vi.mocked(billingApi.recordPayment).mockResolvedValue(
       makeBilling({ status: 'PARTIALLY_PAID', amountPaid: 25, outstandingAmount: 55 })
     );
+    Object.defineProperty(window.URL, 'createObjectURL', { value: vi.fn(() => 'blob:billing'), writable: true });
+    Object.defineProperty(window.URL, 'revokeObjectURL', { value: vi.fn(), writable: true });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      downloadedFileName = this.download;
+    });
   });
 
   it('edits line items and records payments using the MS-29 backend contract', async () => {
@@ -153,9 +162,23 @@ describe('BillingPage', () => {
     expect(await screen.findByText('BILL-20260521-E61720AB')).toBeInTheDocument();
     expect(screen.getAllByText('Arta Krasniqi').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Pending').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Invoice PDF')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+
+    expect(await screen.findByRole('dialog', { name: 'Billing statement' })).toBeInTheDocument();
+    expect(screen.getByText('Invoice PDF')).toBeInTheDocument();
+    expect(screen.getAllByText('MedSphere Healthcare Management Platform').length).toBeGreaterThan(0);
+    expect(screen.getByText('Invoice totals')).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByLabelText('Due date')).toHaveValue('2026-05-30');
     });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
+    await waitFor(() => {
+      expect(billingApi.downloadPdf).toHaveBeenCalledWith('b14d4f97-281c-41b5-b6f4-215c4c620878');
+    });
+    expect(downloadedFileName).toBe('arta-krasniqi-2026-05-21-bill-20260521-e61720ab.pdf');
 
     fireEvent.change(screen.getByLabelText('Manual item'), { target: { value: 'Manual supply charge' } });
     fireEvent.change(screen.getByLabelText('Unit price'), { target: { value: '15' } });
@@ -187,5 +210,29 @@ describe('BillingPage', () => {
       });
     });
     expect(await screen.findByText('Payment recorded successfully.')).toBeInTheDocument();
+  });
+
+  it('sends patient search and calendar date filters to the billing backend', async () => {
+    renderBillingPage();
+
+    expect(await screen.findByText('BILL-20260521-E61720AB')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Patient'), { target: { value: 'Arta' } });
+    fireEvent.change(screen.getByLabelText('From'), { target: { value: '2026-05-01' } });
+    fireEvent.change(screen.getByLabelText('To'), { target: { value: '2026-05-31' } });
+
+    await waitFor(() => {
+      expect(billingApi.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          search: 'Arta',
+          from: expect.any(String),
+          to: expect.any(String),
+        })
+      );
+    });
+
+    const latestParams = vi.mocked(billingApi.list).mock.calls.at(-1)?.[0];
+    expect(latestParams?.from).toBe(new Date('2026-05-01T00:00:00').toISOString());
+    expect(latestParams?.to).toBe(new Date('2026-05-31T23:59:59.999').toISOString());
   });
 });

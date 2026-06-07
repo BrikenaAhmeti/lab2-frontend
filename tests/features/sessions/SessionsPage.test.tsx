@@ -7,6 +7,7 @@ import SessionsPage from '@/features/sessions/pages/SessionsPage';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/features/auth/authSlice';
 import { sessionsApi } from '@/lib/api/auth-api';
+import { aiApi } from '@/lib/api/ai-api';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -20,6 +21,14 @@ vi.mock('@/lib/api/auth-api', () => ({
     logs: vi.fn(),
     revoke: vi.fn(),
     adminRevoke: vi.fn(),
+  },
+}));
+
+vi.mock('@/lib/api/ai-api', () => ({
+  aiApi: {
+    listVapiCalls: vi.fn(),
+    getVapiCall: vi.fn(),
+    getVapiCallLog: vi.fn(),
   },
 }));
 
@@ -44,7 +53,7 @@ function renderSessionsPage() {
   );
 }
 
-function setAdminSession() {
+function setAdminSession(roles = ['Super Admin']) {
   store.dispatch(clearSession());
   store.dispatch(
     setSession({
@@ -53,7 +62,7 @@ function setAdminSession() {
       user: {
         id: 'admin-1',
         email: 'admin@medsphere.local',
-        roles: ['Super Admin'],
+        roles,
         permissions: ['users:read:all', 'users:update:all'],
       },
     })
@@ -61,6 +70,32 @@ function setAdminSession() {
 }
 
 describe('SessionsPage', () => {
+  const vapiCall = {
+    id: 'call-1',
+    type: 'webCall',
+    status: 'ended',
+    assistantId: 'assistant-1',
+    createdAt: '2026-06-02T14:00:00.000Z',
+    updatedAt: '2026-06-02T14:03:00.000Z',
+    startedAt: '2026-06-02T14:00:05.000Z',
+    endedAt: '2026-06-02T14:03:10.000Z',
+    endedReason: 'customer-ended-call',
+    durationSeconds: 185,
+    cost: 0.42,
+    summary: 'Booked a cardiology appointment.',
+    transcript: 'Caller asked for an appointment.',
+    messages: [
+      {
+        role: 'assistant',
+        message: 'How can I help?',
+        secondsFromStart: 1,
+      },
+    ],
+    recordingUrls: {},
+    logUrl: null,
+    pcapUrl: null,
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     setAdminSession();
@@ -109,6 +144,18 @@ describe('SessionsPage', () => {
       ],
       meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
     });
+    vi.mocked(aiApi.listVapiCalls).mockResolvedValue({
+      assistantId: 'assistant-1',
+      count: 1,
+      calls: [vapiCall],
+    });
+    vi.mocked(aiApi.getVapiCall).mockResolvedValue(vapiCall);
+    vi.mocked(aiApi.getVapiCallLog).mockResolvedValue({
+      callId: 'call-1',
+      logUrl: 'https://logs.example.test/call-1.json',
+      contentType: 'application/json',
+      body: { ok: true },
+    });
   });
 
   it('shows active sessions as readable user/device cards', async () => {
@@ -142,5 +189,25 @@ describe('SessionsPage', () => {
         })
       )
     );
+  });
+
+  it('loads voice AI logs from a super-admin-only sessions tab', async () => {
+    renderSessionsPage();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Voice AI Logs' }));
+
+    expect(await screen.findByText('Assistant assistant-1')).toBeInTheDocument();
+    expect(screen.getAllByText(/call-1/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Booked a cardiology appointment.').length).toBeGreaterThan(0);
+    expect(aiApi.listVapiCalls).toHaveBeenCalledWith({ limit: 50 });
+  });
+
+  it('does not expose voice AI logs to regular admins', async () => {
+    setAdminSession(['Admin']);
+    renderSessionsPage();
+
+    expect(await screen.findByText('Chrome on macOS')).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Voice AI Logs' })).not.toBeInTheDocument();
+    expect(aiApi.listVapiCalls).not.toHaveBeenCalled();
   });
 });

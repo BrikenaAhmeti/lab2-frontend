@@ -2,13 +2,17 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { useSearchParams } from 'react-router-dom';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
 import { sessionsApi, type SessionDto, type SessionLogDto, type SessionUserDto } from '@/lib/api/auth-api';
 import { useAppSelector } from '@/app/hooks';
+import { hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
+import { VapiCallLogsPanel } from '@/features/vapi/pages/VapiCallLogsPage';
 
-type SessionTab = 'sessions' | 'logs';
+type SessionTab = 'sessions' | 'logs' | 'voice-ai';
 
 const logActions = [
   'login.success',
@@ -160,6 +164,12 @@ function localDateToIso(value: string) {
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
 }
 
+function resolveSessionTab(tab: string | null, canSeeVoiceAiLogs: boolean): SessionTab {
+  if (tab === 'logs') return 'logs';
+  if (tab === 'voice-ai' && canSeeVoiceAiLogs) return 'voice-ai';
+  return 'sessions';
+}
+
 function SessionOwner({ user }: { user?: SessionUserDto | null }) {
   return (
     <div>
@@ -282,10 +292,24 @@ function LogCard({ log }: { log: SessionLogDto }) {
 export default function SessionsPage() {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAppSelector((state) => state.auth.user);
-  const roles = user?.roles ?? [];
-  const isAdmin = roles.includes('Admin') || roles.includes('Super Admin');
-  const [activeTab, setActiveTab] = useState<SessionTab>('sessions');
+  const roles = getUserRoleNames(user);
+  const isAdmin = hasAnyRole(roles, ['Admin', 'Super Admin']);
+  const isSuperAdmin = hasAnyRole(roles, ['Super Admin']);
+  const activeTab = resolveSessionTab(searchParams.get('tab'), isSuperAdmin);
+  const tabs = useMemo<Array<{ key: SessionTab; label: string }>>(() => {
+    const visibleTabs: Array<{ key: SessionTab; label: string }> = [
+      { key: 'sessions', label: 'Active sessions' },
+      { key: 'logs', label: 'Logs' },
+    ];
+
+    if (isSuperAdmin) {
+      visibleTabs.push({ key: 'voice-ai', label: 'Voice AI Logs' });
+    }
+
+    return visibleTabs;
+  }, [isSuperAdmin]);
   const [filters, setFilters] = useState({
     userSearch: '',
     action: '',
@@ -334,20 +358,34 @@ export default function SessionsPage() {
     setFilters({ userSearch: '', action: '', from: '', to: '', changed: '' });
   };
 
+  const selectTab = (tab: SessionTab) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (tab === 'sessions') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', tab);
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  };
+
   return (
-    <Card title={t('auth.sessionsTitle')} subtitle="Monitor active devices and review security activity">
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">{t('auth.sessionsTitle')}</h1>
+        <p className="mt-1 text-sm text-muted">Monitor active devices and review security activity.</p>
+      </div>
+
       <div className="space-y-4">
         <div className="flex flex-wrap gap-2 border-b border-border pb-3" role="tablist" aria-label="Session views">
-          {[
-            { key: 'sessions' as const, label: 'Active sessions' },
-            { key: 'logs' as const, label: 'Logs' },
-          ].map((tab) => (
+          {tabs.map((tab) => (
             <button
               key={tab.key}
               type="button"
               role="tab"
               aria-selected={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => selectTab(tab.key)}
               className={clsx(
                 'rounded-lg border px-3 py-2 text-sm font-medium transition',
                 activeTab === tab.key
@@ -361,7 +399,7 @@ export default function SessionsPage() {
         </div>
 
         {activeTab === 'sessions' ? (
-          <div className="space-y-3">
+          <Card title="Active sessions" subtitle="Authenticated devices currently using MedSphere">
             {sessionsQuery.isLoading ? <p className="text-sm text-muted">{t('loading')}</p> : null}
             {sessionsQuery.isError ? <p className="text-sm text-danger">{t('auth.operationFailed')}</p> : null}
             {!sessionsQuery.isLoading && !sessionsQuery.isError && sessionsQuery.data?.length === 0 ? (
@@ -379,11 +417,11 @@ export default function SessionsPage() {
                 onRevoke={(sessionId, admin) => revokeMutation.mutate({ sessionId, admin })}
               />
             ))}
-          </div>
+          </Card>
         ) : null}
 
         {activeTab === 'logs' ? (
-          <div className="space-y-4">
+          <Card title="Logs" subtitle="Search session and identity activity">
             <div className="grid gap-3 rounded-xl border border-border bg-surface/60 p-3 md:grid-cols-2 xl:grid-cols-5">
               <label className="space-y-1 text-xs font-medium text-muted">
                 User
@@ -454,9 +492,13 @@ export default function SessionsPage() {
                 Showing {logsQuery.data.items.length} of {logsQuery.data.meta.total} log entries.
               </p>
             ) : null}
-          </div>
+          </Card>
+        ) : null}
+
+        {activeTab === 'voice-ai' && isSuperAdmin ? (
+          <VapiCallLogsPanel showHeader={false} />
         ) : null}
       </div>
-    </Card>
+    </div>
   );
 }

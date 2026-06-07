@@ -106,7 +106,8 @@ export interface InventoryItemListParams {
   categoryId?: string;
   departmentId?: string;
   belowReorderLevel?: boolean;
-  expiringSoonDays?: number;
+  expiryFrom?: string;
+  expiryTo?: string;
   isActive?: boolean;
   sortBy?: InventorySortBy;
   sortDirection?: InventorySortDirection;

@@ -80,6 +80,7 @@ export interface BillingListParams {
   page?: number;
   limit?: number;
   patientId?: string;
+  search?: string;
   status?: BillingStatus;
   from?: string;
   to?: string;

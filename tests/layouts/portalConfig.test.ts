@@ -29,6 +29,14 @@ describe('portalConfigs', () => {
     ]));
   });
 
+  it('keeps voice AI logs out of the standalone admin navigation', () => {
+    const adminItems = portalConfigs.admin.navGroups.flatMap((group) => group.items);
+
+    expect(adminItems).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Voice AI Logs' }),
+    ]));
+  });
+
   it('wires the patient portal links required by MS-55', () => {
     const care = portalConfigs.patient.navGroups.find((group) => group.label === 'Care');
 

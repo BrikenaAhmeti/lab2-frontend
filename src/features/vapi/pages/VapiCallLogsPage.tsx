@@ -43,7 +43,11 @@ function statusVariant(status?: string | null) {
   return 'neutral';
 }
 
-export default function VapiCallLogsPage() {
+interface VapiCallLogsPanelProps {
+  showHeader?: boolean;
+}
+
+export function VapiCallLogsPanel({ showHeader = true }: VapiCallLogsPanelProps) {
   const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
   const callsQuery = useQuery({
     queryKey: ['vapi-calls', 50],
@@ -71,10 +75,12 @@ export default function VapiCallLogsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Voice AI Logs</h1>
-        <p className="mt-1 text-sm text-muted">Vapi appointment calls, transcripts, recordings, and artifact logs.</p>
-      </div>
+      {showHeader ? (
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Voice AI Logs</h1>
+          <p className="mt-1 text-sm text-muted">Vapi appointment calls, transcripts, recordings, and artifact logs.</p>
+        </div>
+      ) : null}
 
       {callsQuery.isError ? (
         <FeedbackMessage type="error" message="Vapi call logs could not be loaded." />
@@ -250,4 +256,8 @@ export default function VapiCallLogsPage() {
       </div>
     </div>
   );
+}
+
+export default function VapiCallLogsPage() {
+  return <VapiCallLogsPanel />;
 }

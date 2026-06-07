@@ -41,6 +41,25 @@ export function dateInputValue(value?: string | null) {
   return value ? value.slice(0, 10) : '';
 }
 
+function filenamePart(value?: string | null, fallback = 'billing') {
+  const normalized = value
+    ?.normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return normalized || fallback;
+}
+
+export function getBillingPdfFileName(billing: BillingView) {
+  const patient = filenamePart(billing.patient.name, 'patient');
+  const date = dateInputValue(billing.issuedAt) || dateInputValue(billing.dueDate) || dateInputValue(billing.createdAt) || 'undated';
+  const billingNumber = filenamePart(billing.billingNumber, 'billing');
+
+  return `${patient}-${date}-${billingNumber}.pdf`;
+}
+
 export function dateRangeFromInput(value: string, edge: 'start' | 'end') {
   if (!value) return undefined;
   const suffix = edge === 'start' ? 'T00:00:00' : 'T23:59:59.999';

@@ -7,13 +7,13 @@ import { formatCurrency } from '@/utils/formatters/currency';
 import { billingApi, type BillingView } from '@/lib/api/billing-api';
 import { getBillingApiErrorMessage, useBillingList } from '@/features/billing/hooks/useBillings';
 import BillingStatusBadge from './BillingStatusBadge';
-import { formatBillingDate } from './billingFormat';
+import { formatBillingDate, getBillingPdfFileName } from './billingFormat';
 
 function downloadBlob(blob: Blob, billing: BillingView) {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${billing.billingNumber}.pdf`;
+  link.download = getBillingPdfFileName(billing);
   link.click();
   window.URL.revokeObjectURL(url);
 }
@@ -51,9 +51,9 @@ export default function PatientBillingPanel({ patientId }: { patientId: string }
       {billings.map((billing) => (
         <PdfDocumentPanel
           key={billing.id}
-          documentLabel="Billing Statement PDF"
-          title={billing.billingNumber}
-          subtitle={billing.patient.name}
+          documentLabel="Tax Invoice PDF"
+          title={`Invoice ${billing.billingNumber}`}
+          subtitle={`Issued to ${billing.patient.name}`}
           accent={Number(billing.outstandingAmount) > 0 ? 'amber' : 'green'}
           status={<BillingStatusBadge status={billing.status} />}
           actions={
@@ -71,14 +71,28 @@ export default function PatientBillingPanel({ patientId }: { patientId: string }
           meta={[
             { label: 'Issued', value: formatBillingDate(billing.issuedAt) },
             { label: 'Due', value: formatBillingDate(billing.dueDate) },
-            { label: 'Total', value: formatCurrency(Number(billing.totalAmount)) },
+            { label: 'TVSH', value: formatCurrency(Number(billing.taxAmount)) },
             { label: 'Outstanding', value: formatCurrency(Number(billing.outstandingAmount)) },
           ]}
         >
-          <PdfSection title="Statement totals" accent="green">
+          <PdfSection title="Invoice identity" accent="teal">
             <PdfInfoGrid
               columns="three"
               items={[
+                { label: 'Provider', value: 'MedSphere Healthcare' },
+                { label: 'Business no.', value: '810123456' },
+                { label: 'TVSH no.', value: 'TVSH-KS-601234789' },
+              ]}
+            />
+          </PdfSection>
+
+          <PdfSection title="Invoice totals" accent="green">
+            <PdfInfoGrid
+              columns="three"
+              items={[
+                { label: 'Subtotal', value: formatCurrency(Number(billing.subtotal)) },
+                { label: 'TVSH / VAT', value: formatCurrency(Number(billing.taxAmount)) },
+                { label: 'Discount', value: formatCurrency(Number(billing.discountAmount)) },
                 { label: 'Total', value: formatCurrency(Number(billing.totalAmount)) },
                 { label: 'Paid', value: formatCurrency(Number(billing.amountPaid)) },
                 { label: 'Outstanding', value: formatCurrency(Number(billing.outstandingAmount)) },
@@ -94,6 +108,8 @@ export default function PatientBillingPanel({ patientId }: { patientId: string }
                     <tr>
                       <th className="px-3 py-2 font-medium">Item</th>
                       <th className="px-3 py-2 font-medium">Qty</th>
+                      <th className="px-3 py-2 font-medium">Unit</th>
+                      <th className="px-3 py-2 font-medium">TVSH</th>
                       <th className="px-3 py-2 font-medium">Total</th>
                     </tr>
                   </thead>
@@ -102,6 +118,8 @@ export default function PatientBillingPanel({ patientId }: { patientId: string }
                       <tr key={item.id} className="border-t border-border">
                         <td className="px-3 py-2 text-foreground">{item.description}</td>
                         <td className="px-3 py-2 text-muted">{item.quantity}</td>
+                        <td className="px-3 py-2 text-muted">{formatCurrency(Number(item.unitPrice))}</td>
+                        <td className="px-3 py-2 text-muted">{Number(billing.taxAmount) > 0 ? 'Included' : '0%'}</td>
                         <td className="px-3 py-2 text-foreground">{formatCurrency(Number(item.totalPrice))}</td>
                       </tr>
                     ))}
@@ -114,6 +132,18 @@ export default function PatientBillingPanel({ patientId }: { patientId: string }
               </div>
             )}
           </PdfSection>
+
+          {billing.payments.length > 0 ? (
+            <PdfSection title="Payments" accent="blue">
+              <PdfInfoGrid
+                columns="two"
+                items={billing.payments.map((payment) => ({
+                  label: formatBillingDate(payment.paidAt),
+                  value: `${formatCurrency(Number(payment.amount))} - ${payment.paymentMethod.replaceAll('_', ' ')}`,
+                }))}
+              />
+            </PdfSection>
+          ) : null}
         </PdfDocumentPanel>
       ))}
     </div>

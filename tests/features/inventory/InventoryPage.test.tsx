@@ -211,11 +211,41 @@ describe('InventoryPage', () => {
       categoryId: undefined,
       departmentId: undefined,
       belowReorderLevel: undefined,
-      expiringSoonDays: undefined,
+      expiryFrom: undefined,
+      expiryTo: undefined,
       isActive: true,
       sortBy: 'name',
       sortDirection: 'asc',
     });
+  });
+
+  it('filters inventory by a single expiry date with backend range params', async () => {
+    renderInventoryPage(['inventory:read']);
+
+    expect(await screen.findByText('Aspirin 81 mg')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Any expiry date'));
+    fireEvent.change(inputById('inventory-expiry-filter-single-date'), { target: { value: '2026-12-31' } });
+
+    await waitFor(() => {
+      expect(inventoryApi.items.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          expiryFrom: '2026-12-31',
+          expiryTo: '2026-12-31',
+        })
+      );
+    });
+  });
+
+  it('shows an empty history dialog when an item has no transaction history', async () => {
+    renderInventoryPage(['inventory:read']);
+
+    expect(await screen.findByText('Aspirin 81 mg')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'History' }));
+
+    expect(screen.getByRole('dialog', { name: 'Transaction history' })).toBeInTheDocument();
+    expect(await screen.findByText('No transaction history found for this item.')).toBeInTheDocument();
   });
 
   it('creates an item using the MS-27 item payload', async () => {

@@ -219,6 +219,7 @@ export default function CalendarDatePicker({
           aria-controls={panelId}
           aria-expanded={open}
           onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
           onChange={(event) => onChange(event.target.value)}
           className={clsx(
             'w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-20 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60',

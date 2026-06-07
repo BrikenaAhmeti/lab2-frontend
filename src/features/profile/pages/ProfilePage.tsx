@@ -141,6 +141,10 @@ export default function ProfilePage() {
             phone: t('auth.phone'),
             dateOfBirth: t('auth.dateOfBirth'),
             gender: t('auth.gender'),
+            selectGender: t('auth.selectGender'),
+            genderFemale: t('auth.genderFemale'),
+            genderMale: t('auth.genderMale'),
+            genderOther: t('auth.genderOther'),
             avatarFileId: t('auth.avatarFileId'),
             saveProfile: t('auth.saveProfile'),
           }}

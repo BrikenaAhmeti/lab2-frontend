@@ -7,6 +7,7 @@ import {
   getDataExchangeErrorMessage,
   type ExchangeFormat,
   type ExportEntity,
+  type ExportFilters,
 } from '@/lib/api/data-exchange-api';
 import { useExportFile } from '@/features/data-exchange/hooks/useDataExchange';
 
@@ -21,9 +22,10 @@ interface ExportButtonProps {
   label?: string;
   size?: 'sm' | 'md' | 'lg';
   excludeFields?: string[];
+  filters?: ExportFilters;
 }
 
-export default function ExportButton({ entity, label = 'Export', size = 'sm', excludeFields }: ExportButtonProps) {
+export default function ExportButton({ entity, label = 'Export', size = 'sm', excludeFields, filters }: ExportButtonProps) {
   const formatId = useId();
   const [format, setFormat] = useState<ExchangeFormat>('csv');
   const [error, setError] = useState('');
@@ -33,7 +35,7 @@ export default function ExportButton({ entity, label = 'Export', size = 'sm', ex
     setError('');
 
     try {
-      const file = await exportMutation.mutateAsync({ entity, format, excludeFields });
+      const file = await exportMutation.mutateAsync({ entity, format, excludeFields, filters });
       downloadFile(file);
     } catch (exportError) {
       setError(getDataExchangeErrorMessage(exportError, 'Export could not be downloaded'));

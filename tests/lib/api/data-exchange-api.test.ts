@@ -50,6 +50,40 @@ describe('dataExchangeApi', () => {
     });
   });
 
+  it('sends selected export filters as backend query parameters', async () => {
+    const instance = mockClient();
+
+    await dataExchangeApi.exportFile(
+      'inventory-items',
+      'xlsx',
+      {
+        filters: {
+          search: 'aspirin',
+          categoryId: 'category-1',
+          belowReorderLevel: true,
+          isActive: false,
+          expiryFrom: '2026-12-01',
+          expiryTo: '2026-12-31',
+          empty: '',
+        },
+      },
+      instance
+    );
+
+    expect(instance.get).toHaveBeenCalledWith('/api/export/inventory-items', {
+      params: {
+        search: 'aspirin',
+        categoryId: 'category-1',
+        belowReorderLevel: true,
+        isActive: false,
+        expiryFrom: '2026-12-01',
+        expiryTo: '2026-12-31',
+        format: 'xlsx',
+      },
+      responseType: 'blob',
+    });
+  });
+
   it('posts multipart imports with the backend file field and mode query', async () => {
     const instance = mockClient();
     const file = new File(['firstName,lastName\nAda,Lovelace'], 'patients.csv', { type: 'text/csv' });
