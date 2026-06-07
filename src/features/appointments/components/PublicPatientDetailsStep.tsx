@@ -1,4 +1,5 @@
 import Input from '@/ui/atoms/Input';
+import BirthdayField from '@/ui/molecules/BirthdayField';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import type { PublicAppointmentPatientPayload } from '@/lib/api/appointments-api';
 
@@ -137,16 +138,17 @@ export default function PublicPatientDetailsStep({
           id="public-personal-number"
           label="Personal number"
           value={details.personalNumber}
+          required
           onChange={(event) => onChange('personalNumber', event.target.value)}
           error={errors.personalNumber}
           autoComplete="off"
         />
-        <Input
+        <BirthdayField
           id="public-date-of-birth"
-          type="date"
           label="Date of birth"
           value={details.dateOfBirth}
-          onChange={(event) => onChange('dateOfBirth', event.target.value)}
+          required
+          onChange={(value) => onChange('dateOfBirth', value)}
           error={errors.dateOfBirth}
           autoComplete="bday"
         />
@@ -163,7 +165,7 @@ export default function PublicPatientDetailsStep({
             <option value="">Select gender</option>
             <option value="female">Female</option>
             <option value="male">Male</option>
-            <option value="other">Other</option>
+            <option value="other">Others</option>
           </select>
           {errors.gender ? <p className="text-xs text-danger">{errors.gender}</p> : null}
         </label>

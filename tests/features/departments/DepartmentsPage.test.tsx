@@ -65,6 +65,24 @@ function inputById(id: string) {
   return element;
 }
 
+function formatDateInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+function dateInVisibleCalendarMonth(day: number) {
+  const today = new Date();
+  return formatDateInput(new Date(today.getFullYear(), today.getMonth(), day));
+}
+
+function clickCalendarDay(groupName: string, day: number) {
+  const calendar = screen.getByRole('group', { name: groupName });
+  fireEvent.click(within(calendar).getByRole('button', { name: new RegExp(`Choose.*\\b${day}\\b`) }));
+}
+
 describe('DepartmentsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -199,7 +217,8 @@ describe('DepartmentsPage', () => {
     expect(await screen.findByText('Primary Care')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Sort'), { target: { value: 'name:asc' } });
-    fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2026-01-05' } });
+    fireEvent.click(screen.getByRole('button', { name: /Open hours/i }));
+    clickCalendarDay('Date', 5);
     fireEvent.change(screen.getByLabelText('Time'), { target: { value: '10:30' } });
 
     await waitFor(() =>
@@ -210,7 +229,7 @@ describe('DepartmentsPage', () => {
         isActive: undefined,
         sortBy: 'name',
         sortDirection: 'asc',
-        openAt: '2026-01-05T10:30',
+        openAt: `${dateInVisibleCalendarMonth(5)}T10:30`,
       })
     );
 
@@ -223,10 +242,11 @@ describe('DepartmentsPage', () => {
 
     expect(await screen.findByText('Primary Care')).toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole('button', { name: /Open hours/i }));
     fireEvent.click(screen.getByRole('button', { name: 'Range' }));
-    fireEvent.change(screen.getByLabelText('Start date'), { target: { value: '2026-01-05' } });
+    clickCalendarDay('Start date', 5);
     fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '09:00' } });
-    fireEvent.change(screen.getByLabelText('End date'), { target: { value: '2026-01-07' } });
+    clickCalendarDay('End date', 7);
     fireEvent.change(screen.getByLabelText('End time'), { target: { value: '15:30' } });
 
     await waitFor(() =>
@@ -237,8 +257,8 @@ describe('DepartmentsPage', () => {
         isActive: undefined,
         sortBy: 'createdAt',
         sortDirection: 'desc',
-        openFrom: '2026-01-05T09:00',
-        openTo: '2026-01-07T15:30',
+        openFrom: `${dateInVisibleCalendarMonth(5)}T09:00`,
+        openTo: `${dateInVisibleCalendarMonth(7)}T15:30`,
       })
     );
 

@@ -10,12 +10,13 @@ import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import FilterSummaryBar, { type FilterSummaryChip } from '@/ui/molecules/FilterSummaryBar';
-import OpenHoursFilter, {
+import OpenHoursFilter from '@/ui/molecules/OpenHoursFilter';
+import {
   emptyOpenHoursFilterValue,
   formatOpenHoursFilterSummary,
   isOpenHoursFilterActive,
   openHoursFilterToParams,
-} from '@/ui/molecules/OpenHoursFilter';
+} from '@/ui/molecules/OpenHoursFilter.utils';
 import Pagination from '@/ui/molecules/Pagination';
 import SelectField from '@/ui/molecules/SelectField';
 import WorkingHoursSummary from '@/ui/molecules/WorkingHoursSummary';
@@ -316,7 +317,7 @@ export default function DepartmentsPage() {
               ) : null}
             </div>
 
-            <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_180px_220px]">
+            <div className="grid gap-3 xl:grid-cols-[minmax(260px,1fr)_180px_220px_280px]">
               <Input
                 id="department-search"
                 label="Search"
@@ -346,14 +347,13 @@ export default function DepartmentsPage() {
                   </option>
                 ))}
               </SelectField>
+              <OpenHoursFilter
+                id="department-open-hours-filter"
+                label="Open hours"
+                value={openHoursFilter}
+                onChange={updateOpenHoursFilter}
+              />
             </div>
-
-            <OpenHoursFilter
-              id="department-open-hours-filter"
-              label="Open hours"
-              value={openHoursFilter}
-              onChange={updateOpenHoursFilter}
-            />
 
             <FilterSummaryBar chips={filterChips} onClear={clearFilters} />
           </section>

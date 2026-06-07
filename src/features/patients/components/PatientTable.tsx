@@ -12,6 +12,7 @@ function PatientTable({ rows, basePath }: { rows: PatientRecord[]; basePath: str
         <thead className="bg-surface text-muted">
           <tr>
             <th className="px-4 py-3 font-medium">Patient</th>
+            <th className="px-4 py-3 font-medium">Personal number</th>
             <th className="px-4 py-3 font-medium">Contact</th>
             <th className="px-4 py-3 font-medium">Gender</th>
             <th className="px-4 py-3 font-medium">Blood</th>
@@ -24,6 +25,7 @@ function PatientTable({ rows, basePath }: { rows: PatientRecord[]; basePath: str
           {rows.map((patient) => (
             <tr key={patient.id} className="border-t border-border">
               <td className="px-4 py-3 font-medium text-foreground">{getPatientName(patient)}</td>
+              <td className="px-4 py-3 font-medium text-foreground">{patient.personalNumber ?? '-'}</td>
               <td className="px-4 py-3 text-muted">
                 <p>{patient.email ?? '-'}</p>
                 <p>{patient.phone ?? '-'}</p>

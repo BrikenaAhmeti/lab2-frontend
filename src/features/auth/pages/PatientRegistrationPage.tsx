@@ -6,6 +6,7 @@ import { ArrowRight, CheckCircle2, LogIn, MailCheck, ShieldCheck } from 'lucide-
 import AuthPageShell from '@/features/auth/components/AuthPageShell';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
+import BirthdayField from '@/ui/molecules/BirthdayField';
 import PasswordRequirementsList from '@/ui/molecules/PasswordRequirementsList';
 import { patientRegistrationService } from '@/features/auth/services/patientRegistrationService';
 import { getAuthApiErrorMessage } from '@/features/auth/utils/errors';
@@ -236,12 +237,11 @@ export default function PatientRegistrationPage() {
             autoComplete="tel"
             error={fieldError('phone')}
           />
-          <Input
+          <BirthdayField
             id="dateOfBirth"
-            type="date"
             label={t('auth.dateOfBirth')}
             value={values.dateOfBirth}
-            onChange={(event) => update('dateOfBirth', event.target.value)}
+            onChange={(value) => update('dateOfBirth', value)}
             autoComplete="bday"
             error={fieldError('dateOfBirth')}
           />
@@ -264,6 +264,7 @@ export default function PatientRegistrationPage() {
             id="personalNumber"
             label={t('auth.personalNumber')}
             value={values.personalNumber}
+            required
             onChange={(event) => update('personalNumber', event.target.value)}
             autoComplete="off"
             error={fieldError('personalNumber')}

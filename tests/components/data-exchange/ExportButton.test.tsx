@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ComponentProps } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ExportButton from '@/components/export/ExportButton';
 import { dataExchangeApi, downloadFile } from '@/lib/api/data-exchange-api';
@@ -17,7 +18,7 @@ vi.mock('@/lib/api/data-exchange-api', async () => {
   };
 });
 
-function renderExportButton() {
+function renderExportButton(props: Partial<ComponentProps<typeof ExportButton>> = {}) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -27,7 +28,7 @@ function renderExportButton() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <ExportButton entity="patients" />
+      <ExportButton entity="patients" {...props} />
     </QueryClientProvider>
   );
 }
@@ -53,6 +54,16 @@ describe('ExportButton', () => {
     expect(downloadFile).toHaveBeenCalledWith({
       blob: expect.any(Blob),
       filename: 'patients.xlsx',
+    });
+  });
+
+  it('passes hidden fields to the export endpoint when configured', async () => {
+    renderExportButton({ excludeFields: ['userId'] });
+
+    fireEvent.click(screen.getByRole('button', { name: /export/i }));
+
+    await waitFor(() => {
+      expect(dataExchangeApi.exportFile).toHaveBeenCalledWith('patients', 'csv', { excludeFields: ['userId'] });
     });
   });
 });

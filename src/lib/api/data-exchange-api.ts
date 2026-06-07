@@ -16,6 +16,10 @@ export interface FileDownload {
   filename: string;
 }
 
+export interface ExportFileOptions {
+  excludeFields?: string[];
+}
+
 export interface ImportRowError {
   row: number;
   field?: string;
@@ -50,6 +54,10 @@ export type ImportResponse = {
 
 function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
+}
+
+function isAxiosInstance(value: unknown): value is AxiosInstance {
+  return Boolean(value && typeof (value as AxiosInstance).get === 'function');
 }
 
 function filenameFromDisposition(disposition?: string) {
@@ -87,9 +95,23 @@ export function downloadFile(file: FileDownload) {
 }
 
 export const dataExchangeApi = {
-  exportFile(entity: ExportEntity, format: ExchangeFormat, instance?: AxiosInstance) {
-    return client(instance)
-      .get<Blob>(`/api/export/${entity}`, { params: { format }, responseType: 'blob' })
+  exportFile(
+    entity: ExportEntity,
+    format: ExchangeFormat,
+    optionsOrInstance?: ExportFileOptions | AxiosInstance,
+    instance?: AxiosInstance
+  ) {
+    const options = isAxiosInstance(optionsOrInstance) ? undefined : optionsOrInstance;
+    const resolvedInstance = isAxiosInstance(optionsOrInstance) ? optionsOrInstance : instance;
+
+    return client(resolvedInstance)
+      .get<Blob>(`/api/export/${entity}`, {
+        params: {
+          format,
+          excludeFields: options?.excludeFields?.length ? options.excludeFields.join(',') : undefined,
+        },
+        responseType: 'blob',
+      })
       .then(toFileDownload);
   },
   downloadTemplate(entity: ImportEntity, format: ExchangeFormat, instance?: AxiosInstance) {

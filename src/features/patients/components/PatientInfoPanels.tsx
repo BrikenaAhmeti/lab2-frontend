@@ -1,5 +1,5 @@
 import type { PatientRecord } from '@/lib/api/patients-api';
-import { formatBloodType, formatDate, formatJsonText } from './patientFormat';
+import { formatBloodType, formatDate, formatEnum, formatJsonText } from './patientFormat';
 
 function Field({ label, value }: { label: string; value: string | null | undefined }) {
   return (
@@ -18,7 +18,7 @@ export function PersonalPanel({ patient, selfView }: { patient: PatientRecord; s
       <Field label="Email" value={patient.email} />
       <Field label="Phone" value={patient.phone} />
       <Field label="Date of birth" value={formatDate(patient.dateOfBirth)} />
-      <Field label="Gender" value={patient.gender} />
+      <Field label="Gender" value={formatEnum(patient.gender)} />
       <Field label="Personal number" value={selfView ? null : patient.personalNumber} />
       <Field label="Address" value={patient.address} />
       <Field label="Emergency contact" value={patient.emergencyContact} />

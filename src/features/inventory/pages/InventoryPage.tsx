@@ -30,11 +30,12 @@ import Card from '@/ui/atoms/Card';
 import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Pagination from '@/ui/molecules/Pagination';
 
 type InventoryTab = 'items' | 'categories' | 'alerts';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
 
-const pageSize = 10;
+const defaultPageSize = 10;
 const tabs: Array<{ id: InventoryTab; label: string }> = [
   { id: 'items', label: 'Items' },
   { id: 'categories', label: 'Categories' },
@@ -54,6 +55,7 @@ export default function InventoryPage() {
   const [expiringSoonDays, setExpiringSoonDays] = useState('');
   const [activeFilter, setActiveFilter] = useState<ActiveStatus>('active');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [formError, setFormError] = useState('');
   const [transactionError, setTransactionError] = useState('');
@@ -65,7 +67,7 @@ export default function InventoryPage() {
   const listParams = useMemo(
     () => ({
       page,
-      limit: pageSize,
+      limit,
       search: search.trim() || undefined,
       categoryId: categoryId || undefined,
       departmentId: departmentId || undefined,
@@ -75,7 +77,7 @@ export default function InventoryPage() {
       sortBy: 'name' as const,
       sortDirection: 'asc' as const,
     }),
-    [activeFilter, belowReorderLevel, categoryId, departmentId, expiringSoonDays, page, search]
+    [activeFilter, belowReorderLevel, categoryId, departmentId, expiringSoonDays, limit, page, search]
   );
 
   const itemsQuery = useInventoryItems(listParams);
@@ -89,14 +91,19 @@ export default function InventoryPage() {
   const items = itemsQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
   const departments = departmentsQuery.data ?? [];
-  const totalPages = Math.max(1, itemsQuery.data?.meta.totalPages ?? 1);
-  const currentPage = itemsQuery.data?.meta.page ?? page;
+  const paginationMeta = itemsQuery.data?.meta;
   const mutationPending =
     createMutation.isPending || updateMutation.isPending || deactivateMutation.isPending || transactionMutation.isPending;
 
   useEffect(() => {
     setPage(1);
   }, [search, categoryId, departmentId, belowReorderLevel, expiringSoonDays, activeFilter]);
+
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
 
   if (!canRead) {
     return <Forbidden />;
@@ -131,6 +138,11 @@ export default function InventoryPage() {
   const closeTransactionModal = () => {
     setTransactionError('');
     setTransactionItem(null);
+  };
+
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
   };
 
   const submitItem = async (values: InventoryItemFormValues) => {
@@ -245,41 +257,28 @@ export default function InventoryPage() {
                 </p>
               ) : null}
 
-              {items.length > 0 ? (
-                <>
-                  <InventoryItemsTable
-                    rows={items}
-                    canManage={canManage}
-                    mutationPending={mutationPending}
-                    onEdit={openEditModal}
-                    onDeactivate={deactivateItem}
-                    onTransaction={openTransactionModal}
-                    onHistory={setHistoryItem}
-                  />
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={currentPage <= 1 || itemsQuery.isFetching}
-                        onClick={() => setPage((value) => Math.max(1, value - 1))}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={currentPage >= totalPages || itemsQuery.isFetching}
-                        onClick={() => setPage((value) => value + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                </>
+              {!itemsQuery.isLoading && !itemsQuery.isError && items.length > 0 ? (
+                <InventoryItemsTable
+                  rows={items}
+                  canManage={canManage}
+                  mutationPending={mutationPending}
+                  onEdit={openEditModal}
+                  onDeactivate={deactivateItem}
+                  onTransaction={openTransactionModal}
+                  onHistory={setHistoryItem}
+                />
+              ) : null}
+
+              {!itemsQuery.isLoading && !itemsQuery.isError && paginationMeta ? (
+                <Pagination
+                  page={page}
+                  totalPages={paginationMeta.totalPages}
+                  total={paginationMeta.total}
+                  limit={limit}
+                  loading={itemsQuery.isFetching}
+                  onPageChange={setPage}
+                  onLimitChange={updateLimit}
+                />
               ) : null}
 
               <InventoryTransactionHistory item={historyItem} onClose={() => setHistoryItem(null)} />

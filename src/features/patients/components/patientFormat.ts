@@ -34,5 +34,10 @@ export function formatJsonText(value: unknown) {
 }
 
 export function formatEnum(value?: string | null) {
-  return value ? value.toLowerCase().replaceAll('_', ' ') : '-';
+  if (!value) return '-';
+
+  return value
+    .toLowerCase()
+    .replaceAll('_', ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }

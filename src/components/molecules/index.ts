@@ -1,6 +1,10 @@
 export { default as Breadcrumbs } from './Breadcrumbs';
 export type { BreadcrumbItem } from './Breadcrumbs';
 export { default as FeedbackMessage } from './FeedbackMessage';
+export { default as BirthdayField } from './BirthdayField';
+export type { BirthdayFieldProps } from './BirthdayField';
+export { default as CalendarDatePicker } from './CalendarDatePicker';
+export type { CalendarDatePickerProps } from './CalendarDatePicker';
 export { default as DateModeFilter } from './DateModeFilter';
 export {
   dateModeFilterToRange,

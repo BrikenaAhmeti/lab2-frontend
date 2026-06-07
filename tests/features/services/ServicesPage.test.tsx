@@ -176,7 +176,7 @@ describe('ServicesPage', () => {
       departmentId: '11111111-1111-4111-8111-111111111111',
       isActive: undefined,
     });
-    expect(screen.queryByRole('button', { name: 'Add Service' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Clinical Service' })).not.toBeInTheDocument();
     expect(screen.getByText('Read only')).toBeInTheDocument();
   });
 
@@ -192,7 +192,7 @@ describe('ServicesPage', () => {
 
     expect(await screen.findByText('Initial Consultation')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Add Service' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Clinical Service' }));
     fireEvent.change(selectById('service-department-id'), {
       target: { value: '22222222-2222-4222-8222-222222222222' },
     });
@@ -201,7 +201,7 @@ describe('ServicesPage', () => {
     fireEvent.change(inputById('service-price'), { target: { value: '35' } });
     fireEvent.change(inputById('service-sort-order'), { target: { value: '1' } });
     fireEvent.change(inputById('service-description'), { target: { value: 'Shorter visit' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Create service' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create clinical service' }));
 
     await waitFor(() =>
       expect(servicesApi.create).toHaveBeenCalledWith({
@@ -215,7 +215,7 @@ describe('ServicesPage', () => {
       })
     );
 
-    expect(await screen.findByText('Service created successfully')).toBeInTheDocument();
+    expect(await screen.findByText('Clinical service created successfully')).toBeInTheDocument();
   });
 
   it('updates an existing service', async () => {
@@ -245,7 +245,7 @@ describe('ServicesPage', () => {
       })
     );
 
-    expect(await screen.findByText('Service updated successfully')).toBeInTheDocument();
+    expect(await screen.findByText('Clinical service updated successfully')).toBeInTheDocument();
   });
 
   it('shows the backend conflict message when delete is blocked', async () => {

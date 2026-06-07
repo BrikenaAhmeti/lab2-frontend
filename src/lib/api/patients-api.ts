@@ -59,7 +59,6 @@ export interface PatientListResponse {
 }
 
 export interface PatientPayload {
-  userId?: string | null;
   firstName: string;
   lastName: string;
   email?: string | null;
@@ -67,7 +66,7 @@ export interface PatientPayload {
   dateOfBirth?: string | null;
   gender?: string | null;
   bloodType?: BloodType | null;
-  personalNumber?: string | null;
+  personalNumber: string;
   address?: string | null;
   emergencyContact?: string | null;
   emergencyPhone?: string | null;

@@ -4,10 +4,10 @@ import Forbidden from '@/components/common/Forbidden';
 import ExportButton from '@/components/export/ExportButton';
 import { hasAnyPermission, hasAnyRole, hasPermission } from '@/features/auth/utils/permission';
 import { billingApi, type BillingStatus, type BillingView, type RecordPaymentPayload, type UpdateBillingPayload } from '@/lib/api/billing-api';
-import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Pagination from '@/ui/molecules/Pagination';
 import { formatCurrency } from '@/utils/formatters/currency';
 import BillingDetailPanel from '@/features/billing/components/BillingDetailPanel';
 import BillingFilters from '@/features/billing/components/BillingFilters';
@@ -30,7 +30,7 @@ interface BillingPageProps {
   portal: 'admin' | 'receptionist';
 }
 
-const pageSize = 10;
+const defaultPageSize = 10;
 
 function downloadBlob(blob: Blob, billing: BillingView) {
   const url = window.URL.createObjectURL(blob);
@@ -70,6 +70,7 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [selectedId, setSelectedId] = useState('');
   const [paymentBilling, setPaymentBilling] = useState<BillingView | null>(null);
   const [actionError, setActionError] = useState('');
@@ -79,12 +80,12 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const listParams = useMemo(
     () => ({
       page,
-      limit: pageSize,
+      limit,
       status: status === 'all' ? undefined : status,
       from: dateRangeFromInput(from, 'start'),
       to: dateRangeFromInput(to, 'end'),
     }),
-    [from, page, status, to]
+    [from, limit, page, status, to]
   );
   const todayRange = useMemo(() => getBillingPeriodRange('today'), []);
   const weekRange = useMemo(() => getBillingPeriodRange('week'), []);
@@ -99,8 +100,7 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const paymentMutation = useRecordBillingPayment();
 
   const rows = useMemo(() => billingsQuery.data?.items ?? [], [billingsQuery.data?.items]);
-  const totalPages = billingsQuery.data?.meta.totalPages ?? 1;
-  const currentPage = billingsQuery.data?.meta.page ?? page;
+  const paginationMeta = billingsQuery.data?.meta;
   const selectedBilling = detailQuery.data ?? rows.find((billing) => billing.id === selectedId) ?? null;
 
   useEffect(() => {
@@ -109,6 +109,12 @@ export default function BillingPage({ portal }: BillingPageProps) {
     setActionError('');
     setActionMessage('');
   }, [from, status, to]);
+
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
 
   useEffect(() => {
     if (rows.length === 0) {
@@ -163,6 +169,12 @@ export default function BillingPage({ portal }: BillingPageProps) {
     } catch (error) {
       setActionError(getBillingApiErrorMessage(error, 'Billing statement could not be downloaded'));
     }
+  };
+
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
+    setSelectedId('');
   };
 
   return (
@@ -221,29 +233,6 @@ export default function BillingPage({ portal }: BillingPageProps) {
                     setActionMessage('');
                   }}
                 />
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      disabled={currentPage <= 1 || billingsQuery.isFetching}
-                      onClick={() => setPage((currentValue) => Math.max(1, currentValue - 1))}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      disabled={currentPage >= totalPages || billingsQuery.isFetching}
-                      onClick={() => setPage((currentValue) => currentValue + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
               </div>
               <BillingDetailPanel
                 billing={selectedBilling}
@@ -259,6 +248,18 @@ export default function BillingPage({ portal }: BillingPageProps) {
                 onDownloadPdf={downloadPdf}
               />
             </div>
+          ) : null}
+
+          {!billingsQuery.isLoading && !billingsQuery.isError && paginationMeta ? (
+            <Pagination
+              page={page}
+              totalPages={paginationMeta.totalPages}
+              total={paginationMeta.total}
+              limit={limit}
+              loading={billingsQuery.isFetching}
+              onPageChange={setPage}
+              onLimitChange={updateLimit}
+            />
           ) : null}
         </div>
       </Card>

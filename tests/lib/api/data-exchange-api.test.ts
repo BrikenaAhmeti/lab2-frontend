@@ -39,6 +39,17 @@ describe('dataExchangeApi', () => {
     expect(file.filename).toBe('patients-2026-05-29.csv');
   });
 
+  it('sends excluded export fields as a backend query parameter', async () => {
+    const instance = mockClient();
+
+    await dataExchangeApi.exportFile('patients', 'csv', { excludeFields: ['userId'] }, instance);
+
+    expect(instance.get).toHaveBeenCalledWith('/api/export/patients', {
+      params: { format: 'csv', excludeFields: 'userId' },
+      responseType: 'blob',
+    });
+  });
+
   it('posts multipart imports with the backend file field and mode query', async () => {
     const instance = mockClient();
     const file = new File(['firstName,lastName\nAda,Lovelace'], 'patients.csv', { type: 'text/csv' });

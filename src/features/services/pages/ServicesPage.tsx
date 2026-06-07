@@ -24,13 +24,14 @@ import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Pagination from '@/ui/molecules/Pagination';
 import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import { organizationBreadcrumbs } from '@/pages/admin/organization/organizationBreadcrumbs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
 
-const pageSize = 10;
+const defaultPageSize = 10;
 
 export default function ServicesPage() {
   const { departmentId: routeDepartmentId } = useParams();
@@ -44,6 +45,7 @@ export default function ServicesPage() {
   const [departmentId, setDepartmentId] = useState(initialDepartmentId);
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [formError, setFormError] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -55,12 +57,12 @@ export default function ServicesPage() {
   const listParams = useMemo(
     () => ({
       page,
-      limit: pageSize,
+      limit,
       search: search.trim() || undefined,
       departmentId: departmentId || undefined,
       isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     }),
-    [activeFilter, departmentId, page, search]
+    [activeFilter, departmentId, limit, page, search]
   );
 
   const servicesQuery = useServiceCatalogList(listParams);
@@ -71,13 +73,18 @@ export default function ServicesPage() {
 
   const rows = servicesQuery.data?.items ?? [];
   const departments = departmentsQuery.data ?? [];
-  const totalPages = servicesQuery.data?.meta.totalPages ?? 1;
-  const currentPage = servicesQuery.data?.meta.page ?? page;
+  const paginationMeta = servicesQuery.data?.meta;
   const mutationPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   useEffect(() => {
     setPage(1);
   }, [search, departmentId, activeFilter]);
+
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
 
   if (!canRead) {
     return <Forbidden />;
@@ -86,11 +93,13 @@ export default function ServicesPage() {
   const servicesErrorMessage = servicesQuery.isError
     ? getApiErrorMessage(servicesQuery.error, 'Clinical services could not be loaded')
     : '';
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
+  };
 
   const openImportWizard = useCallback(() => setShowImportWizard(true), []);
   const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
-  const goPreviousPage = useCallback(() => setPage((currentValue) => Math.max(1, currentValue - 1)), []);
-  const goNextPage = useCallback(() => setPage((currentValue) => currentValue + 1), []);
   const handleImportCompleted = useCallback(() => {
     setFeedback({ type: 'success', message: 'Clinical services imported successfully' });
     void servicesQuery.refetch();
@@ -208,37 +217,26 @@ export default function ServicesPage() {
           ) : null}
 
           {!servicesQuery.isLoading && !servicesQuery.isError && rows.length > 0 ? (
-            <>
-              <ServiceCatalogTable
-                rows={rows}
-                departments={departments}
-                canManage={canManage}
-                mutationPending={mutationPending}
-                onEdit={openEditModal}
-                onDelete={setServiceToDelete}
-              />
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={currentPage <= 1 || servicesQuery.isFetching}
-                    onClick={goPreviousPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={currentPage >= totalPages || servicesQuery.isFetching}
-                    onClick={goNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </>
+            <ServiceCatalogTable
+              rows={rows}
+              departments={departments}
+              canManage={canManage}
+              mutationPending={mutationPending}
+              onEdit={openEditModal}
+              onDelete={setServiceToDelete}
+            />
+          ) : null}
+
+          {!servicesQuery.isLoading && !servicesQuery.isError && paginationMeta ? (
+            <Pagination
+              page={page}
+              totalPages={paginationMeta.totalPages}
+              total={paginationMeta.total}
+              limit={limit}
+              loading={servicesQuery.isFetching}
+              onPageChange={setPage}
+              onLimitChange={updateLimit}
+            />
           ) : null}
         </div>
 

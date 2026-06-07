@@ -57,7 +57,6 @@ export function toPatientPayload(values: Record<string, string>): PatientPayload
   const text = (value: string) => value.trim() || null;
 
   return {
-    userId: text(values.userId),
     firstName: values.firstName.trim(),
     lastName: values.lastName.trim(),
     email: text(values.email),
@@ -65,7 +64,7 @@ export function toPatientPayload(values: Record<string, string>): PatientPayload
     dateOfBirth: text(values.dateOfBirth),
     gender: text(values.gender),
     bloodType: (text(values.bloodType) as PatientPayload['bloodType']) ?? null,
-    personalNumber: text(values.personalNumber),
+    personalNumber: values.personalNumber.trim(),
     address: text(values.address),
     emergencyContact: text(values.emergencyContact),
     emergencyPhone: text(values.emergencyPhone),

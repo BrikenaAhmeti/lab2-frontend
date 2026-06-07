@@ -20,9 +20,10 @@ interface ExportButtonProps {
   entity: ExportEntity;
   label?: string;
   size?: 'sm' | 'md' | 'lg';
+  excludeFields?: string[];
 }
 
-export default function ExportButton({ entity, label = 'Export', size = 'sm' }: ExportButtonProps) {
+export default function ExportButton({ entity, label = 'Export', size = 'sm', excludeFields }: ExportButtonProps) {
   const formatId = useId();
   const [format, setFormat] = useState<ExchangeFormat>('csv');
   const [error, setError] = useState('');
@@ -32,7 +33,7 @@ export default function ExportButton({ entity, label = 'Export', size = 'sm' }: 
     setError('');
 
     try {
-      const file = await exportMutation.mutateAsync({ entity, format });
+      const file = await exportMutation.mutateAsync({ entity, format, excludeFields });
       downloadFile(file);
     } catch (exportError) {
       setError(getDataExchangeErrorMessage(exportError, 'Export could not be downloaded'));

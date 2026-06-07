@@ -112,17 +112,28 @@ describe('PatientsPage', () => {
     renderPatients();
 
     expect(await screen.findByText('Arta Krasniqi')).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Personal number' })).toBeInTheDocument();
+    expect(screen.getByText('1234567890')).toBeInTheDocument();
+    expect(screen.getAllByText('Female').length).toBeGreaterThan(0);
 
     fireEvent.change(screen.getByPlaceholderText(/search name/i), { target: { value: 'arta' } });
-    fireEvent.change(screen.getByPlaceholderText('Gender'), { target: { value: 'female' } });
-    fireEvent.change(screen.getByDisplayValue('All blood types'), { target: { value: 'A_POSITIVE' } });
+    fireEvent.change(screen.getByLabelText('Gender'), { target: { value: 'female' } });
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'active' } });
+    fireEvent.change(screen.getByLabelText('Blood type'), { target: { value: 'A_POSITIVE' } });
+    fireEvent.click(screen.getByRole('button', { name: /birth date/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Range' }));
+    fireEvent.change(screen.getByLabelText('Born from'), { target: { value: '1995-01-01' } });
+    fireEvent.change(screen.getByLabelText('Born to'), { target: { value: '1995-12-31' } });
 
     await waitFor(() => {
       expect(patientsApi.list).toHaveBeenLastCalledWith(
         expect.objectContaining({
           search: 'arta',
           gender: 'female',
+          isActive: true,
           bloodType: 'A_POSITIVE',
+          dateOfBirthFrom: '1995-01-01',
+          dateOfBirthTo: '1995-12-31',
         })
       );
     });
@@ -133,11 +144,46 @@ describe('PatientsPage', () => {
     renderPatients();
 
     fireEvent.click(await screen.findByRole('button', { name: 'Register Patient' }));
+    expect(screen.getByLabelText('Allergies').tagName).toBe('TEXTAREA');
+    expect(screen.getByRole('button', { name: 'Open calendar' })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Arta' } });
     fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'Krasniqi' } });
     fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'arta@example.com' } });
+    fireEvent.change(screen.getByLabelText('Personal number'), { target: { value: '1234567890' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Register patient' }).closest('form')!);
 
     expect(await screen.findByText('Patient email already registered')).toBeInTheDocument();
+  });
+
+  it('requires a personal number when registering a patient', async () => {
+    renderPatients();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Register Patient' }));
+    fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Arta' } });
+    fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'Krasniqi' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Register patient' }).closest('form')!);
+
+    expect(await screen.findByText('Personal number is required')).toBeInTheDocument();
+    expect(patientsApi.create).not.toHaveBeenCalled();
+  });
+
+  it('registers patients without exposing linked user ids in the payload', async () => {
+    renderPatients();
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Register Patient' }));
+    fireEvent.change(screen.getByLabelText('First name'), { target: { value: 'Arta' } });
+    fireEvent.change(screen.getByLabelText('Last name'), { target: { value: 'Krasniqi' } });
+    fireEvent.change(screen.getByLabelText('Personal number'), { target: { value: '1234567890' } });
+    fireEvent.submit(screen.getByRole('button', { name: 'Register patient' }).closest('form')!);
+
+    await waitFor(() => expect(patientsApi.create).toHaveBeenCalled());
+    const payload = vi.mocked(patientsApi.create).mock.calls[0][0];
+
+    expect(payload).toEqual(expect.objectContaining({
+      firstName: 'Arta',
+      lastName: 'Krasniqi',
+      personalNumber: '1234567890',
+    }));
+    expect(payload).not.toHaveProperty('userId');
   });
 });
