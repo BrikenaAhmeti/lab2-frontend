@@ -43,6 +43,9 @@ export interface PatientListParams {
   search?: string;
   gender?: string;
   bloodType?: BloodType;
+  isActive?: boolean;
+  dateOfBirthFrom?: string;
+  dateOfBirthTo?: string;
 }
 
 export interface PatientListResponse {

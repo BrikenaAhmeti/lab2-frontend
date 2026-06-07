@@ -68,6 +68,18 @@ describe('MedspereUbtAiAgentWidget', () => {
     });
   });
 
+  it('keeps the collapsed launcher hit area compact', () => {
+    renderWidget();
+
+    const launcher = screen.getByRole('button', { name: 'Open MedSphere UBT AI Agent' });
+    const floatingRoot = launcher.closest('.fixed');
+
+    expect(floatingRoot).toHaveClass('w-fit');
+    expect(floatingRoot).toHaveClass('pointer-events-none');
+    expect(launcher).toHaveClass('pointer-events-auto');
+    expect(floatingRoot).not.toHaveClass('sm:w-[368px]');
+  });
+
   it('opens from the dashboard and sends authenticated role-aware socket messages', async () => {
     renderWidget();
 

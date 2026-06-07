@@ -455,11 +455,16 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-3 z-40 sm:inset-x-auto sm:bottom-6 sm:right-6 sm:w-[368px]">
+    <div
+      className={clsx(
+        'pointer-events-none fixed bottom-3 right-3 z-40 sm:bottom-6 sm:right-6',
+        isOpen ? 'left-3 sm:left-auto sm:w-[368px]' : 'w-fit'
+      )}
+    >
       {isOpen ? (
         <section
           aria-label="MedSphere UBT AI Agent"
-          className="flex h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-lg border border-white/20 bg-card shadow-2xl ring-1 ring-primary/10 sm:h-[min(620px,calc(100dvh-3rem))]"
+          className="pointer-events-auto flex h-[calc(100dvh-1.5rem)] flex-col overflow-hidden rounded-lg border border-white/20 bg-card shadow-2xl ring-1 ring-primary/10 sm:h-[min(620px,calc(100dvh-3rem))]"
         >
           <header className="relative overflow-hidden bg-[linear-gradient(135deg,#2437f2_0%,#0bbce8_100%)] px-5 pb-10 pt-5 text-white">
             <div className="relative z-10 flex items-center justify-between gap-3">
@@ -606,7 +611,7 @@ export default function MedspereUbtAiAgentWidget({ portalTitle }: MedspereUbtAiA
         <div className="flex justify-end">
           <button
             type="button"
-            className="grid h-14 w-14 place-items-center rounded-full bg-[#1463ff] text-white shadow-2xl ring-1 ring-white/30 transition hover:-translate-y-0.5 hover:bg-[#0f55dd]"
+            className="pointer-events-auto grid h-14 w-14 place-items-center rounded-full bg-[#1463ff] text-white shadow-2xl ring-1 ring-white/30 transition hover:-translate-y-0.5 hover:bg-[#0f55dd]"
             aria-label="Open MedSphere UBT AI Agent"
             title="Open AI assistant"
             onClick={() => setIsOpen((current) => !current)}

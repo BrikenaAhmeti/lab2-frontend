@@ -20,6 +20,8 @@ export const workingHourDays = [
 
 const defaultStartTime = '09:00';
 const defaultEndTime = '17:00';
+const weekdayDayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+const weekendDayKeys = ['saturday', 'sunday'];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value && typeof value === 'object' && !Array.isArray(value));
@@ -41,6 +43,28 @@ function normalizeDayKey(value: unknown) {
   const match = workingHourDays.find((day) => day.day === compact || day.label.toLowerCase() === compact || day.day.startsWith(compact.slice(0, 3)));
 
   return match?.day ?? '';
+}
+
+function dayKeysFromKey(value: unknown) {
+  const raw = text(value).toLowerCase();
+  if (!raw) return [];
+
+  const compact = raw.replace(/[^a-z]/g, '');
+
+  if (['weekday', 'weekdays', 'businessday', 'businessdays', 'mondayfriday', 'monfri'].includes(compact)) {
+    return weekdayDayKeys;
+  }
+
+  if (['weekend', 'weekends', 'saturdaysunday', 'satsun'].includes(compact)) {
+    return weekendDayKeys;
+  }
+
+  if (['daily', 'everyday', 'everydayhours', 'allday', 'alldays', 'week'].includes(compact)) {
+    return workingHourDays.map(({ day }) => day);
+  }
+
+  const day = normalizeDayKey(value);
+  return day ? [day] : [];
 }
 
 function splitTimeRange(value: unknown) {
@@ -136,9 +160,9 @@ export function normalizeWorkingHours(value: unknown): WorkingHoursRow[] {
     });
   } else if (isRecord(source)) {
     Object.entries(source).forEach(([key, item]) => {
-      const day = normalizeDayKey(key);
-      if (!day) return;
-      rows.set(day, rowFromUnknown(day, item));
+      dayKeysFromKey(key).forEach((day) => {
+        rows.set(day, rowFromUnknown(day, item));
+      });
     });
   }
 
