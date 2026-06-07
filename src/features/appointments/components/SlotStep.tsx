@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { AvailableSlot } from '@/lib/api/appointments-api';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import SlotPicker from './SlotPicker';
 import { getTodayInputValue } from './appointmentFormat';
 
@@ -23,8 +24,20 @@ function formatCountdown(seconds: number) {
 }
 
 function parseDateInput(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return null;
+
+  const [, yearValue, monthValue, dayValue] = match;
+  const year = Number(yearValue);
+  const month = Number(monthValue) - 1;
+  const day = Number(dayValue);
+  const parsedDate = new Date(year, month, day);
+
+  if (parsedDate.getFullYear() !== year || parsedDate.getMonth() !== month || parsedDate.getDate() !== day) {
+    return null;
+  }
+
+  return parsedDate;
 }
 
 function formatDateInput(value: Date) {
@@ -61,20 +74,21 @@ export default function SlotStep({
 }: SlotStepProps) {
   const today = getTodayInputValue();
   const [visibleMonth, setVisibleMonth] = useState(() => {
-    const parsedDate = parseDateInput(date);
+    const parsedDate = parseDateInput(date) ?? new Date();
     return new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1);
   });
   const calendarDays = useMemo(() => getCalendarDays(visibleMonth), [visibleMonth]);
-  const selectedDateLabel = useMemo(
-    () =>
-      new Intl.DateTimeFormat(undefined, {
-        weekday: 'long',
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      }).format(parseDateInput(date)),
-    [date]
-  );
+  const selectedDateLabel = useMemo(() => {
+    const parsedDate = parseDateInput(date);
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    return parsedDate ? formatter.format(parsedDate) : 'Select a date';
+  }, [date]);
   const monthLabel = useMemo(
     () =>
       new Intl.DateTimeFormat(undefined, {
@@ -97,7 +111,9 @@ export default function SlotStep({
   const handleDateInput = (nextValue: string) => {
     onDateChange(nextValue);
     const parsedDate = parseDateInput(nextValue);
-    setVisibleMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
+    if (parsedDate) {
+      setVisibleMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
+    }
   };
 
   return (
@@ -172,16 +188,15 @@ export default function SlotStep({
           })}
         </div>
 
-        <label className="mt-4 block space-y-1.5">
-          <span className="text-sm font-medium text-foreground">Date</span>
-          <input
-            type="date"
-            min={today}
-            value={date}
-            onChange={(event) => handleDateInput(event.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
-          />
-        </label>
+        <CalendarDatePicker
+          id="booking-slot-date"
+          label="Date"
+          value={date}
+          min={today}
+          required
+          className="mt-4 sm:w-64"
+          onChange={handleDateInput}
+        />
       </section>
 
       <section className="rounded-xl border border-border bg-background p-4" aria-labelledby="available-times-title">

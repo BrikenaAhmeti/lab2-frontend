@@ -6,6 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
+import CalendarDateTimePicker from '@/ui/molecules/CalendarDateTimePicker';
 import { sessionsApi, type SessionDto, type SessionLogDto, type SessionUserDto } from '@/lib/api/auth-api';
 import { useAppSelector } from '@/app/hooks';
 import { hasAnyRole } from '@/features/auth/utils/permission';
@@ -445,24 +446,14 @@ export default function SessionsPage() {
                   ))}
                 </select>
               </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
-                From
-                <input
-                  type="datetime-local"
-                  value={filters.from}
-                  onChange={(event) => updateFilter('from', event.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
-                To
-                <input
-                  type="datetime-local"
-                  value={filters.to}
-                  onChange={(event) => updateFilter('to', event.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
+              <CalendarDateTimePicker label="From" id="session-log-from" value={filters.from} onChange={(value) => updateFilter('from', value)} />
+              <CalendarDateTimePicker
+                label="To"
+                id="session-log-to"
+                value={filters.to}
+                defaultTime="23:59"
+                onChange={(value) => updateFilter('to', value)}
+              />
               <label className="space-y-1 text-xs font-medium text-muted">
                 Change or detail
                 <div className="flex gap-2">

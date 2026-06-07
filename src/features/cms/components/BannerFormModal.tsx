@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
+import CalendarDateTimePicker from '@/ui/molecules/CalendarDateTimePicker';
 import type { CmsBanner } from '@/lib/api/cms-api';
 import {
   cmsBannerFormSchema,
@@ -32,6 +33,8 @@ export default function BannerFormModal({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<CmsBannerFormValues>({
     resolver: zodResolver(cmsBannerFormSchema),
@@ -49,6 +52,9 @@ export default function BannerFormModal({
   if (!open) {
     return null;
   }
+
+  const startDate = watch('startDate') ?? '';
+  const endDate = watch('endDate') ?? '';
 
   return (
     <div className="fixed inset-0 z-20 grid place-items-center bg-black/40 p-4">
@@ -79,21 +85,22 @@ export default function BannerFormModal({
               error={errors.linkUrl?.message}
               {...register('linkUrl')}
             />
-            <Input
+            <CalendarDateTimePicker
               id="cms-banner-start-date"
               label="Start Date"
-              type="datetime-local"
+              value={startDate}
               disabled={loading}
               error={errors.startDate?.message}
-              {...register('startDate')}
+              onChange={(value) => setValue('startDate', value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
             />
-            <Input
+            <CalendarDateTimePicker
               id="cms-banner-end-date"
               label="End Date"
-              type="datetime-local"
+              value={endDate}
+              defaultTime="23:59"
               disabled={loading}
               error={errors.endDate?.message}
-              {...register('endDate')}
+              onChange={(value) => setValue('endDate', value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
             />
             <label className="flex items-center gap-2 text-sm font-medium text-foreground">
               <input type="checkbox" className="h-4 w-4 rounded border-border" disabled={loading} {...register('isActive')} />

@@ -21,6 +21,7 @@ import { pharmacyQueueStatusFilters } from '@/lib/api/pharmacy-api';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import Pagination from '@/ui/molecules/Pagination';
 
@@ -204,12 +205,12 @@ export default function PharmacyDashboardPage() {
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Patient, doctor, or medication"
         />
-        <Input
+        <CalendarDatePicker
           id="pharmacy-requested-date"
           label="Requested date"
-          type="date"
           value={requestedDate}
-          onChange={(event) => setRequestedDate(event.target.value)}
+          placeholder="Any requested date"
+          onChange={setRequestedDate}
         />
       </div>
 

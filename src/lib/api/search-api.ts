@@ -33,6 +33,7 @@ export interface PatientSearchItem {
   userId: string | null;
   firstName: string;
   lastName: string;
+  personalNumber?: string | null;
   email: string | null;
   phone: string | null;
   dateOfBirth: string | null;

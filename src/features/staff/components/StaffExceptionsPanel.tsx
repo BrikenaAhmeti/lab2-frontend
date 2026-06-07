@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
 import Input from '@/ui/atoms/Input';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
   getApiErrorMessage,
@@ -67,7 +68,7 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
       {error ? <FeedbackMessage type="error" message={error} /> : null}
 
       <div className="grid gap-3 md:grid-cols-[180px_1fr_auto_auto]">
-        <Input id="staff-exception-date" label="Date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+        <CalendarDatePicker id="staff-exception-date" label="Date" value={date} onChange={setDate} />
         <Input id="staff-exception-reason" label="Reason" value={reason} onChange={(event) => setReason(event.target.value)} />
         <label htmlFor="staff-exception-working" className="flex items-end gap-2 pb-3 text-sm font-medium text-foreground">
           <input

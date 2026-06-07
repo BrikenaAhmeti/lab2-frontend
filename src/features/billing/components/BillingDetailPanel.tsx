@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Download } from 'lucide-react';
 import { PdfDocumentPanel, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import Button from '@/ui/atoms/Button';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import { formatCurrency } from '@/utils/formatters/currency';
 import type { BillingView, UpdateBillingPayload } from '@/lib/api/billing-api';
@@ -276,16 +277,7 @@ export default function BillingDetailPanel({
                 className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </label>
-            <label htmlFor="billing-due-date" className="block space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Due date</span>
-              <input
-                id="billing-due-date"
-                type="date"
-                value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-            </label>
+            <CalendarDatePicker id="billing-due-date" label="Due date" value={dueDate} onChange={setDueDate} />
             <label htmlFor="billing-manual-description" className="block space-y-1.5 md:col-span-2">
               <span className="text-sm font-medium text-foreground">Manual item</span>
               <input

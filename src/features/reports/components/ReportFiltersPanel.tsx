@@ -1,5 +1,5 @@
-import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { ServiceRecord } from '@/lib/api/services-api';
 import type { StaffRecord } from '@/lib/api/staff-api';
@@ -63,19 +63,23 @@ export default function ReportFiltersPanel({
             ))}
           </select>
         </label>
-        <Input
+        <CalendarDatePicker
           id="report-from"
-          label="From"
-          type="date"
+          label="Start date"
           value={filters.from}
-          onChange={(event) => onChange({ from: event.target.value })}
+          max={filters.to || undefined}
+          disabled={loading}
+          placeholder="Any start date"
+          onChange={(value) => onChange({ from: value })}
         />
-        <Input
+        <CalendarDatePicker
           id="report-to"
-          label="To"
-          type="date"
+          label="End date"
           value={filters.to}
-          onChange={(event) => onChange({ to: event.target.value })}
+          min={filters.from || undefined}
+          disabled={loading}
+          placeholder="Any end date"
+          onChange={(value) => onChange({ to: value })}
         />
       </div>
 

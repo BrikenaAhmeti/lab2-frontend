@@ -187,7 +187,7 @@ export default function ReportBuilderPage() {
                   leftIcon={<Save size={16} />}
                   onClick={openTemplateModal}
                 >
-                  Save Template
+                  Save report template
                 </Button>
                 <Button
                   type="button"
@@ -197,7 +197,7 @@ export default function ReportBuilderPage() {
                   loading={exportMutation.isPending}
                   onClick={exportPdf}
                 >
-                  PDF
+                  Download PDF
                 </Button>
                 <Button
                   type="button"
@@ -207,7 +207,7 @@ export default function ReportBuilderPage() {
                   loading={exportMutation.isPending}
                   onClick={exportCsv}
                 >
-                  CSV
+                  Export CSV
                 </Button>
                 <Button
                   type="button"
@@ -217,7 +217,7 @@ export default function ReportBuilderPage() {
                   loading={exportMutation.isPending}
                   onClick={exportExcel}
                 >
-                  Excel
+                  Export Excel
                 </Button>
               </div>
             }
@@ -239,7 +239,7 @@ export default function ReportBuilderPage() {
           </Card>
 
           <Card
-            title="PDF Preview"
+            title="Branded PDF Preview"
             subtitle={report ? `${report.title} - generated ${generatedAtLabel}` : 'Generate a report to preview the branded PDF layout'}
           >
             {generateMutation.isPending ? <TableSkeleton rows={5} columns={4} /> : null}
@@ -264,7 +264,7 @@ export default function ReportBuilderPage() {
                   { label: 'Report type', value: reportTypeLabels[report.type] },
                   { label: 'Grouped by', value: formatOptionLabel(report.groupBy) },
                   { label: 'Rows', value: report.rows.length },
-                  { label: 'Format', value: 'PDF export' },
+                  { label: 'Export style', value: 'Branded PDF' },
                 ]}
               >
                 <PdfSection title="Summary" accent="teal">

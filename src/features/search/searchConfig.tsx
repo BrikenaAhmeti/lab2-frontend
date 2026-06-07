@@ -57,7 +57,7 @@ function enumBadge(value?: string | boolean | null) {
   return <Badge variant={statusVariant(String(value))}>{text}</Badge>;
 }
 
-function detailBlock(title: string, detail?: string | null) {
+function detailBlock(title?: string | null, detail?: string | null) {
   return (
     <div>
       <p className="font-medium text-foreground">{fallback(title)}</p>
@@ -110,7 +110,9 @@ function truncate(value: string, maxLength = 88) {
   return value.length > maxLength ? `${value.slice(0, maxLength - 1)}...` : value;
 }
 
-function formatFieldLabel(value: string) {
+function formatFieldLabel(value?: string | null) {
+  if (!value) return '-';
+
   const normalized = value
     .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
     .replace(/[.:-]/g, '_')
@@ -222,8 +224,8 @@ function auditActor(item: AuditLogSearchItem) {
   };
 }
 
-function auditActionVariant(action: string): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
-  const normalized = action.toLowerCase();
+function auditActionVariant(action?: string | null): 'success' | 'warning' | 'danger' | 'info' | 'neutral' {
+  const normalized = action?.toLowerCase() ?? '';
 
   if (normalized.includes('delete') || normalized.includes('terminate') || normalized.includes('deactivate')) return 'danger';
   if (normalized.includes('fail') || normalized.includes('denied') || normalized.includes('error')) return 'danger';
@@ -235,6 +237,8 @@ function auditActionVariant(action: string): 'success' | 'warning' | 'danger' | 
 }
 
 function renderAuditAction(item: AuditLogSearchItem) {
+  if (!item.action) return <span className="text-muted">-</span>;
+
   return (
     <div className="space-y-1">
       <Badge variant={auditActionVariant(item.action)}>{titleEnum(item.action)}</Badge>
@@ -350,6 +354,7 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
           return detailBlock(`${item.firstName} ${item.lastName}`, item.phone);
         },
       },
+      { key: 'personalNumber', label: 'Personal number', sortBy: 'personalNumber', render: (row) => fallback(patient(row).personalNumber) },
       { key: 'email', label: 'Email', sortBy: 'email', render: (row) => fallback(patient(row).email) },
       { key: 'age', label: 'Age', sortBy: 'age', render: (row) => fallback(patient(row).age) },
       { key: 'gender', label: 'Gender', render: (row) => titleEnum(patient(row).gender) },
@@ -379,7 +384,7 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
         sortBy: 'patientName',
         render: (row) => {
           const item = appointment(row);
-          return detailBlock(item.patient.name, item.patient.email ?? item.patient.phone);
+          return detailBlock(item.patient?.name, item.patient?.email ?? item.patient?.phone);
         },
       },
       {
@@ -393,8 +398,8 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
       },
       { key: 'status', label: 'Status', sortBy: 'status', render: (row) => enumBadge(appointment(row).status) },
       { key: 'scheduledAt', label: 'Scheduled', sortBy: 'scheduledAt', render: (row) => dateCell(appointment(row).scheduledAt) },
-      { key: 'department', label: 'Department', sortBy: 'department', render: (row) => appointment(row).department.name },
-      { key: 'service', label: 'Service', sortBy: 'service', render: (row) => appointment(row).service.name },
+      { key: 'department', label: 'Department', sortBy: 'department', render: (row) => fallback(appointment(row).department?.name) },
+      { key: 'service', label: 'Service', sortBy: 'service', render: (row) => fallback(appointment(row).service?.name) },
     ],
   },
   {
@@ -427,10 +432,10 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
         sortBy: 'patientName',
         render: (row) => {
           const item = labOrder(row);
-          return detailBlock(item.patient.name, item.patient.email ?? item.patient.phone);
+          return detailBlock(item.patient?.name, item.patient?.email ?? item.patient?.phone);
         },
       },
-      { key: 'doctor', label: 'Doctor', sortBy: 'doctor', render: (row) => labOrder(row).orderedByStaff.displayName },
+      { key: 'doctor', label: 'Doctor', sortBy: 'doctor', render: (row) => fallback(labOrder(row).orderedByStaff?.displayName) },
       { key: 'status', label: 'Status', sortBy: 'status', render: (row) => enumBadge(labOrder(row).status) },
       { key: 'priority', label: 'Priority', sortBy: 'priority', render: (row) => enumBadge(labOrder(row).priority) },
       { key: 'tests', label: 'Tests', render: (row) => fallback(labOrder(row).testCount) },
@@ -463,11 +468,21 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
           return detailBlock(item.name, item.sku);
         },
       },
-      { key: 'stock', label: 'Stock', sortBy: 'currentStock', render: (row) => `${inventoryItem(row).currentStock} ${inventoryItem(row).unitOfMeasure}` },
+      {
+        key: 'stock',
+        label: 'Stock',
+        sortBy: 'currentStock',
+        render: (row) => {
+          const item = inventoryItem(row);
+          return item.currentStock === undefined || item.currentStock === null
+            ? '-'
+            : `${item.currentStock} ${fallback(item.unitOfMeasure)}`;
+        },
+      },
       { key: 'reorder', label: 'Reorder', sortBy: 'reorderLevel', render: (row) => fallback(inventoryItem(row).reorderLevel) },
       { key: 'stockLevel', label: 'Level', render: (row) => enumBadge(inventoryItem(row).stockLevel) },
-      { key: 'category', label: 'Category', sortBy: 'category', render: (row) => inventoryItem(row).category.name },
-      { key: 'department', label: 'Department', render: (row) => inventoryItem(row).department?.name ?? '-' },
+      { key: 'category', label: 'Category', sortBy: 'category', render: (row) => fallback(inventoryItem(row).category?.name) },
+      { key: 'department', label: 'Department', render: (row) => fallback(inventoryItem(row).department?.name) },
       { key: 'expiryDate', label: 'Expiry', sortBy: 'expiryDate', render: (row) => dateCell(inventoryItem(row).expiryDate, false) },
     ],
   },
@@ -493,13 +508,13 @@ export const searchResourceConfigs: SearchResourceConfig[] = [
           return detailBlock(item.displayName, item.employeeCode);
         },
       },
-      { key: 'position', label: 'Position', sortBy: 'positionType', render: (row) => staff(row).positionType.name },
+      { key: 'position', label: 'Position', sortBy: 'positionType', render: (row) => fallback(staff(row).positionType?.name) },
       { key: 'specialization', label: 'Specialization', sortBy: 'specialization', render: (row) => fallback(staff(row).specialization) },
       {
         key: 'departments',
         label: 'Departments',
         render: (row) => {
-          const departments = staff(row).departments;
+          const departments = staff(row).departments ?? [];
           return departments.length ? (
             <div className="flex flex-wrap gap-1.5">
               {departments.map((department) => (

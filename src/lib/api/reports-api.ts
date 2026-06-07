@@ -92,6 +92,11 @@ function filenameFromDisposition(disposition: unknown, fallback: string) {
   return plain ?? fallback;
 }
 
+function formatReportFilename(type: ReportType, format: ReportExportFormat) {
+  const date = new Date().toISOString().slice(0, 10);
+  return `medsphere-${type}-report-${date}.${format}`;
+}
+
 export const reportsApi = {
   generateReport(type: ReportType, filters: ReportFilters, instance?: AxiosInstance) {
     return client(instance)
@@ -108,7 +113,7 @@ export const reportsApi = {
       params: cleanParams(filters, format),
       responseType: 'blob',
     });
-    const fallback = `${type}-report.${format}`;
+    const fallback = formatReportFilename(type, format);
 
     return {
       blob: response.data,

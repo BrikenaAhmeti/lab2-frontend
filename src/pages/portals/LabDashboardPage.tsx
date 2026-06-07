@@ -6,6 +6,7 @@ import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import type { EnterLabResultsPayload, LabOrderStatus, LabOrderView } from '@/lib/api/lab-api';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
@@ -199,12 +200,11 @@ export default function LabDashboardPage() {
                   onChange={(event) => setCompletedSearch(event.target.value)}
                   placeholder="Patient or test"
                 />
-                <Input
+                <CalendarDatePicker
                   id="completed-lab-date"
-                  type="date"
                   label="Completed date"
                   value={completedDate}
-                  onChange={(event) => setCompletedDate(event.target.value || today.date)}
+                  onChange={(value) => setCompletedDate(value || today.date)}
                 />
               </div>
             }

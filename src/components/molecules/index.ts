@@ -5,6 +5,8 @@ export { default as BirthdayField } from './BirthdayField';
 export type { BirthdayFieldProps } from './BirthdayField';
 export { default as CalendarDatePicker } from './CalendarDatePicker';
 export type { CalendarDatePickerProps } from './CalendarDatePicker';
+export { default as CalendarDateTimePicker } from './CalendarDateTimePicker';
+export type { CalendarDateTimePickerProps } from './CalendarDateTimePicker';
 export { default as DateModeFilter } from './DateModeFilter';
 export {
   dateModeFilterToRange,

@@ -1,5 +1,6 @@
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 
 export interface SearchFilterOption {
   value: string;
@@ -12,8 +13,8 @@ export interface SearchFilterField {
   type?: 'text' | 'select' | 'date' | 'number';
   placeholder?: string;
   options?: SearchFilterOption[];
-  min?: number;
-  max?: number;
+  min?: number | string;
+  max?: number | string;
   clientOnly?: boolean;
 }
 
@@ -56,6 +57,10 @@ function SelectFilter({
       </select>
     </label>
   );
+}
+
+function dateBoundary(value?: number | string) {
+  return typeof value === 'string' ? value : undefined;
 }
 
 export default function SearchFilterBar({
@@ -102,6 +107,17 @@ export default function SearchFilterBar({
                 key={field.name}
                 field={field}
                 value={filters[field.name] ?? ''}
+                onChange={(value) => onFilterChange(field.name, value)}
+              />
+            ) : field.type === 'date' ? (
+              <CalendarDatePicker
+                key={field.name}
+                id={`filter-${field.name}`}
+                label={field.label}
+                value={filters[field.name] ?? ''}
+                min={dateBoundary(field.min)}
+                max={dateBoundary(field.max)}
+                placeholder={field.placeholder}
                 onChange={(value) => onFilterChange(field.name, value)}
               />
             ) : (

@@ -1,5 +1,6 @@
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
+import BirthdayField from '@/ui/molecules/BirthdayField';
 import RoleCheckboxGroup from '@/ui/molecules/RoleCheckboxGroup';
 
 interface CreateUserValues {
@@ -62,7 +63,14 @@ export default function CreateUserModal({
           <Input id="create-user-last-name" label={labels.lastName} value={values.lastName} onChange={(e) => onChange('lastName', e.target.value)} error={errors.lastName} />
           <Input id="create-user-email" label={labels.email} value={values.email} onChange={(e) => onChange('email', e.target.value)} error={errors.email} />
           <Input id="create-user-phone" label={labels.phone} value={values.phone} onChange={(e) => onChange('phone', e.target.value)} />
-          <Input id="create-user-date-of-birth" label={labels.dateOfBirth} value={values.dateOfBirth} onChange={(e) => onChange('dateOfBirth', e.target.value)} />
+          <BirthdayField
+            id="create-user-date-of-birth"
+            label={labels.dateOfBirth}
+            value={values.dateOfBirth}
+            onChange={(value) => onChange('dateOfBirth', value)}
+            error={errors.dateOfBirth}
+            autoComplete="bday"
+          />
           <Input id="create-user-gender" label={labels.gender} value={values.gender} onChange={(e) => onChange('gender', e.target.value)} />
           <Input id="create-user-personal-number" label={labels.personalNumber} value={values.personalNumber} onChange={(e) => onChange('personalNumber', e.target.value)} />
         </div>

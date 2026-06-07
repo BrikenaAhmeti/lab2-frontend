@@ -6,7 +6,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import AdvancedSearchPage from '@/features/search/pages/AdvancedSearchPage';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/features/auth/authSlice';
-import { advancedSearchApi, type AuditLogSearchItem, type PatientSearchItem, type SearchParams } from '@/lib/api/search-api';
+import {
+  advancedSearchApi,
+  type AuditLogSearchItem,
+  type PatientSearchItem,
+  type SearchParams,
+  type SearchResource,
+} from '@/lib/api/search-api';
 
 vi.mock('@/lib/api/search-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/search-api')>('@/lib/api/search-api');
@@ -24,6 +30,7 @@ const patient: PatientSearchItem = {
   userId: 'user-1',
   firstName: 'Arta',
   lastName: 'Krasniqi',
+  personalNumber: '1234567890',
   email: 'arta@example.com',
   phone: '+38344111222',
   dateOfBirth: '1995-04-10T00:00:00.000Z',
@@ -64,6 +71,69 @@ const auditLog = {
   },
   timestamp: '2026-01-12T10:00:00.000Z',
 } satisfies AuditLogSearchItem & { user: { id: string; firstName: string; lastName: string; email: string } };
+
+const partialSearchRows: Partial<Record<SearchResource, unknown[]>> = {
+  appointments: [
+    {
+      id: 'appointment-1',
+      patient: {
+        id: 'patient-2',
+        name: 'Mira Imeri',
+        email: 'mira@example.com',
+        phone: null,
+      },
+      staff: null,
+      status: 'SCHEDULED',
+      scheduledAt: '2026-01-15T09:00:00.000Z',
+    },
+  ],
+  'lab-orders': [
+    {
+      id: 'lab-order-1',
+      patient: {
+        id: 'patient-3',
+        name: 'Leart Gashi',
+        email: null,
+        phone: '+38344123456',
+      },
+      status: 'PENDING',
+      priority: null,
+      hasCritical: false,
+      testCount: 2,
+      orderedAt: '2026-01-16T10:00:00.000Z',
+    },
+  ],
+  'inventory-items': [
+    {
+      id: 'inventory-1',
+      name: 'CBC Tube',
+      sku: 'LAB-CBC-1',
+      currentStock: 5,
+      unitOfMeasure: 'boxes',
+      reorderLevel: 10,
+      stockLevel: 'low',
+      expiryDate: null,
+    },
+  ],
+  staff: [
+    {
+      id: 'staff-1',
+      displayName: 'Drin Hoxha',
+      employeeCode: 'EMP-001',
+      specialization: null,
+      employmentStatus: 'ACTIVE',
+      hireDate: null,
+    },
+  ],
+  'audit-logs': [
+    {
+      id: 'audit-partial-1',
+      entityId: 'record-1',
+      userId: 'system-user',
+      timestamp: '2026-01-17T10:00:00.000Z',
+    },
+  ],
+};
 
 function setAdminSession() {
   store.dispatch(clearSession());
@@ -125,6 +195,7 @@ describe('AdvancedSearchPage', () => {
     renderSearch('/admin/search/patients?q=arta&page=2&bloodType=A_POSITIVE&sortBy=lastName&sortOrder=asc');
 
     expect(await screen.findByText('Arta Krasniqi')).toBeInTheDocument();
+    expect(screen.getByText('1234567890')).toBeInTheDocument();
     expect(screen.getByLabelText('Search')).toHaveValue('arta');
 
     expect(advancedSearchApi.search).toHaveBeenCalledWith(
@@ -213,5 +284,25 @@ describe('AdvancedSearchPage', () => {
         changedField: 'defaultPrice',
       })
     );
+  });
+
+  it.each([
+    ['appointments', 'Mira Imeri'],
+    ['lab-orders', 'Leart Gashi'],
+    ['inventory-items', 'CBC Tube'],
+    ['staff', 'Drin Hoxha'],
+    ['audit-logs', 'system-user'],
+  ] satisfies Array<[SearchResource, string]>)('renders %s results when optional relation data is missing', async (resource, expectedText) => {
+    vi.mocked(advancedSearchApi.search).mockImplementation(async (requestedResource, params: SearchParams) => ({
+      data: partialSearchRows[requestedResource] ?? [],
+      total: 1,
+      page: Number(params.page ?? 1),
+      limit: Number(params.limit ?? 10),
+      totalPages: 1,
+    }));
+
+    renderSearch(`/admin/search/${resource}`);
+
+    expect(await screen.findByText(expectedText)).toBeInTheDocument();
   });
 });
