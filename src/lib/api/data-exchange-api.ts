@@ -10,6 +10,7 @@ export const exportEntities = [
   'billings',
   'audit-logs',
   'service-catalog',
+  'staff',
 ] as const;
 export const importEntities = ['patients', 'inventory-items', 'lab-tests', 'service-catalog', 'staff'] as const;
 export const importModes = ['strict', 'lenient'] as const;

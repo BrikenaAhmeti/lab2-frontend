@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
-import { getStaffEmail, getStaffName, getStaffStatus } from '@/features/staff/hooks/useStaff';
+import { getStaffDepartmentName, getStaffEmail, getStaffName, getStaffStatus } from '@/features/staff/hooks/useStaff';
 import type { StaffRecord } from '@/lib/api/staff-api';
 
 interface StaffDirectoryTableProps {
@@ -42,7 +42,7 @@ function StaffDirectoryTable({ rows, loading, onDeactivate }: StaffDirectoryTabl
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1.5">
                     {staff.departments?.length ? (
-                      staff.departments.map((department) => <Badge key={department.id}>{department.name}</Badge>)
+                      staff.departments.map((department) => <Badge key={department.id}>{getStaffDepartmentName(department)}</Badge>)
                     ) : (
                       <span className="text-muted">-</span>
                     )}

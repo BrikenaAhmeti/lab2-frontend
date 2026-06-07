@@ -34,4 +34,14 @@ describe('staffApi', () => {
       params: { page: 1, limit: 25, status: 'ON_LEAVE' },
     });
   });
+
+  it('uses the non-redirecting staff detail request for public previews', async () => {
+    const instance = mockClient();
+
+    await staffApi.preview('staff-1', instance);
+
+    expect(instance.get).toHaveBeenCalledWith('/api/staff/staff-1', {
+      skipLoginRedirect: true,
+    });
+  });
 });

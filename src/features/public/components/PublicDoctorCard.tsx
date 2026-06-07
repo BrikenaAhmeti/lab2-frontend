@@ -28,6 +28,7 @@ export default function PublicDoctorCard({ staff, index = 0 }: PublicDoctorCardP
   const tags = getPublicStaffTags(staff);
   const gradient = palette[index % palette.length];
   const footerLabel = staff.employeeCode && staff.employeeCode !== name ? staff.employeeCode : 'Verified staff';
+  const profileLabel = staff.isPublicProfile === false ? 'Staff preview' : 'Public profile';
 
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-lg border border-border bg-card shadow-panel transition hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-soft">
@@ -39,7 +40,7 @@ export default function PublicDoctorCard({ staff, index = 0 }: PublicDoctorCardP
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/14 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-white/20">
             <BadgeCheck className="h-3.5 w-3.5" aria-hidden="true" />
-            Public profile
+            {profileLabel}
           </span>
         </div>
         <div className="relative mt-7">

@@ -1,5 +1,6 @@
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
@@ -73,7 +74,14 @@ export default function StaffProfilePage() {
 
   return (
     <div className="space-y-4">
-      <Breadcrumbs items={[{ label: 'Admin', to: '/admin' }, { label: 'Staff Directory', to: '/admin/staff' }, { label: 'Profile' }]} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Breadcrumbs items={[{ label: 'Admin', to: '/admin' }, { label: 'Staff Directory', to: '/admin/staff' }, { label: 'Profile' }]} />
+        <Link to="/admin/staff">
+          <Button type="button" variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}>
+            Back to staff
+          </Button>
+        </Link>
+      </div>
 
       {staffQuery.isLoading ? <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading staff profile...</div> : null}
       {staffQuery.isError ? <FeedbackMessage type="error" message={getApiErrorMessage(staffQuery.error, 'Staff profile could not be loaded')} /> : null}
@@ -84,7 +92,7 @@ export default function StaffProfilePage() {
           subtitle="Profile, departments, schedules, and exceptions"
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link to={`/doctors?staffId=${staffQuery.data.id}`} target="_blank" rel="noreferrer">
+              <Link to={`/doctors?staffId=${staffQuery.data.id}&preview=staff`} target="_blank" rel="noreferrer">
                 <Button type="button" variant="secondary">Public preview</Button>
               </Link>
               <Button type="button" variant="danger" onClick={() => setStaffToDeactivate(staffQuery.data)}>

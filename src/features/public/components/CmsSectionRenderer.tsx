@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import type { CmsSection } from '@/lib/api/cms-api';
 import { usePublicStaffList } from '@/features/staff/hooks/useStaff';
+import { usePublicDepartments } from '@/features/public/hooks/usePublicCatalog';
 import PublicDoctorCard from './PublicDoctorCard';
 import { isDoctorProfile } from '../utils/publicStaffPresentation';
 import { safeHref, safeImageSrc } from '@/utils/safeUrl';
@@ -102,6 +103,12 @@ function contentText(content: unknown, key: string) {
 
 function contentRecord(content: unknown, key: string) {
   return isMap(content) && isMap(content[key]) ? content[key] : null;
+}
+
+function contentStringArray(content: unknown, key: string) {
+  if (!isMap(content) || !Array.isArray(content[key])) return [];
+
+  return content[key].map(text).filter(Boolean);
 }
 
 function IconBadge({ icon }: { icon?: unknown }) {
@@ -335,11 +342,32 @@ function ServiceCardsSection({ section }: { section: CmsSection }) {
 }
 
 function DoctorCardsSection({ section }: { section: CmsSection }) {
-  const filters = isMap(section.content) && Array.isArray(section.content.filters) ? section.content.filters.map(text).filter(Boolean) : [];
+  const filters = contentStringArray(section.content, 'filters');
+  const selectedDoctorIds = [
+    ...contentStringArray(section.content, 'doctorIds'),
+    ...contentStringArray(section.content, 'staffIds'),
+  ];
+  const selectedDepartmentIds = contentStringArray(section.content, 'departmentIds');
   const limitValue = Number(isMap(section.content) ? numberText(section.content.limit) ?? 0 : 0);
   const limit = Number.isFinite(limitValue) && limitValue > 0 ? limitValue : 4;
-  const staffQuery = usePublicStaffList({ page: 1, limit: 24 });
-  const doctors = (staffQuery.data?.items ?? []).filter(isDoctorProfile).slice(0, limit);
+  const staffQuery = usePublicStaffList({ page: 1, limit: 100 });
+  const selectedDoctorIdSet = new Set(selectedDoctorIds);
+  const selectedDepartmentIdSet = new Set(selectedDepartmentIds);
+  const doctors = (staffQuery.data?.items ?? [])
+    .filter(isDoctorProfile)
+    .filter((staff) => selectedDoctorIdSet.size === 0 || selectedDoctorIdSet.has(staff.id))
+    .filter(
+      (staff) =>
+        selectedDepartmentIdSet.size === 0 ||
+        (staff.departments ?? []).some((department) =>
+          selectedDepartmentIdSet.has(department.departmentId ?? department.department?.id ?? department.id),
+        ),
+    )
+    .sort((first, second) => {
+      if (selectedDoctorIds.length === 0) return 0;
+      return selectedDoctorIds.indexOf(first.id) - selectedDoctorIds.indexOf(second.id);
+    })
+    .slice(0, limit);
 
   if (staffQuery.isError) {
     return (
@@ -390,39 +418,71 @@ function DoctorCardsSection({ section }: { section: CmsSection }) {
 }
 
 function DepartmentCardsSection({ section }: { section: CmsSection }) {
-  const departments = asArray(section.content, 'departments');
+  const staticDepartments = asArray(section.content, 'departments');
+  const selectedDepartmentIds = contentStringArray(section.content, 'departmentIds');
+  const selectedDepartmentIdSet = new Set(selectedDepartmentIds);
+  const departmentsQuery = usePublicDepartments();
+  const departments = (departmentsQuery.data?.items ?? [])
+    .filter((department) => selectedDepartmentIdSet.size === 0 || selectedDepartmentIdSet.has(department.id))
+    .sort((first, second) => {
+      if (selectedDepartmentIds.length === 0) return (first.sortOrder ?? 0) - (second.sortOrder ?? 0);
+      return selectedDepartmentIds.indexOf(first.id) - selectedDepartmentIds.indexOf(second.id);
+    });
 
-  if (departments.length === 0) return <SectionText section={section} />;
+  if (departmentsQuery.isError && staticDepartments.length === 0) {
+    return (
+      <SectionShell tone="surface">
+        <SectionHeading section={section} />
+        <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm text-muted">
+          Public departments are not available right now.
+        </div>
+      </SectionShell>
+    );
+  }
 
   return (
     <SectionShell tone="surface">
       <SectionHeading section={section} />
       <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {departments.map((department, index) => {
-          const services = Array.isArray(department.services) ? department.services.map(text).filter(Boolean) : [];
-
-          return (
-            <article key={`${text(department.title) ?? index}`} className="rounded-lg border border-border bg-card p-5 shadow-panel">
-              <div className="flex items-start gap-4">
-                <IconBadge icon={department.icon} />
-                <div>
-                  <h3 className="text-lg font-semibold text-foreground">{text(department.title) ?? 'Department'}</h3>
-                  <p className="mt-2 text-sm leading-7 text-muted">{text(department.description)}</p>
-                </div>
+        {departmentsQuery.isLoading
+          ? Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="h-48 animate-pulse rounded-lg border border-border bg-card shadow-panel">
+                <div className="m-5 h-11 w-11 rounded-lg bg-surface" />
+                <div className="mx-5 mt-8 h-5 w-2/3 rounded bg-surface" />
+                <div className="mx-5 mt-4 h-14 rounded bg-surface" />
               </div>
-              {services.length > 0 ? (
-                <div className="mt-5 flex flex-wrap gap-2">
-                  {services.map((service) => (
-                    <span key={service} className="rounded-lg bg-surface px-2.5 py-1.5 text-xs text-muted">
-                      {service}
-                    </span>
-                  ))}
+            ))
+          : departments.map((department) => (
+              <article key={department.id} className="rounded-lg border border-border bg-card p-5 shadow-panel">
+                <div className="flex items-start gap-4">
+                  <IconBadge icon="folder-heart" />
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground">{department.name}</h3>
+                    <p className="mt-2 text-sm leading-7 text-muted">
+                      {department.description ?? 'Active MedSphere department'}
+                    </p>
+                  </div>
                 </div>
-              ) : null}
-            </article>
-          );
-        })}
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {department.floor ? (
+                    <span className="rounded-lg bg-surface px-2.5 py-1.5 text-xs text-muted">
+                      Floor {department.floor}
+                    </span>
+                  ) : null}
+                  {department.phoneExtension ? (
+                    <span className="rounded-lg bg-surface px-2.5 py-1.5 text-xs text-muted">
+                      Ext. {department.phoneExtension}
+                    </span>
+                  ) : null}
+                </div>
+              </article>
+            ))}
       </div>
+      {!departmentsQuery.isLoading && !departmentsQuery.isError && departments.length === 0 ? (
+        <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm text-muted">
+          No active departments are published yet.
+        </div>
+      ) : null}
     </SectionShell>
   );
 }

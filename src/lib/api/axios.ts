@@ -27,8 +27,10 @@ const AUTH_REFRESH_EXEMPT_PATHS = new Set([
   '/api/auth/forgot-password',
   '/api/auth/reset-password',
 ]);
-
-type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+type RetryableConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+  skipLoginRedirect?: boolean;
+};
 
 type RefreshSubscriber = (token: string) => void;
 
@@ -139,6 +141,10 @@ function shouldSkipRefreshRetry(config: InternalAxiosRequestConfig) {
   return AUTH_REFRESH_EXEMPT_PATHS.has(getRequestPath(config));
 }
 
+function shouldSkipLoginRedirect(config?: InternalAxiosRequestConfig) {
+  return Boolean((config as RetryableConfig | undefined)?.skipLoginRedirect);
+}
+
 async function refreshTokenFlow(store: AppStore) {
   const auth = store.getState().auth;
   const refreshToken = auth.refreshToken ?? auth.tokens?.refreshToken ?? readPersistedAuthSession()?.refreshToken;
@@ -214,7 +220,9 @@ function applyAuthInterceptors(client: typeof apiClient) {
         subscribers = [];
         authStore.dispatch(clearSession());
         clearPersistedAuthSession();
-        fallbackToLogin();
+        if (!shouldSkipLoginRedirect(originalRequest)) {
+          fallbackToLogin();
+        }
         return Promise.reject(refreshError);
       }
     }

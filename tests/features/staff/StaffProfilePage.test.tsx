@@ -137,6 +137,12 @@ describe('StaffProfilePage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('?tab=exceptions');
   });
 
+  it('links back to the staff directory', async () => {
+    renderProfile('/admin/staff/staff-1?tab=info');
+
+    expect(await screen.findByRole('link', { name: 'Back to staff' })).toHaveAttribute('href', '/admin/staff');
+  });
+
   it('shows the future appointment count before deactivation', async () => {
     renderProfile('/admin/staff/staff-1?tab=info');
 

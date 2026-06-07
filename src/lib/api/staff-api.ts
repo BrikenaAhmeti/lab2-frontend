@@ -1,9 +1,13 @@
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { coreApiClient } from './axios';
 
 function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
+
+type PreviewRequestConfig = AxiosRequestConfig & {
+  skipLoginRedirect?: boolean;
+};
 
 const staffStatusParamMap: Record<string, string> = {
   active: 'ACTIVE',
@@ -155,6 +159,13 @@ export const staffApi = {
   },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);
+  },
+  preview(id: string, instance?: AxiosInstance) {
+    const config: PreviewRequestConfig = { skipLoginRedirect: true };
+
+    return client(instance)
+      .get<StaffRecord>(`/api/staff/${id}`, config)
+      .then((response) => response.data);
   },
   create(payload: StaffPayload, instance?: AxiosInstance) {
     return client(instance).post<StaffRecord>('/api/staff', payload).then((response) => response.data);

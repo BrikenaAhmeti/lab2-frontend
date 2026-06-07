@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { Plus, Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
 import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
@@ -55,6 +56,15 @@ export default function StaffDirectoryPage() {
     () => ({
       page: 1,
       limit: 25,
+      search: search || undefined,
+      departmentId: departmentId || undefined,
+      positionTypeId: positionTypeId || undefined,
+      status: status === 'all' ? undefined : status,
+    }),
+    [departmentId, positionTypeId, search, status]
+  );
+  const exportFilters = useMemo(
+    () => ({
       search: search || undefined,
       departmentId: departmentId || undefined,
       positionTypeId: positionTypeId || undefined,
@@ -150,27 +160,30 @@ export default function StaffDirectoryPage() {
         title="Staff Directory"
         subtitle="Search staff profiles and open schedule management"
         actions={
-          canManage ? (
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                type="button"
-                size="sm"
-                leftIcon={<Plus className="h-4 w-4" />}
-                onClick={openCreateModal}
-              >
-                Add staff
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                leftIcon={<Upload className="h-4 w-4" />}
-                onClick={openImportWizard}
-              >
-                Import
-              </Button>
-            </div>
-          ) : null
+          <div className="flex flex-wrap justify-end gap-2">
+            <ExportButton entity="staff" filters={exportFilters} />
+            {canManage ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  leftIcon={<Plus className="h-4 w-4" />}
+                  onClick={openCreateModal}
+                >
+                  Add staff
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Upload className="h-4 w-4" />}
+                  onClick={openImportWizard}
+                >
+                  Import
+                </Button>
+              </>
+            ) : null}
+          </div>
         }
       >
         <div className="space-y-4">

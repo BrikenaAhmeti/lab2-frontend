@@ -16,6 +16,10 @@ import { VapiCallLogsPanel } from '@/features/vapi/pages/VapiCallLogsPage';
 type SessionTab = 'sessions' | 'logs' | 'voice-ai';
 
 const logActions = [
+  'chat.attachment.uploaded',
+  'chat.message.sent',
+  'chat.room.opened',
+  'chat.room.read',
   'login.success',
   'login.failed',
   'logout',
@@ -29,6 +33,8 @@ const logActions = [
   'email.verification.resent',
   'user.registered',
   'user.created.admin',
+  'user.provisioned',
+  'user.updated',
 ] as const;
 
 function formatDate(date?: string | null) {
@@ -105,6 +111,10 @@ function actionVariant(action: string): 'success' | 'warning' | 'danger' | 'info
 
 function humanAction(action: string) {
   const labels: Record<string, string> = {
+    'chat.attachment.uploaded': 'Chat attachment uploaded',
+    'chat.message.sent': 'Chat message sent',
+    'chat.room.opened': 'Chat room opened',
+    'chat.room.read': 'Chat room read',
     'login.success': 'Login succeeded',
     'login.failed': 'Login failed',
     logout: 'Logged out',
@@ -118,6 +128,8 @@ function humanAction(action: string) {
     'email.verification.resent': 'Verification resent',
     'user.registered': 'User registered',
     'user.created.admin': 'User created by admin',
+    'user.provisioned': 'User provisioned',
+    'user.updated': 'User updated',
   };
 
   return labels[action] ?? toTitle(action);
@@ -423,8 +435,8 @@ export default function SessionsPage() {
 
         {activeTab === 'logs' ? (
           <Card title="Logs" subtitle="Search session and identity activity">
-            <div className="grid gap-3 rounded-xl border border-border bg-surface/60 p-3 md:grid-cols-2 xl:grid-cols-5">
-              <label className="space-y-1 text-xs font-medium text-muted">
+            <div className="grid items-start gap-3 rounded-xl border border-border bg-surface/60 p-3 md:grid-cols-2 2xl:grid-cols-6">
+              <label className="space-y-1 text-xs font-medium text-muted 2xl:col-span-1">
                 User
                 <input
                   value={filters.userSearch}
@@ -433,7 +445,7 @@ export default function SessionsPage() {
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 />
               </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
+              <label className="space-y-1 text-xs font-medium text-muted 2xl:col-span-1">
                 Action
                 <select
                   value={filters.action}
@@ -451,6 +463,7 @@ export default function SessionsPage() {
                 id="session-log-from"
                 value={filters.from}
                 timeLabel="From time"
+                className="min-w-0 2xl:col-span-2"
                 onChange={(value) => updateFilter('from', value)}
               />
               <CalendarDateTimePicker
@@ -459,9 +472,10 @@ export default function SessionsPage() {
                 value={filters.to}
                 defaultTime="23:59"
                 timeLabel="To time"
+                className="min-w-0 2xl:col-span-2"
                 onChange={(value) => updateFilter('to', value)}
               />
-              <label className="space-y-1 text-xs font-medium text-muted">
+              <label className="space-y-1 text-xs font-medium text-muted 2xl:col-span-2">
                 Change or detail
                 <div className="flex gap-2">
                   <input
@@ -470,7 +484,7 @@ export default function SessionsPage() {
                     placeholder="IP, device, field"
                     className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
-                  <Button type="button" variant="secondary" size="sm" onClick={clearFilters}>Clear</Button>
+                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={clearFilters}>Clear</Button>
                 </div>
               </label>
             </div>

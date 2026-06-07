@@ -4,6 +4,8 @@ import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
   getApiErrorMessage,
+  getStaffDepartmentId,
+  getStaffDepartmentName,
   useAssignStaffDepartment,
   useRemoveStaffDepartment,
   useStaffDepartments,
@@ -16,7 +18,7 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
   const departmentsQuery = useStaffDepartments();
   const assignMutation = useAssignStaffDepartment(staff.id);
   const removeMutation = useRemoveStaffDepartment(staff.id);
-  const assignedIds = new Set(staff.departments?.map((department) => department.id) ?? []);
+  const assignedIds = new Set(staff.departments?.map(getStaffDepartmentId) ?? []);
   const availableDepartments = (departmentsQuery.data ?? []).filter((department) => !assignedIds.has(department.id));
   const pending = assignMutation.isPending || removeMutation.isPending;
 
@@ -51,11 +53,11 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
         {staff.departments?.length ? (
           staff.departments.map((department) => (
             <span key={department.id} className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-2 py-1">
-              <Badge>{department.name}</Badge>
+              <Badge>{getStaffDepartmentName(department)}</Badge>
               <button
                 type="button"
                 disabled={pending}
-                onClick={() => removeDepartment(department.id)}
+                onClick={() => removeDepartment(getStaffDepartmentId(department))}
                 className="text-xs font-medium text-danger disabled:opacity-50"
               >
                 Remove
