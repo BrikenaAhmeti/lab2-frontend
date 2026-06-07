@@ -19,8 +19,12 @@ export const router = createBrowserRouter([
     path: '/login'
   },
   {
-    element: <TransactionsPageRQ />,
-    path: '/transactions'
+    path: '/transactions',
+    element: <Navigate to="/app/transactions" replace />
+  },
+  {
+    path: '/tan-transactions',
+    element: <Navigate to="/app/tan-transactions" replace />
   },
   {
     path: '/app',

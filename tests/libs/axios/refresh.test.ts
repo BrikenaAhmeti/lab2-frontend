@@ -6,7 +6,12 @@ import { store } from '@/app/store';
 import { setSession, clearSession } from '@/domain/auth/authSlice';
 import type { AuthUser } from '@/domain/auth/types';
 
-const mockUser: AuthUser = { id: '1', email: 'a@b.com', name: 'A', role: 'admins' };
+const mockUser: AuthUser = {
+  id: '1',
+  email: 'a@b.com',
+  roles: ['Admin'],
+  permissions: ['users:read'],
+};
 
 function makeResponse<T>(cfg: any, status: number, data: T): AxiosResponse<T> {
   return {
@@ -75,9 +80,11 @@ describe('axios refresh', () => {
 
     // GLOBAL adapter (used by axios.post('<core>/auth/refresh'))
     const originalGlobalAdapter = axios.defaults.adapter as AxiosAdapter | undefined;
+    const refreshBodies: unknown[] = [];
     axios.defaults.adapter = async (cfg) => {
       const url = fullUrl(cfg);
       if (url.includes('/auth/refresh')) {
+        refreshBodies.push(JSON.parse(String(cfg.data)));
         return makeResponse(cfg, 200, {
           user: mockUser,
           tokens: { accessToken: 'new', refreshToken: 'ref' },
@@ -90,6 +97,7 @@ describe('axios refresh', () => {
 
     // Assertions
     expect(protectedCalls).toBe(2); // first 401 + retried once after refresh
+    expect(refreshBodies).toEqual([{ refreshToken: 'ref' }]);
     expect(store.getState().auth.tokens?.accessToken).toBe('new');
     expect(res?.data?.ok).toBe(true);
 

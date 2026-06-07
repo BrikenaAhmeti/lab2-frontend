@@ -1,0 +1,5435 @@
+{
+  "source": "local core Postgres DB: department_service",
+  "generatedAt": "2026-06-03T20:27:11.982Z",
+  "privacy": "Appointment catalog only. No patients, user accounts, appointment history, billing, audit logs, staff emails, staff phones, user IDs, or license numbers included.",
+  "facility": {
+    "name": "MedSphere Demo Clinic",
+    "tagline": "Health. Connected.",
+    "description": "Departments, service catalogs, staff workflows, patient portals, records, diagnostics, billing, and AI support in one connected system.",
+    "address": "44 Lakeview Avenue, Springfield",
+    "phone": "+1 (555) 010-2400",
+    "email": "hello@medsphere.local",
+    "workingHours": {
+      "friday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "monday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "sunday": {
+        "isClosed": true
+      },
+      "tuesday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "saturday": {
+        "end": "13:00",
+        "start": "09:00"
+      },
+      "thursday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "wednesday": {
+        "end": "18:00",
+        "start": "08:00"
+      }
+    }
+  },
+  "departments": [
+    {
+      "id": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+      "name": "Primary Care",
+      "description": "Family medicine, triage, and follow-up care",
+      "floor": "1",
+      "phoneExtension": "101",
+      "operatingHours": {
+        "saturday": "09:00-13:00",
+        "weekdays": "08:00-18:00"
+      },
+      "sortOrder": 1
+    },
+    {
+      "id": "913e5dd6-2131-41e1-bbc9-e1e393238810",
+      "name": "Diagnostics",
+      "description": "Laboratory diagnostics and sample processing",
+      "floor": "2",
+      "phoneExtension": "202",
+      "operatingHours": {
+        "weekdays": "08:00-17:00"
+      },
+      "sortOrder": 2
+    },
+    {
+      "id": "87588e82-33ae-43b7-be4c-4d32ffb900a3",
+      "name": "Pharmacy",
+      "description": "Medication dispensing and stock coordination",
+      "floor": "1",
+      "phoneExtension": "130",
+      "operatingHours": {
+        "weekdays": "08:00-18:00"
+      },
+      "sortOrder": 3
+    },
+    {
+      "id": "39cee12f-e0a5-4178-901f-3b1f04179def",
+      "name": "Cardiology",
+      "description": "Preventive cardiology, ECG review, and chronic heart-care follow-up",
+      "floor": "2",
+      "phoneExtension": "210",
+      "operatingHours": {
+        "weekdays": "08:00-17:00"
+      },
+      "sortOrder": 4
+    },
+    {
+      "id": "06993386-5002-4e2a-9561-76a30e863569",
+      "name": "Pediatrics",
+      "description": "Child wellness, vaccinations, and pediatric acute visits",
+      "floor": "1",
+      "phoneExtension": "120",
+      "operatingHours": {
+        "saturday": "09:00-13:00",
+        "weekdays": "08:30-17:30"
+      },
+      "sortOrder": 5
+    },
+    {
+      "id": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+      "name": "Emergency & Triage",
+      "description": "Walk-in urgent assessment and fast-track clinical triage",
+      "floor": "G",
+      "phoneExtension": "911",
+      "operatingHours": {
+        "daily": "00:00-24:00"
+      },
+      "sortOrder": 6
+    },
+    {
+      "id": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+      "name": "Radiology",
+      "description": "X-ray, ultrasound, and imaging coordination",
+      "floor": "2",
+      "phoneExtension": "220",
+      "operatingHours": {
+        "weekdays": "08:00-16:00"
+      },
+      "sortOrder": 7
+    },
+    {
+      "id": "7e94066d-b28e-42be-8585-48e38586b43e",
+      "name": "Billing & Administration",
+      "description": "Clinic administration, insurance support, and billing desk",
+      "floor": "1",
+      "phoneExtension": "140",
+      "operatingHours": {
+        "weekdays": "08:00-18:00"
+      },
+      "sortOrder": 8
+    },
+    {
+      "id": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+      "name": "Neurology",
+      "description": "Headache, seizure, neuropathy, and neurologic follow-up care",
+      "floor": "3",
+      "phoneExtension": "230",
+      "operatingHours": {
+        "weekdays": "08:00-17:00"
+      },
+      "sortOrder": 9
+    },
+    {
+      "id": "e2d856f0-edff-4624-87aa-746410657202",
+      "name": "Dermatology",
+      "description": "Skin checks, acne, rashes, and minor dermatologic procedures",
+      "floor": "2",
+      "phoneExtension": "240",
+      "operatingHours": {
+        "weekdays": "09:00-17:00"
+      },
+      "sortOrder": 10
+    },
+    {
+      "id": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+      "name": "Orthopedics",
+      "description": "Joint pain, fractures, sports medicine, and musculoskeletal care",
+      "floor": "3",
+      "phoneExtension": "250",
+      "operatingHours": {
+        "weekdays": "08:30-17:30"
+      },
+      "sortOrder": 11
+    },
+    {
+      "id": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+      "name": "Women's Health",
+      "description": "Gynecology, prenatal counseling, and preventive women's health visits",
+      "floor": "2",
+      "phoneExtension": "260",
+      "operatingHours": {
+        "saturday": "09:00-12:00",
+        "weekdays": "08:30-17:30"
+      },
+      "sortOrder": 12
+    },
+    {
+      "id": "2067b805-6af5-4c94-9a4b-190d37a25712",
+      "name": "Mental Health",
+      "description": "Counseling, psychiatry follow-up, and behavioral-health support",
+      "floor": "3",
+      "phoneExtension": "270",
+      "operatingHours": {
+        "weekdays": "09:00-18:00"
+      },
+      "sortOrder": 13
+    },
+    {
+      "id": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+      "name": "Dental Care",
+      "description": "Preventive dentistry, dental pain visits, and oral-health care plans",
+      "floor": "1",
+      "phoneExtension": "280",
+      "operatingHours": {
+        "weekdays": "08:00-16:00"
+      },
+      "sortOrder": 14
+    },
+    {
+      "id": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+      "name": "Ophthalmology",
+      "description": "Eye exams, retinal screening, and vision-care referrals",
+      "floor": "2",
+      "phoneExtension": "290",
+      "operatingHours": {
+        "weekdays": "08:00-16:30"
+      },
+      "sortOrder": 15
+    },
+    {
+      "id": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+      "name": "Endocrinology",
+      "description": "Diabetes, thyroid, and metabolic condition management",
+      "floor": "3",
+      "phoneExtension": "310",
+      "operatingHours": {
+        "weekdays": "08:00-17:00"
+      },
+      "sortOrder": 16
+    },
+    {
+      "id": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+      "name": "Rehabilitation & Physical Therapy",
+      "description": "Physical therapy, post-injury rehabilitation, and mobility plans",
+      "floor": "G",
+      "phoneExtension": "320",
+      "operatingHours": {
+        "weekdays": "07:30-18:30"
+      },
+      "sortOrder": 17
+    },
+    {
+      "id": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+      "name": "Oncology",
+      "description": "Cancer screening coordination, survivorship follow-up, and referral care",
+      "floor": "4",
+      "phoneExtension": "330",
+      "operatingHours": {
+        "weekdays": "08:30-16:30"
+      },
+      "sortOrder": 18
+    }
+  ],
+  "clinicalServices": [
+    {
+      "id": "29277e52-db76-47e4-8fd0-bac0bb4a9101",
+      "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+      "departmentName": "Primary Care",
+      "name": "General Consultation",
+      "description": "Routine family medicine consultation",
+      "durationMinutes": 30,
+      "estimatedFee": "85.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "f79735cd-0e43-4b1e-861b-8ac5330fc525",
+      "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+      "departmentName": "Primary Care",
+      "name": "Follow-up Consultation",
+      "description": "Follow-up review after treatment or testing",
+      "durationMinutes": 20,
+      "estimatedFee": "55.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "b2d1ca9c-1196-49dd-8a55-67ea75c9559b",
+      "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+      "departmentName": "Primary Care",
+      "name": "Nursing Triage",
+      "description": "Vitals, intake, and care-coordination visit",
+      "durationMinutes": 20,
+      "estimatedFee": "35.00",
+      "sortOrder": 3
+    },
+    {
+      "id": "1b37bf31-2b5b-4e18-81cf-5e4f4a502172",
+      "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+      "departmentName": "Primary Care",
+      "name": "Vaccination Visit",
+      "description": "Routine vaccine administration and observation",
+      "durationMinutes": 20,
+      "estimatedFee": "40.00",
+      "sortOrder": 4
+    },
+    {
+      "id": "1cd62e97-d3aa-4252-98a5-b622b5413b2e",
+      "departmentId": "913e5dd6-2131-41e1-bbc9-e1e393238810",
+      "departmentName": "Diagnostics",
+      "name": "Lab Review",
+      "description": "Diagnostic sample review and interpretation",
+      "durationMinutes": 20,
+      "estimatedFee": "45.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "dc0fbcc9-b38d-443c-ab75-521b74b52d62",
+      "departmentId": "913e5dd6-2131-41e1-bbc9-e1e393238810",
+      "departmentName": "Diagnostics",
+      "name": "Sample Collection",
+      "description": "Blood, urine, or swab sample collection",
+      "durationMinutes": 15,
+      "estimatedFee": "25.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "55dac74f-0a3e-4095-ad3a-2c47fdd51649",
+      "departmentId": "87588e82-33ae-43b7-be4c-4d32ffb900a3",
+      "departmentName": "Pharmacy",
+      "name": "Medication Counseling",
+      "description": "Pharmacist review of medication use and safety",
+      "durationMinutes": 20,
+      "estimatedFee": "30.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "32cedf21-b39d-41e2-93d5-c357c0609ead",
+      "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+      "departmentName": "Cardiology",
+      "name": "Cardiology Consultation",
+      "description": "Specialist cardiovascular evaluation",
+      "durationMinutes": 40,
+      "estimatedFee": "140.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "72bbc649-44e9-44ac-9576-b423845b5d76",
+      "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+      "departmentName": "Cardiology",
+      "name": "ECG",
+      "description": "Resting 12-lead electrocardiogram",
+      "durationMinutes": 20,
+      "estimatedFee": "65.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "a3e31d19-d761-432f-b47b-112a1372a35d",
+      "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+      "departmentName": "Pediatrics",
+      "name": "Pediatric Consultation",
+      "description": "General child health visit",
+      "durationMinutes": 30,
+      "estimatedFee": "95.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "106799e8-f203-40ce-ac91-35a1af4f0d7d",
+      "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+      "departmentName": "Pediatrics",
+      "name": "Child Wellness Check",
+      "description": "Growth, development, and immunization review",
+      "durationMinutes": 30,
+      "estimatedFee": "80.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "750a6e78-5369-4737-b33a-73b81496f54b",
+      "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+      "departmentName": "Emergency & Triage",
+      "name": "Urgent Walk-in Assessment",
+      "description": "Fast-track triage and acute assessment",
+      "durationMinutes": 30,
+      "estimatedFee": "120.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "820433ba-b4c9-4e8c-818d-0c9d96006b66",
+      "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+      "departmentName": "Emergency & Triage",
+      "name": "Minor Procedure",
+      "description": "Small wound, dressing, or minor intervention visit",
+      "durationMinutes": 30,
+      "estimatedFee": "110.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "fbdb3e2b-6107-4a20-beaf-c1ad4b6ab651",
+      "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+      "departmentName": "Radiology",
+      "name": "X-Ray Imaging",
+      "description": "Plain film imaging with radiology report",
+      "durationMinutes": 25,
+      "estimatedFee": "75.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "934819eb-534c-4f36-a01b-e1772aa37689",
+      "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+      "departmentName": "Radiology",
+      "name": "Ultrasound Scan",
+      "description": "Focused ultrasound imaging appointment",
+      "durationMinutes": 35,
+      "estimatedFee": "130.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "a0922692-9fb1-4e72-8afa-27fbd6f521a3",
+      "departmentId": "7e94066d-b28e-42be-8585-48e38586b43e",
+      "departmentName": "Billing & Administration",
+      "name": "Insurance Verification",
+      "description": "Coverage check and billing eligibility support",
+      "durationMinutes": 20,
+      "estimatedFee": "20.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "2f82e8d8-7c39-4e49-a0ed-2333117177ea",
+      "departmentId": "7e94066d-b28e-42be-8585-48e38586b43e",
+      "departmentName": "Billing & Administration",
+      "name": "Billing Consultation",
+      "description": "Patient billing explanation and payment-plan support",
+      "durationMinutes": 20,
+      "estimatedFee": "15.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "e030c858-22e4-48a6-aff5-5ccd36622512",
+      "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+      "departmentName": "Neurology",
+      "name": "Migraine & Headache Consultation",
+      "description": "Neurologic review for recurrent headache and migraine care",
+      "durationMinutes": 40,
+      "estimatedFee": "135.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "4297d1a3-fb21-4a33-abbd-de0cfa768c56",
+      "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+      "departmentName": "Neurology",
+      "name": "Seizure Follow-up",
+      "description": "Medication and symptom review for seizure disorders",
+      "durationMinutes": 35,
+      "estimatedFee": "125.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "1220cb3b-62d9-4c88-b705-c09eaaf17489",
+      "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+      "departmentName": "Dermatology",
+      "name": "Full Skin Check",
+      "description": "Preventive dermatology exam and lesion review",
+      "durationMinutes": 30,
+      "estimatedFee": "105.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "62c7c554-ceae-4716-a545-173b353966db",
+      "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+      "departmentName": "Dermatology",
+      "name": "Acne & Rash Visit",
+      "description": "Dermatology visit for acne, eczema, or rash care",
+      "durationMinutes": 25,
+      "estimatedFee": "85.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "c6cc720f-5bc6-439b-898d-4efafabeeb25",
+      "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+      "departmentName": "Orthopedics",
+      "name": "Orthopedic Consultation",
+      "description": "Joint, bone, and sports-injury assessment",
+      "durationMinutes": 35,
+      "estimatedFee": "130.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "d760911d-1aff-475b-af78-c9b096f7fffa",
+      "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+      "departmentName": "Orthopedics",
+      "name": "Fracture Follow-up",
+      "description": "Post-injury review and immobilization follow-up",
+      "durationMinutes": 25,
+      "estimatedFee": "90.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "2d1304f9-7d58-4395-b39f-28c1f262992f",
+      "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+      "departmentName": "Women's Health",
+      "name": "Gynecology Visit",
+      "description": "Preventive women's health and gynecology appointment",
+      "durationMinutes": 35,
+      "estimatedFee": "120.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "23d502d9-a739-4b4f-a347-46bf8a7a5ce8",
+      "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+      "departmentName": "Women's Health",
+      "name": "Prenatal Counseling",
+      "description": "Early pregnancy counseling and care planning",
+      "durationMinutes": 40,
+      "estimatedFee": "140.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "f39cefc5-2551-4751-b1bd-d4b9707ca9a3",
+      "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+      "departmentName": "Mental Health",
+      "name": "Therapy Session",
+      "description": "Behavioral-health counseling session",
+      "durationMinutes": 50,
+      "estimatedFee": "115.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "23fcf4c8-33a0-45ad-8bd7-efce1a5b4bff",
+      "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+      "departmentName": "Mental Health",
+      "name": "Psychiatry Follow-up",
+      "description": "Medication and mental-health treatment review",
+      "durationMinutes": 30,
+      "estimatedFee": "125.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "8c19c353-496d-42db-8c2e-767edf49eaec",
+      "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+      "departmentName": "Dental Care",
+      "name": "Dental Cleaning",
+      "description": "Preventive dental cleaning and oral-health check",
+      "durationMinutes": 40,
+      "estimatedFee": "95.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "e3245973-0853-425b-bf61-f477f575db75",
+      "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+      "departmentName": "Dental Care",
+      "name": "Dental Pain Visit",
+      "description": "Urgent dental assessment for tooth or gum pain",
+      "durationMinutes": 30,
+      "estimatedFee": "110.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "99754528-aa20-4580-989c-fa89233052c7",
+      "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+      "departmentName": "Ophthalmology",
+      "name": "Comprehensive Eye Exam",
+      "description": "Vision, pressure, and eye-health screening",
+      "durationMinutes": 35,
+      "estimatedFee": "100.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "7f403737-b1a3-4f33-b854-dcf3f514c2a0",
+      "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+      "departmentName": "Ophthalmology",
+      "name": "Retinal Screening",
+      "description": "Retinal imaging and diabetic eye screening workflow",
+      "durationMinutes": 25,
+      "estimatedFee": "115.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "beb124d0-f42c-417e-a35a-94747942ff24",
+      "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+      "departmentName": "Endocrinology",
+      "name": "Diabetes Management Visit",
+      "description": "Glucose, medication, and lifestyle-management review",
+      "durationMinutes": 40,
+      "estimatedFee": "135.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "02573474-d50d-4d37-9e10-1d9b3201b7f9",
+      "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+      "departmentName": "Endocrinology",
+      "name": "Thyroid Consultation",
+      "description": "Thyroid lab review and treatment planning",
+      "durationMinutes": 35,
+      "estimatedFee": "125.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "3a41e7ba-d628-42c2-b72d-c2deb308afa7",
+      "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+      "departmentName": "Rehabilitation & Physical Therapy",
+      "name": "Physical Therapy Evaluation",
+      "description": "Initial rehabilitation evaluation and movement plan",
+      "durationMinutes": 45,
+      "estimatedFee": "105.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "6b1dbdb5-cd13-4e01-a3e6-d7f09501c3db",
+      "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+      "departmentName": "Rehabilitation & Physical Therapy",
+      "name": "Rehabilitation Follow-up",
+      "description": "Follow-up physical therapy session",
+      "durationMinutes": 30,
+      "estimatedFee": "75.00",
+      "sortOrder": 2
+    },
+    {
+      "id": "a93c40dd-2a11-43f4-8f4e-9f5494453b64",
+      "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+      "departmentName": "Oncology",
+      "name": "Oncology Follow-up",
+      "description": "Cancer-care follow-up and symptom review",
+      "durationMinutes": 40,
+      "estimatedFee": "160.00",
+      "sortOrder": 1
+    },
+    {
+      "id": "756665c0-4271-4f5c-ade1-dbbe08c1c6e4",
+      "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+      "departmentName": "Oncology",
+      "name": "Cancer Screening Coordination",
+      "description": "Screening coordination and referral planning",
+      "durationMinutes": 30,
+      "estimatedFee": "95.00",
+      "sortOrder": 2
+    }
+  ],
+  "servicesByDepartment": {
+    "b7b934e1-9fab-4f47-94b2-63d4039cf328": [
+      {
+        "id": "29277e52-db76-47e4-8fd0-bac0bb4a9101",
+        "name": "General Consultation",
+        "description": "Routine family medicine consultation",
+        "durationMinutes": 30,
+        "estimatedFee": "85.00"
+      },
+      {
+        "id": "f79735cd-0e43-4b1e-861b-8ac5330fc525",
+        "name": "Follow-up Consultation",
+        "description": "Follow-up review after treatment or testing",
+        "durationMinutes": 20,
+        "estimatedFee": "55.00"
+      },
+      {
+        "id": "b2d1ca9c-1196-49dd-8a55-67ea75c9559b",
+        "name": "Nursing Triage",
+        "description": "Vitals, intake, and care-coordination visit",
+        "durationMinutes": 20,
+        "estimatedFee": "35.00"
+      },
+      {
+        "id": "1b37bf31-2b5b-4e18-81cf-5e4f4a502172",
+        "name": "Vaccination Visit",
+        "description": "Routine vaccine administration and observation",
+        "durationMinutes": 20,
+        "estimatedFee": "40.00"
+      }
+    ],
+    "913e5dd6-2131-41e1-bbc9-e1e393238810": [
+      {
+        "id": "1cd62e97-d3aa-4252-98a5-b622b5413b2e",
+        "name": "Lab Review",
+        "description": "Diagnostic sample review and interpretation",
+        "durationMinutes": 20,
+        "estimatedFee": "45.00"
+      },
+      {
+        "id": "dc0fbcc9-b38d-443c-ab75-521b74b52d62",
+        "name": "Sample Collection",
+        "description": "Blood, urine, or swab sample collection",
+        "durationMinutes": 15,
+        "estimatedFee": "25.00"
+      }
+    ],
+    "87588e82-33ae-43b7-be4c-4d32ffb900a3": [
+      {
+        "id": "55dac74f-0a3e-4095-ad3a-2c47fdd51649",
+        "name": "Medication Counseling",
+        "description": "Pharmacist review of medication use and safety",
+        "durationMinutes": 20,
+        "estimatedFee": "30.00"
+      }
+    ],
+    "39cee12f-e0a5-4178-901f-3b1f04179def": [
+      {
+        "id": "32cedf21-b39d-41e2-93d5-c357c0609ead",
+        "name": "Cardiology Consultation",
+        "description": "Specialist cardiovascular evaluation",
+        "durationMinutes": 40,
+        "estimatedFee": "140.00"
+      },
+      {
+        "id": "72bbc649-44e9-44ac-9576-b423845b5d76",
+        "name": "ECG",
+        "description": "Resting 12-lead electrocardiogram",
+        "durationMinutes": 20,
+        "estimatedFee": "65.00"
+      }
+    ],
+    "06993386-5002-4e2a-9561-76a30e863569": [
+      {
+        "id": "a3e31d19-d761-432f-b47b-112a1372a35d",
+        "name": "Pediatric Consultation",
+        "description": "General child health visit",
+        "durationMinutes": 30,
+        "estimatedFee": "95.00"
+      },
+      {
+        "id": "106799e8-f203-40ce-ac91-35a1af4f0d7d",
+        "name": "Child Wellness Check",
+        "description": "Growth, development, and immunization review",
+        "durationMinutes": 30,
+        "estimatedFee": "80.00"
+      }
+    ],
+    "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e": [
+      {
+        "id": "750a6e78-5369-4737-b33a-73b81496f54b",
+        "name": "Urgent Walk-in Assessment",
+        "description": "Fast-track triage and acute assessment",
+        "durationMinutes": 30,
+        "estimatedFee": "120.00"
+      },
+      {
+        "id": "820433ba-b4c9-4e8c-818d-0c9d96006b66",
+        "name": "Minor Procedure",
+        "description": "Small wound, dressing, or minor intervention visit",
+        "durationMinutes": 30,
+        "estimatedFee": "110.00"
+      }
+    ],
+    "4abfc772-183b-4d95-8789-d11ee592bbfc": [
+      {
+        "id": "fbdb3e2b-6107-4a20-beaf-c1ad4b6ab651",
+        "name": "X-Ray Imaging",
+        "description": "Plain film imaging with radiology report",
+        "durationMinutes": 25,
+        "estimatedFee": "75.00"
+      },
+      {
+        "id": "934819eb-534c-4f36-a01b-e1772aa37689",
+        "name": "Ultrasound Scan",
+        "description": "Focused ultrasound imaging appointment",
+        "durationMinutes": 35,
+        "estimatedFee": "130.00"
+      }
+    ],
+    "7e94066d-b28e-42be-8585-48e38586b43e": [
+      {
+        "id": "a0922692-9fb1-4e72-8afa-27fbd6f521a3",
+        "name": "Insurance Verification",
+        "description": "Coverage check and billing eligibility support",
+        "durationMinutes": 20,
+        "estimatedFee": "20.00"
+      },
+      {
+        "id": "2f82e8d8-7c39-4e49-a0ed-2333117177ea",
+        "name": "Billing Consultation",
+        "description": "Patient billing explanation and payment-plan support",
+        "durationMinutes": 20,
+        "estimatedFee": "15.00"
+      }
+    ],
+    "a79c64e1-27fe-4dbd-806f-1c474e8a6f94": [
+      {
+        "id": "e030c858-22e4-48a6-aff5-5ccd36622512",
+        "name": "Migraine & Headache Consultation",
+        "description": "Neurologic review for recurrent headache and migraine care",
+        "durationMinutes": 40,
+        "estimatedFee": "135.00"
+      },
+      {
+        "id": "4297d1a3-fb21-4a33-abbd-de0cfa768c56",
+        "name": "Seizure Follow-up",
+        "description": "Medication and symptom review for seizure disorders",
+        "durationMinutes": 35,
+        "estimatedFee": "125.00"
+      }
+    ],
+    "e2d856f0-edff-4624-87aa-746410657202": [
+      {
+        "id": "1220cb3b-62d9-4c88-b705-c09eaaf17489",
+        "name": "Full Skin Check",
+        "description": "Preventive dermatology exam and lesion review",
+        "durationMinutes": 30,
+        "estimatedFee": "105.00"
+      },
+      {
+        "id": "62c7c554-ceae-4716-a545-173b353966db",
+        "name": "Acne & Rash Visit",
+        "description": "Dermatology visit for acne, eczema, or rash care",
+        "durationMinutes": 25,
+        "estimatedFee": "85.00"
+      }
+    ],
+    "f553cda1-1f92-4a4d-a547-a967bd02b014": [
+      {
+        "id": "c6cc720f-5bc6-439b-898d-4efafabeeb25",
+        "name": "Orthopedic Consultation",
+        "description": "Joint, bone, and sports-injury assessment",
+        "durationMinutes": 35,
+        "estimatedFee": "130.00"
+      },
+      {
+        "id": "d760911d-1aff-475b-af78-c9b096f7fffa",
+        "name": "Fracture Follow-up",
+        "description": "Post-injury review and immobilization follow-up",
+        "durationMinutes": 25,
+        "estimatedFee": "90.00"
+      }
+    ],
+    "e2bcf1d4-f256-4c6c-ab7d-415160e15650": [
+      {
+        "id": "2d1304f9-7d58-4395-b39f-28c1f262992f",
+        "name": "Gynecology Visit",
+        "description": "Preventive women's health and gynecology appointment",
+        "durationMinutes": 35,
+        "estimatedFee": "120.00"
+      },
+      {
+        "id": "23d502d9-a739-4b4f-a347-46bf8a7a5ce8",
+        "name": "Prenatal Counseling",
+        "description": "Early pregnancy counseling and care planning",
+        "durationMinutes": 40,
+        "estimatedFee": "140.00"
+      }
+    ],
+    "2067b805-6af5-4c94-9a4b-190d37a25712": [
+      {
+        "id": "f39cefc5-2551-4751-b1bd-d4b9707ca9a3",
+        "name": "Therapy Session",
+        "description": "Behavioral-health counseling session",
+        "durationMinutes": 50,
+        "estimatedFee": "115.00"
+      },
+      {
+        "id": "23fcf4c8-33a0-45ad-8bd7-efce1a5b4bff",
+        "name": "Psychiatry Follow-up",
+        "description": "Medication and mental-health treatment review",
+        "durationMinutes": 30,
+        "estimatedFee": "125.00"
+      }
+    ],
+    "1077b975-d589-435e-9f4f-f4a5a7f3c2e0": [
+      {
+        "id": "8c19c353-496d-42db-8c2e-767edf49eaec",
+        "name": "Dental Cleaning",
+        "description": "Preventive dental cleaning and oral-health check",
+        "durationMinutes": 40,
+        "estimatedFee": "95.00"
+      },
+      {
+        "id": "e3245973-0853-425b-bf61-f477f575db75",
+        "name": "Dental Pain Visit",
+        "description": "Urgent dental assessment for tooth or gum pain",
+        "durationMinutes": 30,
+        "estimatedFee": "110.00"
+      }
+    ],
+    "44990bd0-f2d2-450d-b781-d5122db6ca7a": [
+      {
+        "id": "99754528-aa20-4580-989c-fa89233052c7",
+        "name": "Comprehensive Eye Exam",
+        "description": "Vision, pressure, and eye-health screening",
+        "durationMinutes": 35,
+        "estimatedFee": "100.00"
+      },
+      {
+        "id": "7f403737-b1a3-4f33-b854-dcf3f514c2a0",
+        "name": "Retinal Screening",
+        "description": "Retinal imaging and diabetic eye screening workflow",
+        "durationMinutes": 25,
+        "estimatedFee": "115.00"
+      }
+    ],
+    "e78e67f8-4984-4640-9254-5bdf5b087dea": [
+      {
+        "id": "beb124d0-f42c-417e-a35a-94747942ff24",
+        "name": "Diabetes Management Visit",
+        "description": "Glucose, medication, and lifestyle-management review",
+        "durationMinutes": 40,
+        "estimatedFee": "135.00"
+      },
+      {
+        "id": "02573474-d50d-4d37-9e10-1d9b3201b7f9",
+        "name": "Thyroid Consultation",
+        "description": "Thyroid lab review and treatment planning",
+        "durationMinutes": 35,
+        "estimatedFee": "125.00"
+      }
+    ],
+    "b3444a6e-3f2b-442f-9c7c-acab8567b42d": [
+      {
+        "id": "3a41e7ba-d628-42c2-b72d-c2deb308afa7",
+        "name": "Physical Therapy Evaluation",
+        "description": "Initial rehabilitation evaluation and movement plan",
+        "durationMinutes": 45,
+        "estimatedFee": "105.00"
+      },
+      {
+        "id": "6b1dbdb5-cd13-4e01-a3e6-d7f09501c3db",
+        "name": "Rehabilitation Follow-up",
+        "description": "Follow-up physical therapy session",
+        "durationMinutes": 30,
+        "estimatedFee": "75.00"
+      }
+    ],
+    "d66583aa-e0cf-45c0-b433-c6ba307df402": [
+      {
+        "id": "a93c40dd-2a11-43f4-8f4e-9f5494453b64",
+        "name": "Oncology Follow-up",
+        "description": "Cancer-care follow-up and symptom review",
+        "durationMinutes": 40,
+        "estimatedFee": "160.00"
+      },
+      {
+        "id": "756665c0-4271-4f5c-ade1-dbbe08c1c6e4",
+        "name": "Cancer Screening Coordination",
+        "description": "Screening coordination and referral planning",
+        "durationMinutes": 30,
+        "estimatedFee": "95.00"
+      }
+    ]
+  },
+  "doctors": [
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000024",
+      "displayName": "Dr. Aleksei Petrov",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Radiology",
+      "bio": "Dr. Aleksei Petrov reviews imaging studies, ultrasound findings, and radiology coordination cases.",
+      "departments": [
+        {
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "departmentName": "Radiology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000021",
+      "displayName": "Dr. Amara Okafor",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Interventional Cardiology",
+      "bio": "Dr. Amara Okafor provides chest-pain review, cardiac-risk counseling, and post-ECG follow-up.",
+      "departments": [
+        {
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "departmentName": "Cardiology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000001",
+      "displayName": "Dr. Amina El-Sayed",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Neurology",
+      "bio": "Dr. Amina El-Sayed treats migraine, neuropathy, and seizure follow-up with a calm, patient-centered approach.",
+      "departments": [
+        {
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "departmentName": "Neurology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000014",
+      "displayName": "Dr. Ana Ribeiro",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Retina",
+      "bio": "Dr. Ana Ribeiro focuses on retina review, diabetic screening, and visual-symptom triage.",
+      "departments": [
+        {
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "departmentName": "Ophthalmology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "22222222-2222-4222-8222-222222222222",
+      "displayName": "Dr. Anika Rao",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Family Medicine",
+      "bio": "Dr. Anika Rao is a board-certified family physician for the MedSphere demo clinic.",
+      "departments": [
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "913e5dd6-2131-41e1-bbc9-e1e393238810",
+          "departmentName": "Diagnostics",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000010",
+      "displayName": "Dr. Camila Torres",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Behavioral Health",
+      "bio": "Dr. Camila Torres offers therapy visits, anxiety support, and continuity counseling.",
+      "departments": [
+        {
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "departmentName": "Mental Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000008",
+      "displayName": "Dr. Elena Popescu",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Women's Health",
+      "bio": "Dr. Elena Popescu supports prenatal counseling, preventive screening, and women's health follow-up.",
+      "departments": [
+        {
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "departmentName": "Women's Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000019",
+      "displayName": "Dr. Fatima Zahra",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Oncology",
+      "bio": "Dr. Fatima Zahra supports cancer screening coordination, survivorship review, and referral care.",
+      "departments": [
+        {
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "departmentName": "Oncology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000004",
+      "displayName": "Dr. Hiro Yamamoto",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Dermatologic Surgery",
+      "bio": "Dr. Hiro Yamamoto supports lesion review, biopsy planning, and outpatient dermatologic procedures.",
+      "departments": [
+        {
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "departmentName": "Dermatology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000013",
+      "displayName": "Dr. Ibrahim Hassan",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Ophthalmology",
+      "bio": "Dr. Ibrahim Hassan handles comprehensive eye exams, glaucoma checks, and diabetic eye screening.",
+      "departments": [
+        {
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "departmentName": "Ophthalmology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000020",
+      "displayName": "Dr. James O'Connor",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Medical Oncology",
+      "bio": "Dr. James O'Connor manages oncology follow-up, symptom review, and coordinated care plans.",
+      "departments": [
+        {
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "departmentName": "Oncology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000026",
+      "displayName": "Dr. Kenji Watanabe",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Emergency Medicine",
+      "bio": "Dr. Kenji Watanabe manages urgent walk-ins, acute stabilization, and triage escalation.",
+      "departments": [
+        {
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "departmentName": "Emergency & Triage",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000002",
+      "displayName": "Dr. Lars Nordin",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Neurophysiology",
+      "bio": "Dr. Lars Nordin focuses on neurophysiology, dizziness, and complex neurologic symptom review.",
+      "departments": [
+        {
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "departmentName": "Neurology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000012",
+      "displayName": "Dr. Layla Haddad",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Pediatric Dentistry",
+      "bio": "Dr. Layla Haddad focuses on pediatric dental visits, prevention, and gentle urgent dental care.",
+      "departments": [
+        {
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "departmentName": "Dental Care",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000023",
+      "displayName": "Dr. Leila Farah",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Family Medicine",
+      "bio": "Dr. Leila Farah provides family medicine, preventive care, and chronic-condition follow-up.",
+      "departments": [
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000007",
+      "displayName": "Dr. Mariam Al-Khatib",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Gynecology",
+      "bio": "Dr. Mariam Al-Khatib provides preventive gynecology, prenatal counseling, and reproductive-health visits.",
+      "departments": [
+        {
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "departmentName": "Women's Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000022",
+      "displayName": "Dr. Mateo Silva",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Pediatrics",
+      "bio": "Dr. Mateo Silva supports child wellness, pediatric acute visits, and vaccine counseling.",
+      "departments": [
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000005",
+      "displayName": "Dr. Mateusz Kowalski",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Orthopedics",
+      "bio": "Dr. Mateusz Kowalski manages sports injuries, fracture follow-up, and joint-pain care.",
+      "departments": [
+        {
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "departmentName": "Orthopedics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000015",
+      "displayName": "Dr. Maya Singh",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Endocrinology",
+      "bio": "Dr. Maya Singh supports diabetes care, thyroid review, and metabolic-health treatment planning.",
+      "departments": [
+        {
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "departmentName": "Endocrinology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000003",
+      "displayName": "Dr. Nia Mensah",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Dermatology",
+      "bio": "Dr. Nia Mensah provides preventive skin checks, acne care, eczema review, and minor skin procedures.",
+      "departments": [
+        {
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "departmentName": "Dermatology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000016",
+      "displayName": "Dr. Noah Stein",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Diabetes Care",
+      "bio": "Dr. Noah Stein focuses on diabetes follow-up, medication adjustment, and prevention counseling.",
+      "departments": [
+        {
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "departmentName": "Endocrinology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000009",
+      "displayName": "Dr. Ravi Menon",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Psychiatry",
+      "bio": "Dr. Ravi Menon provides psychiatry follow-up, medication review, and behavioral-health care planning.",
+      "departments": [
+        {
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "departmentName": "Mental Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000011",
+      "displayName": "Dr. Santiago Alvarez",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Dentistry",
+      "bio": "Dr. Santiago Alvarez provides preventive dentistry, dental-pain care, and oral-health counseling.",
+      "departments": [
+        {
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "departmentName": "Dental Care",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000025",
+      "displayName": "Dr. Sara Lindgren",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Diagnostic Imaging",
+      "bio": "Dr. Sara Lindgren supports X-ray review, ultrasound reporting, and diagnostic imaging workflows.",
+      "departments": [
+        {
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "departmentName": "Radiology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "22222222-2222-4222-8222-222222222224",
+      "displayName": "Dr. Sofia Kovalenko",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Pediatrics",
+      "bio": "Dr. Sofia Kovalenko provides pediatric wellness, immunization planning, and acute child visits.",
+      "departments": [
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000006",
+      "displayName": "Dr. Valentina Rossi",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Sports Medicine",
+      "bio": "Dr. Valentina Rossi focuses on sports medicine, mobility recovery, and active-lifestyle injuries.",
+      "departments": [
+        {
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "departmentName": "Orthopedics",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "departmentName": "Rehabilitation & Physical Therapy",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "22222222-2222-4222-8222-222222222223",
+      "displayName": "Dr. Youssef Benali",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Cardiology",
+      "bio": "Dr. Youssef Benali focuses on preventive cardiology, chest-pain follow-up, and ECG interpretation.",
+      "departments": [
+        {
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "departmentName": "Cardiology",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000017",
+      "displayName": "Dr. Zara Khan",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Physical Medicine",
+      "bio": "Dr. Zara Khan coordinates rehabilitation plans, mobility recovery, and post-injury care.",
+      "departments": [
+        {
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "departmentName": "Rehabilitation & Physical Therapy",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000018",
+      "displayName": "Jonas Bergstrom",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Physical Therapy",
+      "bio": "Jonas Bergstrom leads physical therapy follow-ups, strengthening plans, and mobility coaching.",
+      "departments": [
+        {
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "departmentName": "Rehabilitation & Physical Therapy",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    }
+  ],
+  "doctorsByDepartment": {
+    "4abfc772-183b-4d95-8789-d11ee592bbfc": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000024",
+        "displayName": "Dr. Aleksei Petrov",
+        "specialization": "Radiology"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000025",
+        "displayName": "Dr. Sara Lindgren",
+        "specialization": "Diagnostic Imaging"
+      }
+    ],
+    "39cee12f-e0a5-4178-901f-3b1f04179def": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000021",
+        "displayName": "Dr. Amara Okafor",
+        "specialization": "Interventional Cardiology"
+      },
+      {
+        "staffProfileId": "22222222-2222-4222-8222-222222222223",
+        "displayName": "Dr. Youssef Benali",
+        "specialization": "Cardiology"
+      }
+    ],
+    "a79c64e1-27fe-4dbd-806f-1c474e8a6f94": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000001",
+        "displayName": "Dr. Amina El-Sayed",
+        "specialization": "Neurology"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000002",
+        "displayName": "Dr. Lars Nordin",
+        "specialization": "Neurophysiology"
+      }
+    ],
+    "44990bd0-f2d2-450d-b781-d5122db6ca7a": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000014",
+        "displayName": "Dr. Ana Ribeiro",
+        "specialization": "Retina"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000013",
+        "displayName": "Dr. Ibrahim Hassan",
+        "specialization": "Ophthalmology"
+      }
+    ],
+    "b7b934e1-9fab-4f47-94b2-63d4039cf328": [
+      {
+        "staffProfileId": "22222222-2222-4222-8222-222222222222",
+        "displayName": "Dr. Anika Rao",
+        "specialization": "Family Medicine"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000023",
+        "displayName": "Dr. Leila Farah",
+        "specialization": "Family Medicine"
+      },
+      {
+        "staffProfileId": "22222222-2222-4222-8222-222222222223",
+        "displayName": "Dr. Youssef Benali",
+        "specialization": "Cardiology"
+      }
+    ],
+    "913e5dd6-2131-41e1-bbc9-e1e393238810": [
+      {
+        "staffProfileId": "22222222-2222-4222-8222-222222222222",
+        "displayName": "Dr. Anika Rao",
+        "specialization": "Family Medicine"
+      }
+    ],
+    "2067b805-6af5-4c94-9a4b-190d37a25712": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000010",
+        "displayName": "Dr. Camila Torres",
+        "specialization": "Behavioral Health"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000009",
+        "displayName": "Dr. Ravi Menon",
+        "specialization": "Psychiatry"
+      }
+    ],
+    "e2bcf1d4-f256-4c6c-ab7d-415160e15650": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000008",
+        "displayName": "Dr. Elena Popescu",
+        "specialization": "Women's Health"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000007",
+        "displayName": "Dr. Mariam Al-Khatib",
+        "specialization": "Gynecology"
+      }
+    ],
+    "d66583aa-e0cf-45c0-b433-c6ba307df402": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000019",
+        "displayName": "Dr. Fatima Zahra",
+        "specialization": "Oncology"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000020",
+        "displayName": "Dr. James O'Connor",
+        "specialization": "Medical Oncology"
+      }
+    ],
+    "e2d856f0-edff-4624-87aa-746410657202": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000004",
+        "displayName": "Dr. Hiro Yamamoto",
+        "specialization": "Dermatologic Surgery"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000003",
+        "displayName": "Dr. Nia Mensah",
+        "specialization": "Dermatology"
+      }
+    ],
+    "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000026",
+        "displayName": "Dr. Kenji Watanabe",
+        "specialization": "Emergency Medicine"
+      }
+    ],
+    "1077b975-d589-435e-9f4f-f4a5a7f3c2e0": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000012",
+        "displayName": "Dr. Layla Haddad",
+        "specialization": "Pediatric Dentistry"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000011",
+        "displayName": "Dr. Santiago Alvarez",
+        "specialization": "Dentistry"
+      }
+    ],
+    "06993386-5002-4e2a-9561-76a30e863569": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000012",
+        "displayName": "Dr. Layla Haddad",
+        "specialization": "Pediatric Dentistry"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000022",
+        "displayName": "Dr. Mateo Silva",
+        "specialization": "Pediatrics"
+      },
+      {
+        "staffProfileId": "22222222-2222-4222-8222-222222222224",
+        "displayName": "Dr. Sofia Kovalenko",
+        "specialization": "Pediatrics"
+      }
+    ],
+    "f553cda1-1f92-4a4d-a547-a967bd02b014": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000005",
+        "displayName": "Dr. Mateusz Kowalski",
+        "specialization": "Orthopedics"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000006",
+        "displayName": "Dr. Valentina Rossi",
+        "specialization": "Sports Medicine"
+      }
+    ],
+    "e78e67f8-4984-4640-9254-5bdf5b087dea": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000015",
+        "displayName": "Dr. Maya Singh",
+        "specialization": "Endocrinology"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000016",
+        "displayName": "Dr. Noah Stein",
+        "specialization": "Diabetes Care"
+      }
+    ],
+    "b3444a6e-3f2b-442f-9c7c-acab8567b42d": [
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000006",
+        "displayName": "Dr. Valentina Rossi",
+        "specialization": "Sports Medicine"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000017",
+        "displayName": "Dr. Zara Khan",
+        "specialization": "Physical Medicine"
+      },
+      {
+        "staffProfileId": "b2000000-0000-4000-8000-000000000018",
+        "displayName": "Jonas Bergstrom",
+        "specialization": "Physical Therapy"
+      }
+    ]
+  },
+  "publicCareProviders": [
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000024",
+      "displayName": "Dr. Aleksei Petrov",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Radiology",
+      "bio": "Dr. Aleksei Petrov reviews imaging studies, ultrasound findings, and radiology coordination cases.",
+      "departments": [
+        {
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "departmentName": "Radiology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000021",
+      "displayName": "Dr. Amara Okafor",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Interventional Cardiology",
+      "bio": "Dr. Amara Okafor provides chest-pain review, cardiac-risk counseling, and post-ECG follow-up.",
+      "departments": [
+        {
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "departmentName": "Cardiology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000001",
+      "displayName": "Dr. Amina El-Sayed",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Neurology",
+      "bio": "Dr. Amina El-Sayed treats migraine, neuropathy, and seizure follow-up with a calm, patient-centered approach.",
+      "departments": [
+        {
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "departmentName": "Neurology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000014",
+      "displayName": "Dr. Ana Ribeiro",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Retina",
+      "bio": "Dr. Ana Ribeiro focuses on retina review, diabetic screening, and visual-symptom triage.",
+      "departments": [
+        {
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "departmentName": "Ophthalmology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "22222222-2222-4222-8222-222222222222",
+      "displayName": "Dr. Anika Rao",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Family Medicine",
+      "bio": "Dr. Anika Rao is a board-certified family physician for the MedSphere demo clinic.",
+      "departments": [
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "913e5dd6-2131-41e1-bbc9-e1e393238810",
+          "departmentName": "Diagnostics",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000010",
+      "displayName": "Dr. Camila Torres",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Behavioral Health",
+      "bio": "Dr. Camila Torres offers therapy visits, anxiety support, and continuity counseling.",
+      "departments": [
+        {
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "departmentName": "Mental Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000008",
+      "displayName": "Dr. Elena Popescu",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Women's Health",
+      "bio": "Dr. Elena Popescu supports prenatal counseling, preventive screening, and women's health follow-up.",
+      "departments": [
+        {
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "departmentName": "Women's Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000019",
+      "displayName": "Dr. Fatima Zahra",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Oncology",
+      "bio": "Dr. Fatima Zahra supports cancer screening coordination, survivorship review, and referral care.",
+      "departments": [
+        {
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "departmentName": "Oncology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000004",
+      "displayName": "Dr. Hiro Yamamoto",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Dermatologic Surgery",
+      "bio": "Dr. Hiro Yamamoto supports lesion review, biopsy planning, and outpatient dermatologic procedures.",
+      "departments": [
+        {
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "departmentName": "Dermatology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000013",
+      "displayName": "Dr. Ibrahim Hassan",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Ophthalmology",
+      "bio": "Dr. Ibrahim Hassan handles comprehensive eye exams, glaucoma checks, and diabetic eye screening.",
+      "departments": [
+        {
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "departmentName": "Ophthalmology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "44990bd0-f2d2-450d-b781-d5122db6ca7a",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000020",
+      "displayName": "Dr. James O'Connor",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Medical Oncology",
+      "bio": "Dr. James O'Connor manages oncology follow-up, symptom review, and coordinated care plans.",
+      "departments": [
+        {
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "departmentName": "Oncology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d66583aa-e0cf-45c0-b433-c6ba307df402",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000026",
+      "displayName": "Dr. Kenji Watanabe",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Emergency Medicine",
+      "bio": "Dr. Kenji Watanabe manages urgent walk-ins, acute stabilization, and triage escalation.",
+      "departments": [
+        {
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "departmentName": "Emergency & Triage",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000002",
+      "displayName": "Dr. Lars Nordin",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Neurophysiology",
+      "bio": "Dr. Lars Nordin focuses on neurophysiology, dizziness, and complex neurologic symptom review.",
+      "departments": [
+        {
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "departmentName": "Neurology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "a79c64e1-27fe-4dbd-806f-1c474e8a6f94",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000012",
+      "displayName": "Dr. Layla Haddad",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Pediatric Dentistry",
+      "bio": "Dr. Layla Haddad focuses on pediatric dental visits, prevention, and gentle urgent dental care.",
+      "departments": [
+        {
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "departmentName": "Dental Care",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000023",
+      "displayName": "Dr. Leila Farah",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Family Medicine",
+      "bio": "Dr. Leila Farah provides family medicine, preventive care, and chronic-condition follow-up.",
+      "departments": [
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000007",
+      "displayName": "Dr. Mariam Al-Khatib",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Gynecology",
+      "bio": "Dr. Mariam Al-Khatib provides preventive gynecology, prenatal counseling, and reproductive-health visits.",
+      "departments": [
+        {
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "departmentName": "Women's Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2bcf1d4-f256-4c6c-ab7d-415160e15650",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000022",
+      "displayName": "Dr. Mateo Silva",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Pediatrics",
+      "bio": "Dr. Mateo Silva supports child wellness, pediatric acute visits, and vaccine counseling.",
+      "departments": [
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "12:00",
+          "endTime": "20:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000005",
+      "displayName": "Dr. Mateusz Kowalski",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Orthopedics",
+      "bio": "Dr. Mateusz Kowalski manages sports injuries, fracture follow-up, and joint-pain care.",
+      "departments": [
+        {
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "departmentName": "Orthopedics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000015",
+      "displayName": "Dr. Maya Singh",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Endocrinology",
+      "bio": "Dr. Maya Singh supports diabetes care, thyroid review, and metabolic-health treatment planning.",
+      "departments": [
+        {
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "departmentName": "Endocrinology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000003",
+      "displayName": "Dr. Nia Mensah",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Dermatology",
+      "bio": "Dr. Nia Mensah provides preventive skin checks, acne care, eczema review, and minor skin procedures.",
+      "departments": [
+        {
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "departmentName": "Dermatology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e2d856f0-edff-4624-87aa-746410657202",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000016",
+      "displayName": "Dr. Noah Stein",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Diabetes Care",
+      "bio": "Dr. Noah Stein focuses on diabetes follow-up, medication adjustment, and prevention counseling.",
+      "departments": [
+        {
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "departmentName": "Endocrinology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "e78e67f8-4984-4640-9254-5bdf5b087dea",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000009",
+      "displayName": "Dr. Ravi Menon",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Psychiatry",
+      "bio": "Dr. Ravi Menon provides psychiatry follow-up, medication review, and behavioral-health care planning.",
+      "departments": [
+        {
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "departmentName": "Mental Health",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "2067b805-6af5-4c94-9a4b-190d37a25712",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000011",
+      "displayName": "Dr. Santiago Alvarez",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Dentistry",
+      "bio": "Dr. Santiago Alvarez provides preventive dentistry, dental-pain care, and oral-health counseling.",
+      "departments": [
+        {
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "departmentName": "Dental Care",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "1077b975-d589-435e-9f4f-f4a5a7f3c2e0",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000025",
+      "displayName": "Dr. Sara Lindgren",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Diagnostic Imaging",
+      "bio": "Dr. Sara Lindgren supports X-ray review, ultrasound reporting, and diagnostic imaging workflows.",
+      "departments": [
+        {
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "departmentName": "Radiology",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "4abfc772-183b-4d95-8789-d11ee592bbfc",
+          "startTime": "09:30",
+          "endTime": "17:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "22222222-2222-4222-8222-222222222224",
+      "displayName": "Dr. Sofia Kovalenko",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Pediatrics",
+      "bio": "Dr. Sofia Kovalenko provides pediatric wellness, immunization planning, and acute child visits.",
+      "departments": [
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000006",
+      "displayName": "Dr. Valentina Rossi",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Sports Medicine",
+      "bio": "Dr. Valentina Rossi focuses on sports medicine, mobility recovery, and active-lifestyle injuries.",
+      "departments": [
+        {
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "departmentName": "Orthopedics",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "departmentName": "Rehabilitation & Physical Therapy",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "f553cda1-1f92-4a4d-a547-a967bd02b014",
+          "startTime": "10:00",
+          "endTime": "18:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "22222222-2222-4222-8222-222222222223",
+      "displayName": "Dr. Youssef Benali",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Cardiology",
+      "bio": "Dr. Youssef Benali focuses on preventive cardiology, chest-pain follow-up, and ECG interpretation.",
+      "departments": [
+        {
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "departmentName": "Cardiology",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "39cee12f-e0a5-4178-901f-3b1f04179def",
+          "startTime": "08:30",
+          "endTime": "16:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000017",
+      "displayName": "Dr. Zara Khan",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Physical Medicine",
+      "bio": "Dr. Zara Khan coordinates rehabilitation plans, mobility recovery, and post-injury care.",
+      "departments": [
+        {
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "departmentName": "Rehabilitation & Physical Therapy",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000018",
+      "displayName": "Jonas Bergstrom",
+      "position": "Doctor",
+      "roleKey": "doctor",
+      "specialization": "Physical Therapy",
+      "bio": "Jonas Bergstrom leads physical therapy follow-ups, strengthening plans, and mobility coaching.",
+      "departments": [
+        {
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "departmentName": "Rehabilitation & Physical Therapy",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b3444a6e-3f2b-442f-9c7c-acab8567b42d",
+          "startTime": "11:00",
+          "endTime": "19:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000028",
+      "displayName": "Nurse Amina Diallo",
+      "position": "Nurse",
+      "roleKey": "nurse",
+      "specialization": "Chronic Care Nursing",
+      "bio": "Nurse Amina Diallo supports chronic-care check-ins, vitals, and patient education.",
+      "departments": [
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "09:00",
+          "endTime": "17:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "33333333-3333-4333-8333-333333333333",
+      "displayName": "Nurse Hana Berisha",
+      "position": "Nurse",
+      "roleKey": "nurse",
+      "specialization": "Care Coordination",
+      "bio": "Hana Berisha handles intake, triage, and patient preparation across the MedSphere demo clinic.",
+      "departments": [
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "07:30",
+          "endTime": "15:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "07:30",
+          "endTime": "15:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "07:30",
+          "endTime": "15:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "07:30",
+          "endTime": "15:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "startTime": "07:30",
+          "endTime": "15:30",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "33333333-3333-4333-8333-333333333334",
+      "displayName": "Nurse Mei Tanaka",
+      "position": "Nurse",
+      "roleKey": "nurse",
+      "specialization": "Emergency Triage",
+      "bio": "Mei Tanaka handles urgent intake, escalation, and fast-track triage workflows.",
+      "departments": [
+        {
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "departmentName": "Emergency & Triage",
+          "isPrimary": true
+        },
+        {
+          "departmentId": "b7b934e1-9fab-4f47-94b2-63d4039cf328",
+          "departmentName": "Primary Care",
+          "isPrimary": false
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "07:00",
+          "endTime": "15:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "07:00",
+          "endTime": "15:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "07:00",
+          "endTime": "15:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "07:00",
+          "endTime": "15:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "07:00",
+          "endTime": "15:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000029",
+      "displayName": "Nurse Noor Al-Farsi",
+      "position": "Nurse",
+      "roleKey": "nurse",
+      "specialization": "Emergency Nursing",
+      "bio": "Nurse Noor Al-Farsi handles urgent triage, observation checks, and escalation support.",
+      "departments": [
+        {
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "departmentName": "Emergency & Triage",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "d64ebb3e-c99e-44bc-a10d-bba916ce9b1e",
+          "startTime": "15:00",
+          "endTime": "23:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    },
+    {
+      "staffProfileId": "b2000000-0000-4000-8000-000000000027",
+      "displayName": "Nurse Sofia Martinez",
+      "position": "Nurse",
+      "roleKey": "nurse",
+      "specialization": "Pediatrics Nursing",
+      "bio": "Nurse Sofia Martinez supports pediatric intake, vaccination preparation, and family education.",
+      "departments": [
+        {
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "departmentName": "Pediatrics",
+          "isPrimary": true
+        }
+      ],
+      "weeklySchedule": [
+        {
+          "dayOfWeek": 1,
+          "dayName": "Monday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 2,
+          "dayName": "Tuesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 3,
+          "dayName": "Wednesday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 4,
+          "dayName": "Thursday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        },
+        {
+          "dayOfWeek": 5,
+          "dayName": "Friday",
+          "departmentId": "06993386-5002-4e2a-9561-76a30e863569",
+          "startTime": "08:00",
+          "endTime": "16:00",
+          "slotDurationMinutes": 30,
+          "breakStart": "12:00",
+          "breakEnd": "12:30"
+        }
+      ]
+    }
+  ],
+  "publicSettings": {
+    "contact_email": "hello@medsphere.local",
+    "contact_phone": "+1 (555) 010-2400",
+    "facility_address": "44 Lakeview Avenue, Springfield",
+    "facility_description": "Departments, service catalogs, staff workflows, patient portals, records, diagnostics, billing, and AI support in one connected system.",
+    "facility_name": "MedSphere Demo Clinic",
+    "facility_tagline": "Health. Connected.",
+    "working_hours": {
+      "friday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "monday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "sunday": {
+        "isClosed": true
+      },
+      "tuesday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "saturday": {
+        "end": "13:00",
+        "start": "09:00"
+      },
+      "thursday": {
+        "end": "18:00",
+        "start": "08:00"
+      },
+      "wednesday": {
+        "end": "18:00",
+        "start": "08:00"
+      }
+    }
+  },
+  "appointmentTypeOptions": [
+    "IN_PERSON",
+    "VIRTUAL",
+    "WALK_IN",
+    "FOLLOW_UP"
+  ],
+  "availabilityLookup": {
+    "method": "GET",
+    "pathTemplate": "/api/public/staff/{staffProfileId}/available-slots?date=YYYY-MM-DD&serviceId={serviceCatalogId}",
+    "requiredInputs": [
+      "staffProfileId",
+      "serviceCatalogId",
+      "date"
+    ]
+  }
+}

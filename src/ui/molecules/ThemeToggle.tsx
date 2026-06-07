@@ -1,22 +1,38 @@
 import { useThemeMode } from '@/hooks/useThemeMode';
+import Button from '@/ui/atoms/Button';
 
 export default function ThemeToggle() {
-  const { mode, cycle, setMode } = useThemeMode();
+  const { mode, setMode } = useThemeMode();
 
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={cycle}
-        className="px-3 py-1 rounded border bg-gray-100 dark:bg-gray-800"
-        title="Cycle theme: light → dark → system"
+    <div className="flex items-center gap-1 rounded-xl border border-border bg-card p-1">
+      <Button
+        type="button"
+        size="sm"
+        variant={mode === 'light' ? 'primary' : 'ghost'}
+        onClick={() => setMode('light')}
+        className="h-8 px-3"
       >
-        Theme: {mode}
-      </button>
-      <div className="hidden sm:flex gap-1">
-        <button className="px-2 py-1 rounded border" onClick={() => setMode('light')}>Light</button>
-        <button className="px-2 py-1 rounded border" onClick={() => setMode('dark')}>Dark</button>
-        <button className="px-2 py-1 rounded border" onClick={() => setMode('system')}>System</button>
-      </div>
+        Light
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={mode === 'dark' ? 'primary' : 'ghost'}
+        onClick={() => setMode('dark')}
+        className="h-8 px-3"
+      >
+        Dark
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant={mode === 'system' ? 'primary' : 'ghost'}
+        onClick={() => setMode('system')}
+        className="hidden h-8 px-3 sm:inline-flex"
+      >
+        System
+      </Button>
     </div>
   );
 }

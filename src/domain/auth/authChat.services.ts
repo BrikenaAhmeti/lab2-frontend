@@ -1,5 +1,6 @@
 import { api } from '@/libs/axios/client';
 import type { SignInPayload } from './authChat.types';
+import type { AuthUser } from './types';
 
 export type SignInResponse = {
   data: {
@@ -8,15 +9,15 @@ export type SignInResponse = {
         chatId: string;
         accessToken: string;
         refreshToken: string;
-        user: any;
+        user: AuthUser;
       };
-      chatData: any;
+      chatData: unknown[];
     };
   };
 };
 
 export async function signInWithAgent(payload: SignInPayload) {
-  const res = await api.core.post<SignInResponse>(
+  const res = await api.auth.post<SignInResponse>(
     '/rebecca-agent-dom.controller/sign-in',
     payload
   );

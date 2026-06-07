@@ -19,6 +19,8 @@ export default function ChatMessageList() {
                 alt="agent"
                 className="w-9 h-9 rounded-full object-cover border border-border"
                 src="/assets/agents/sage-agent-icon.svg"
+                loading="lazy"
+                decoding="async"
               />
               <div className="max-w-[85%] rounded-2xl bg-card border border-border px-4 py-3">
                 <div className="text-sm leading-relaxed">{m.agent.message}</div>

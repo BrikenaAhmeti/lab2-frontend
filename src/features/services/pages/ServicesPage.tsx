@@ -1,0 +1,283 @@
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Upload } from 'lucide-react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { useAppSelector } from '@/app/hooks';
+import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
+import LazyImportWizard from '@/components/import/LazyImportWizard';
+import {
+  getApiErrorMessage,
+  toServicePayload,
+  useCreateService,
+  useDeleteService,
+  useDepartmentsOptions,
+  useServiceCatalogList,
+  useUpdateService,
+} from '@/features/services/hooks/useServiceCatalog';
+import ServiceCatalogFilters from '@/features/services/components/ServiceCatalogFilters';
+import ServiceCatalogTable from '@/features/services/components/ServiceCatalogTable';
+import ServiceCatalogFormModal from '@/features/services/components/ServiceCatalogFormModal';
+import DeleteServiceDialog from '@/features/services/components/DeleteServiceDialog';
+import type { ServiceFormValues } from '@/features/services/services.schemas';
+import { hasAnyPermission } from '@/features/auth/utils/permission';
+import type { ServiceRecord } from '@/lib/api/services-api';
+import Card from '@/ui/atoms/Card';
+import Button from '@/ui/atoms/Button';
+import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
+import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Pagination from '@/ui/molecules/Pagination';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
+import { organizationBreadcrumbs } from '@/pages/admin/organization/organizationBreadcrumbs';
+
+type StatusFilter = 'all' | 'active' | 'inactive';
+type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+
+const defaultPageSize = 10;
+
+export default function ServicesPage() {
+  const { departmentId: routeDepartmentId } = useParams();
+  const [searchParams] = useSearchParams();
+  const permissions = useAppSelector((state) => state.auth.user?.permissions ?? []);
+  const canRead = hasAnyPermission(permissions, ['services:read', 'services:manage', 'services:manage:all'], 'any');
+  const canManage = hasAnyPermission(permissions, ['services:manage', 'services:manage:all'], 'any');
+
+  const initialDepartmentId = searchParams.get('departmentId') ?? routeDepartmentId ?? '';
+  const [search, setSearch] = useState('');
+  const [departmentId, setDepartmentId] = useState(initialDepartmentId);
+  const [activeFilter, setActiveFilter] = useState<StatusFilter>('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
+  const [feedback, setFeedback] = useState<FeedbackState>(null);
+  const [formError, setFormError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showImportWizard, setShowImportWizard] = useState(false);
+  const [editingService, setEditingService] = useState<ServiceRecord | null>(null);
+  const [serviceToDelete, setServiceToDelete] = useState<ServiceRecord | null>(null);
+
+  const listParams = useMemo(
+    () => ({
+      page,
+      limit,
+      search: search.trim() || undefined,
+      departmentId: departmentId || undefined,
+      isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+    }),
+    [activeFilter, departmentId, limit, page, search]
+  );
+  const exportFilters = useMemo(
+    () => ({
+      search: search.trim() || undefined,
+      departmentId: departmentId || undefined,
+      isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+    }),
+    [activeFilter, departmentId, search]
+  );
+
+  const servicesQuery = useServiceCatalogList(listParams);
+  const departmentsQuery = useDepartmentsOptions();
+  const createMutation = useCreateService();
+  const updateMutation = useUpdateService();
+  const deleteMutation = useDeleteService();
+
+  const rows = servicesQuery.data?.items ?? [];
+  const departments = departmentsQuery.data ?? [];
+  const paginationMeta = servicesQuery.data?.meta;
+  const mutationPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, departmentId, activeFilter]);
+
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
+
+  if (!canRead) {
+    return <Forbidden />;
+  }
+
+  const servicesErrorMessage = servicesQuery.isError
+    ? getApiErrorMessage(servicesQuery.error, 'Clinical services could not be loaded')
+    : '';
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
+  };
+
+  const openImportWizard = useCallback(() => setShowImportWizard(true), []);
+  const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const handleImportCompleted = useCallback(() => {
+    setFeedback({ type: 'success', message: 'Clinical services imported successfully' });
+    void servicesQuery.refetch();
+  }, [servicesQuery.refetch]);
+
+  const openCreateModal = useCallback(() => {
+    setFormError('');
+    setEditingService(null);
+    setShowFormModal(true);
+  }, []);
+
+  const openEditModal = useCallback((service: ServiceRecord) => {
+    setFormError('');
+    setEditingService(service);
+    setShowFormModal(true);
+  }, []);
+
+  const closeFormModal = useCallback(() => {
+    setFormError('');
+    setEditingService(null);
+    setShowFormModal(false);
+  }, []);
+
+  const closeDeleteDialog = useCallback(() => {
+    setDeleteError('');
+    setServiceToDelete(null);
+  }, []);
+
+  const submitForm = useCallback(async (values: ServiceFormValues) => {
+    setFeedback(null);
+    setFormError('');
+
+    const payload = toServicePayload(values);
+
+    try {
+      if (editingService) {
+        await updateMutation.mutateAsync({ id: editingService.id, payload });
+        setFeedback({ type: 'success', message: 'Clinical service updated successfully' });
+      } else {
+        await createMutation.mutateAsync(payload);
+        setFeedback({ type: 'success', message: 'Clinical service created successfully' });
+      }
+
+      closeFormModal();
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, 'Clinical service could not be saved'));
+    }
+  }, [createMutation, editingService, updateMutation, closeFormModal]);
+
+  const confirmDelete = useCallback(async () => {
+    if (!serviceToDelete) {
+      return;
+    }
+
+    setFeedback(null);
+    setDeleteError('');
+
+    try {
+      await deleteMutation.mutateAsync(serviceToDelete.id);
+      setFeedback({ type: 'success', message: 'Clinical service deleted successfully' });
+      setServiceToDelete(null);
+    } catch (error) {
+      setDeleteError(getApiErrorMessage(error, 'Clinical service could not be deleted'));
+    }
+  }, [deleteMutation, serviceToDelete]);
+
+  return (
+    <div className="space-y-4">
+      <Breadcrumbs items={organizationBreadcrumbs('Service Catalog')} />
+
+      <Card
+        title="Clinical Service Catalog"
+        subtitle="Manage department clinical services and procedures"
+        actions={
+          <div className="flex flex-wrap justify-end gap-2">
+            <ExportButton entity="service-catalog" filters={exportFilters} />
+            {canManage ? (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Upload className="h-4 w-4" />}
+                  onClick={openImportWizard}
+                >
+                  Import
+                </Button>
+                <Button size="sm" onClick={openCreateModal}>
+                  Add Clinical Service
+                </Button>
+              </>
+            ) : null}
+          </div>
+        }
+      >
+        <div className="space-y-4">
+          <ServiceCatalogFilters
+            search={search}
+            departmentId={departmentId}
+            isActive={activeFilter}
+            departments={departments}
+            onSearchChange={setSearch}
+            onDepartmentChange={setDepartmentId}
+            onStatusChange={setActiveFilter}
+          />
+
+          {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
+
+          {servicesQuery.isLoading ? <TableSkeleton rows={4} columns={6} /> : null}
+
+          {servicesQuery.isError ? <FeedbackMessage type="error" message={servicesErrorMessage} /> : null}
+
+          {!servicesQuery.isLoading && !servicesQuery.isError && rows.length === 0 ? (
+            <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
+              <p className="font-medium text-foreground">No clinical services found</p>
+              <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new clinical service.</p>
+            </div>
+          ) : null}
+
+          {!servicesQuery.isLoading && !servicesQuery.isError && rows.length > 0 ? (
+            <ServiceCatalogTable
+              rows={rows}
+              departments={departments}
+              canManage={canManage}
+              mutationPending={mutationPending}
+              onEdit={openEditModal}
+              onDelete={setServiceToDelete}
+            />
+          ) : null}
+
+          {!servicesQuery.isLoading && !servicesQuery.isError && paginationMeta ? (
+            <Pagination
+              page={page}
+              totalPages={paginationMeta.totalPages}
+              total={paginationMeta.total}
+              limit={limit}
+              loading={servicesQuery.isFetching}
+              onPageChange={setPage}
+              onLimitChange={updateLimit}
+            />
+          ) : null}
+        </div>
+
+        <ServiceCatalogFormModal
+          open={showFormModal}
+          departments={departments}
+          service={editingService}
+          defaultDepartmentId={departmentId}
+          loading={createMutation.isPending || updateMutation.isPending}
+          submitError={formError}
+          onClose={closeFormModal}
+          onSubmit={submitForm}
+        />
+
+        <DeleteServiceDialog
+          service={serviceToDelete}
+          errorMessage={deleteError}
+          loading={deleteMutation.isPending}
+          onClose={closeDeleteDialog}
+          onConfirm={confirmDelete}
+        />
+        <LazyImportWizard
+          open={showImportWizard}
+          entity="service-catalog"
+          title="Import Service Catalog"
+          onClose={closeImportWizard}
+          onCompleted={handleImportCompleted}
+        />
+      </Card>
+    </div>
+  );
+}

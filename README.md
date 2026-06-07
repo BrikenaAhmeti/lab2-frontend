@@ -1,73 +1,102 @@
-# React + TypeScript + Vite + Tailwind
+# MedSphere Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + TypeScript + Vite frontend for the Lab2 MedSphere platform. It serves the public website, authentication screens, and role-based portals for admins, doctors, nurses, receptionists, lab staff, pharmacy staff, and patients.
 
-Currently, two official plugins are available:
+The frontend does not own a database. It talks to the Lab2 backend services through HTTP and Socket.IO.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Port
 
-## React Compiler
+- Local Vite dev server: `http://localhost:3001`
+- Docker host port: `http://localhost:3001`
+- Docker container port: `80`
+- Docker health check path: `/health`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment Keys
 
-## Expanding the ESLint configuration
+Copy `.env.example` to `.env`. Vite reads these keys at build time, so rebuild the Docker image after changing them.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Preferred keys:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- `VITE_AUTH_API_URL`
+- `VITE_CORE_API_URL`
+- `VITE_NOTIFICATION_API_URL`
+- `VITE_NOTIFICATION_SOCKET_URL`
+- `VITE_CMS_API_URL`
+- `VITE_CMS_SOCKET_URL`
+- `VITE_AI_API_URL`
+- `VITE_AI_SOCKET_URL`
+- `VITE_API_DEVICE_INFO`
+- `VITE_PUBLIC_SITE_URL`
+- `VITE_VAPI_PUBLIC_KEY`
+- `VITE_VAPI_ASSISTANT_ID`
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Accepted legacy aliases still supported by `src/config/env.ts`:
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `VITE_API_AUTH_SERVICE`
+- `VITE_API_CORE_SERVICE`
+- `VITE_API_NOTIFICATION_SERVICE`
+- `VITE_API_CMS_SERVICE`
+- `VITE_API_AI_SERVICE`
+- `VITE_API_CORE`
+
+Docker-only host port override:
+
+- `FRONTEND_PORT`
+
+## Start Locally
+
+```bash
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Open `http://localhost:3001`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Run With Docker
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+cp .env.example .env
+npm run docker:up
+npm run docker:logs
 ```
+
+Stop the container:
+
+```bash
+npm run docker:down
+```
+
+The Docker image builds the Vite app and serves static files with Nginx. SPA routes fall back to `index.html`.
+
+## Build And Tests
+
+```bash
+npm run build
+npm run test
+```
+
+Additional test modes:
+
+```bash
+npm run test:watch
+npm run test:ui
+```
+
+## Swagger
+
+This repository does not expose Swagger because it is a browser frontend, not an API service. Use the backend service Swagger URLs:
+
+- Auth: `http://localhost:3005/docs` or `http://localhost:3005/api/docs`
+- Core: `http://localhost:3007/api/docs`
+- Notifications: `http://localhost:3008/api/docs`
+- CMS: `http://localhost:3009/api/docs`
+- AI: `http://localhost:3010/api/docs`
+
+## Notes
+
+- The app uses React Query, Redux Toolkit, React Router, Socket.IO client, Tailwind, and Vitest.
+- Notification and chat realtime features require the Notification Service Socket.IO URL.
+- The dashboard AI helper uses `VITE_AI_SOCKET_URL` and sends the authenticated user's current role on every helper message.
+- Voice booking requires Vapi keys when that assistant is enabled.
+- The latest bundle optimization pass lazy-loads auth pages, portal layouts, heavy widgets, report charts, CMS preview/editor panels, and consultation audio tools.

@@ -29,20 +29,20 @@ const Button = ({
       disabled={disabled || loading}
       className={clsx(
         // Base
-        "inline-flex items-center justify-center rounded-lg font-medium transition focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed",
+        "inline-flex items-center justify-center gap-2 rounded-lg border font-medium transition focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-60",
         // Size
         size === "sm" && "text-sm px-3 py-1.5",
-        size === "md" && "text-sm px-4 py-2",
+        size === "md" && "text-sm px-4 py-2.5",
         size === "lg" && "text-base px-6 py-3",
         // Variants
         variant === "primary" &&
-          "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 dark:bg-blue-500 dark:hover:bg-blue-600",
+          "border-transparent bg-primary text-primary-foreground hover:bg-primary/90",
         variant === "secondary" &&
-          "bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700",
+          "border-border bg-surface text-foreground hover:bg-surface/80",
         variant === "danger" &&
-          "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
+          "border-transparent bg-danger text-white hover:bg-danger/90",
         variant === "ghost" &&
-          "bg-transparent text-gray-900 hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-900",
+          "border-transparent bg-transparent text-foreground hover:bg-surface",
         className
       )}
       {...rest}
@@ -50,12 +50,12 @@ const Button = ({
       {loading && (
         <span
           data-testid="spinner"
-          className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
         />
       )}
-      {leftIcon && <span className="mr-2">{leftIcon}</span>}
+      {leftIcon && <span>{leftIcon}</span>}
       <span>{children}</span>
-      {rightIcon && <span className="ml-2">{rightIcon}</span>}
+      {rightIcon && <span>{rightIcon}</span>}
     </button>
   );
 };

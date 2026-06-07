@@ -1,55 +1,103 @@
-import axios from 'axios';
-import type { AxiosInstance, AxiosError } from 'axios';
+import axios, { AxiosHeaders } from 'axios';
+import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/domain/auth/authSlice';
+import {
+  clearPersistedAuthSession,
+  persistAuthSession,
+  readPersistedAuthSession,
+} from '@/features/auth/authStorage';
 import { env } from '@/config/env';
 import { addSubscriber, flushSubscribers, getRefreshing, setRefreshing } from './refreshQueue';
+import type { AuthUser } from '@/domain/auth/types';
 
-type ApiKey = 'core' | 'deviceInfo';
-const base: Record<ApiKey, string> = { core: env.API_CORE, deviceInfo: env.API_DEVICE_INFO };
+type ApiKey = 'auth' | 'core' | 'deviceInfo';
+type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
+
+interface RefreshResponse {
+  accessToken?: string;
+  refreshToken?: string;
+  tokens?: {
+    accessToken?: string;
+    refreshToken?: string;
+  };
+  user: AuthUser;
+}
+
+const base: Record<ApiKey, string> = {
+  auth: env.AUTH_API_URL,
+  core: env.CORE_API_URL,
+  deviceInfo: env.API_DEVICE_INFO,
+};
+
+function setAuthHeader(config: InternalAxiosRequestConfig, token: string) {
+  const headers =
+    config.headers instanceof AxiosHeaders ? config.headers : AxiosHeaders.from(config.headers ?? {});
+  headers.set('Authorization', `Bearer ${token}`);
+  config.headers = headers;
+}
 
 function build(key: ApiKey): AxiosInstance {
-  const instance = axios.create({ baseURL: base[key], timeout: 20000 });
+  const instance = axios.create({ baseURL: base[key], timeout: 20000, withCredentials: true });
 
   instance.interceptors.request.use(cfg => {
     const token = store.getState().auth.tokens?.accessToken;
-    if (token) cfg.headers.Authorization = `Bearer ${token}`;
+    if (token) setAuthHeader(cfg, token);
     return cfg;
   });
 
   instance.interceptors.response.use(
     res => res,
     async (error: AxiosError) => {
-      const orig = error.config!;
+      const orig = error.config as RetryableConfig | undefined;
       const status = error.response?.status;
 
-      if (status === 401 && !(orig as any)._retry) {
-        (orig as any)._retry = true;
+      if (!orig) {
+        return Promise.reject(error);
+      }
+
+      if (status === 401 && !orig._retry) {
+        orig._retry = true;
 
         if (!getRefreshing()) {
           setRefreshing(true);
           try {
-            const refreshToken = store.getState().auth.tokens?.refreshToken;
-            if (!refreshToken) throw new Error('No refresh token');
+            const auth = store.getState().auth;
+            const refreshToken = auth.refreshToken ?? auth.tokens?.refreshToken ?? readPersistedAuthSession()?.refreshToken;
+            if (!refreshToken) {
+              throw new Error('Cannot refresh session without a refresh token');
+            }
 
-            const { data } = await axios.post(`${base.core}/auth/refresh`, { refreshToken });
-            store.dispatch(setSession({ user: data.user, tokens: data.tokens }));
+            const { data } = await axios.post<RefreshResponse>(
+              `${base.auth}/auth/refresh`,
+              { refreshToken },
+              { withCredentials: true }
+            );
+            const accessToken = data.accessToken ?? data.tokens?.accessToken;
+            if (!accessToken) {
+              throw new Error('Refresh response did not include an access token');
+            }
+            store.dispatch(setSession({
+              user: data.user,
+              accessToken,
+              refreshToken: data.refreshToken ?? data.tokens?.refreshToken ?? refreshToken,
+            }));
+            persistAuthSession(store.getState().auth);
             setRefreshing(false);
-            flushSubscribers(data.tokens.accessToken);
-            orig.headers = orig.headers ?? {};
-            (orig.headers as any).Authorization = `Bearer ${data.tokens.accessToken}`;
+            flushSubscribers(accessToken);
+            setAuthHeader(orig, accessToken);
             return instance(orig);
           } catch (e) {
             setRefreshing(false);
             store.dispatch(clearSession());
+            clearPersistedAuthSession();
             return Promise.reject(e);
           }
         }
 
         return new Promise((resolve, reject) => {
           addSubscriber((newToken) => {
-            orig.headers = orig.headers ?? {};
-            (orig.headers as any).Authorization = `Bearer ${newToken}`;
+            setAuthHeader(orig, newToken);
             instance(orig).then(resolve).catch(reject);
           });
         });
@@ -57,6 +105,7 @@ function build(key: ApiKey): AxiosInstance {
 
       if (status === 403) {
         store.dispatch(clearSession());
+        clearPersistedAuthSession();
       }
       return Promise.reject(error);
     }
@@ -66,6 +115,7 @@ function build(key: ApiKey): AxiosInstance {
 }
 
 export const api = {
+  auth: build('auth'),
   core: build('core'),
   deviceInfo: build('deviceInfo')
 };
