@@ -7,6 +7,7 @@ import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import { authApi } from '@/lib/api/auth-api';
 import { passwordRequirementKeys, passwordSchema } from '@/features/auth/utils/password';
+import { getAuthApiErrorMessage } from '@/features/auth/utils/errors';
 
 const resetPasswordSchema = z
   .object({
@@ -58,8 +59,8 @@ export default function ResetPasswordPage() {
       setMessage(data.message || t('auth.resetSuccess'));
       setNewPassword('');
       setConfirmPassword('');
-    } catch {
-      setError(t('auth.operationFailed'));
+    } catch (resetError) {
+      setError(getAuthApiErrorMessage(resetError, t('auth.operationFailed')));
     } finally {
       setLoading(false);
     }

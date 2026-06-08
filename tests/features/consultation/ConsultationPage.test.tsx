@@ -195,9 +195,10 @@ const aiSummary: ConsultationSummary = {
   assessmentAndDiagnosis: 'Stable exam',
   treatmentPlan: 'Continue monitoring',
   followUpInstructions: 'Return if pain worsens',
+  aiReview: 'Verify red flags before finalizing.',
 };
 
-const aiReportText = `Chief complaint
+const aiReportText = `Patient concern
 Chest discomfort
 
 History of present illness
@@ -213,7 +214,10 @@ Treatment plan
 Continue monitoring
 
 Follow-up instructions
-Return if pain worsens`;
+Return if pain worsens
+
+AI review
+Verify red flags before finalizing.`;
 
 function makeAiConversation(overrides: Partial<AiConsultationConversation> = {}): AiConsultationConversation {
   return {
@@ -523,16 +527,20 @@ describe('ConsultationPage', () => {
     });
   });
 
-  it('generates an AI report from the transcript and saves it as the appointment record', async () => {
-    vi.mocked(aiApi.getConsultation).mockResolvedValue(makeAiConversation());
+  it('saves the generated AI report as the appointment record', async () => {
+    vi.mocked(aiApi.getConsultation).mockResolvedValue(makeAiConversation({ summary: aiSummary, reportText: aiReportText }));
 
     renderPage();
 
     expect(await screen.findAllByText('Ada Lovelace')).not.toHaveLength(0);
-    fireEvent.click(await screen.findByRole('button', { name: 'Generate Summary' }));
-
-    await screen.findByText('AI report generated.');
-    fireEvent.click(screen.getByRole('button', { name: 'Save as Record' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Report text')).toHaveValue(aiReportText);
+    });
+    const saveAsRecordButton = screen.getByRole('button', { name: 'Save as Record' });
+    await waitFor(() => {
+      expect(saveAsRecordButton).toBeEnabled();
+    });
+    fireEvent.click(saveAsRecordButton);
 
     await waitFor(() => {
       expect(medicalRecordsApi.create).toHaveBeenCalledWith({

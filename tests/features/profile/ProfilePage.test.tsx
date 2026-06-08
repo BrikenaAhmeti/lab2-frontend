@@ -116,6 +116,14 @@ describe('ProfilePage', () => {
     expect(await screen.findByText('auth.changePasswordSuccess auth.otherSessionsSignedOut')).toBeInTheDocument();
   });
 
+  it('keeps change password validation hidden before interaction', async () => {
+    renderProfilePage();
+
+    expect(await screen.findByDisplayValue('Ada')).toBeInTheDocument();
+    expect(screen.queryByText('auth.currentPasswordRequired')).not.toBeInTheDocument();
+    expect(screen.queryByText('auth.passwordTooShort')).not.toBeInTheDocument();
+  });
+
   it('uses a gender select when updating profile details', async () => {
     vi.mocked(profileApi.me).mockResolvedValue({
       id: '1',

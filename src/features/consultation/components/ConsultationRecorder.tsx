@@ -110,17 +110,17 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
   const recordingStatusText = useMemo(() => {
     if (isRecording) return 'Recording in progress';
     if (processingStage === 'saving') return 'Saving recording';
-    if (processingStage === 'transcribing' || transcribeMutation.isPending) return 'Recording saved. Transcribing conversation';
+    if (processingStage === 'transcribing' || transcribeMutation.isPending) return 'Audio saved. Transcribing conversation';
     if (processingStage === 'summarizing' || summarizeMutation.isPending) return 'Transcript ready. Generating AI summary';
-    if (audioUrl) return 'Recording saved';
-    return 'No recording saved yet';
+    if (audioUrl) return 'Audio saved';
+    return 'No audio saved yet';
   }, [audioUrl, isRecording, processingStage, summarizeMutation.isPending, transcribeMutation.isPending]);
 
   const transcriptStatusText = useMemo(() => {
     if (transcript) return '';
     if (processingStage === 'saving') return 'Saving the recording before transcription starts.';
     if (processingStage === 'transcribing' || transcribeMutation.isPending) {
-      return 'Recording saved. AI is transcribing the conversation now.';
+      return 'Audio saved. AI is transcribing the conversation now.';
     }
     if (processingStage === 'summarizing' || summarizeMutation.isPending) {
       return 'Transcript is ready. AI is preparing the consultation summary.';

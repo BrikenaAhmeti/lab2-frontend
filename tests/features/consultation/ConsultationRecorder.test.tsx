@@ -174,7 +174,7 @@ describe('ConsultationRecorder', () => {
       expect(aiApi.transcribeConsultationAudio).toHaveBeenCalled();
     });
     expect(window.URL.createObjectURL).toHaveBeenCalled();
-    expect(await screen.findByText('Recording saved. AI is transcribing the conversation now.')).toBeInTheDocument();
+    expect(await screen.findByText('Audio saved. AI is transcribing the conversation now.')).toBeInTheDocument();
 
     await act(async () => {
       resolveTranscription({

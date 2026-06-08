@@ -22,6 +22,7 @@ interface ChangePasswordFormProps {
   loading: boolean;
   feedback?: { type: 'success' | 'error'; message: string } | null;
   onChange: (field: keyof ChangePasswordValues, value: string) => void;
+  onBlur: (field: keyof ChangePasswordValues) => void;
   onSubmit: () => void;
 }
 
@@ -33,6 +34,7 @@ export default function ChangePasswordForm({
   loading,
   feedback,
   onChange,
+  onBlur,
   onSubmit,
 }: ChangePasswordFormProps) {
   return (
@@ -49,6 +51,7 @@ export default function ChangePasswordForm({
         label={labels.currentPassword}
         value={values.currentPassword}
         onChange={(e) => onChange('currentPassword', e.target.value)}
+        onBlur={() => onBlur('currentPassword')}
         error={errors.currentPassword}
       />
       <div />
@@ -58,6 +61,7 @@ export default function ChangePasswordForm({
         label={labels.newPassword}
         value={values.newPassword}
         onChange={(e) => onChange('newPassword', e.target.value)}
+        onBlur={() => onBlur('newPassword')}
         error={errors.newPassword}
       />
       <Input
@@ -66,6 +70,7 @@ export default function ChangePasswordForm({
         label={labels.confirmNewPassword}
         value={values.confirmNewPassword}
         onChange={(e) => onChange('confirmNewPassword', e.target.value)}
+        onBlur={() => onBlur('confirmNewPassword')}
         error={errors.confirmNewPassword}
       />
       <PasswordRequirementsList className="md:col-span-2" items={requirements} />

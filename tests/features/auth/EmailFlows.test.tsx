@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import PatientRegistrationPage from '@/features/auth/pages/PatientRegistrationPage';
 import ResendVerificationPage from '@/features/auth/pages/ResendVerificationPage';
+import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 import VerifyEmailPage from '@/features/auth/pages/VerifyEmailPage';
 import { authApi } from '@/lib/api/auth-api';
 
@@ -18,6 +19,7 @@ vi.mock('@/lib/api/auth-api', () => ({
     forgotPassword: vi.fn(),
     register: vi.fn(),
     resendVerification: vi.fn(),
+    resetPassword: vi.fn(),
     verifyEmail: vi.fn(),
   },
 }));
@@ -46,6 +48,55 @@ describe('email-based auth flows', () => {
     expect(await screen.findByText('auth.checkEmailReset')).toBeInTheDocument();
     expect(screen.queryByText('auth.developerToken')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'auth.copyToken' })).not.toBeInTheDocument();
+  });
+
+  it('shows the backend message when forgot password email is missing', async () => {
+    vi.mocked(authApi.forgotPassword).mockRejectedValue({
+      isAxiosError: true,
+      message: 'Request failed with status code 404',
+      response: {
+        status: 404,
+        data: {
+          message: 'Email is missing from our records.',
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText('auth.email'), { target: { value: 'missing@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.sendResetLink' }));
+
+    expect(await screen.findByText('Email is missing from our records.')).toBeInTheDocument();
+  });
+
+  it('resets password with the emailed query token', async () => {
+    vi.mocked(authApi.resetPassword).mockResolvedValue({
+      success: true,
+      message: '',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/reset-password?token=raw-reset-token']}>
+        <ResetPasswordPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(document.getElementById('reset-password')!, { target: { value: 'AnotherStrong123!' } });
+    fireEvent.change(document.getElementById('confirm-password')!, { target: { value: 'AnotherStrong123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.resetPassword' }));
+
+    await waitFor(() => {
+      expect(authApi.resetPassword).toHaveBeenCalledWith({
+        token: 'raw-reset-token',
+        newPassword: 'AnotherStrong123!',
+      });
+    });
+    expect(await screen.findByText('auth.resetSuccess')).toBeInTheDocument();
   });
 
   it('shows email-based resend verification messaging and no developer token UI', async () => {
