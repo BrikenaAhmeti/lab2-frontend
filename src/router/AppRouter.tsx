@@ -1,5 +1,5 @@
 import { Suspense, lazy, type ReactNode } from 'react';
-import { Navigate, createBrowserRouter } from 'react-router-dom';
+import { Navigate, createBrowserRouter, useParams } from 'react-router-dom';
 import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
 import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';

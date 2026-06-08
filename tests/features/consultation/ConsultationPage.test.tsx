@@ -72,6 +72,25 @@ vi.mock('@/lib/api/prescriptions-api', async () => {
   };
 });
 
+vi.mock('@/lib/api/lab-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/lab-api')>('@/lib/api/lab-api');
+
+  return {
+    ...actual,
+    labApi: {
+      listTests: vi.fn(),
+      listOrders: vi.fn(),
+      createOrder: vi.fn(),
+      pendingOrders: vi.fn(),
+      getOrder: vi.fn(),
+      updateOrderStatus: vi.fn(),
+      enterResults: vi.fn(),
+      reviewOrder: vi.fn(),
+      triggerAi: vi.fn(),
+    },
+  };
+});
+
 vi.mock('@/lib/api/ai-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/ai-api')>('@/lib/api/ai-api');
 
@@ -155,6 +174,20 @@ const patient: PatientRecord = {
   updatedAt: '2030-01-01T09:00:00.000Z',
 };
 
+const labTest: LabTestView = {
+  id: '88888888-8888-4888-8888-888888888888',
+  code: 'CBC',
+  name: 'Complete Blood Count',
+  description: 'Automated blood count with differential.',
+  category: 'Hematology',
+  sampleType: 'Blood',
+  defaultPrice: '45.00',
+  referenceRange: 'Hemoglobin 12.0 - 16.0 g/dL',
+  isActive: true,
+  createdAt: '2030-01-01T09:00:00.000Z',
+  updatedAt: '2030-01-01T09:00:00.000Z',
+};
+
 const aiSummary: ConsultationSummary = {
   chiefComplaint: 'Chest discomfort',
   historyOfPresentIllness: 'Patient reports intermittent chest discomfort.',
@@ -162,9 +195,10 @@ const aiSummary: ConsultationSummary = {
   assessmentAndDiagnosis: 'Stable exam',
   treatmentPlan: 'Continue monitoring',
   followUpInstructions: 'Return if pain worsens',
+  aiReview: 'Verify red flags before finalizing.',
 };
 
-const aiReportText = `Chief complaint
+const aiReportText = `Patient concern
 Chest discomfort
 
 History of present illness
@@ -180,7 +214,10 @@ Treatment plan
 Continue monitoring
 
 Follow-up instructions
-Return if pain worsens`;
+Return if pain worsens
+
+AI review
+Verify red flags before finalizing.`;
 
 function makeAiConversation(overrides: Partial<AiConsultationConversation> = {}): AiConsultationConversation {
   return {
@@ -380,6 +417,12 @@ describe('ConsultationPage', () => {
     );
   });
 
+  it('links back to the doctor dashboard from the consultation', async () => {
+    renderPage();
+
+    expect(await screen.findByRole('link', { name: 'Back to dashboard' })).toHaveAttribute('href', '/doctor');
+  });
+
   it('creates a medical record with the backend MS-19 field names', async () => {
     renderPage();
 
@@ -457,16 +500,47 @@ describe('ConsultationPage', () => {
     });
   });
 
-  it('generates an AI report from the transcript and saves it as the appointment record', async () => {
-    vi.mocked(aiApi.getConsultation).mockResolvedValue(makeAiConversation());
+  it('creates a lab order with selected backend lab test ids', async () => {
+    renderPage();
+
+    expect(await screen.findAllByText('Ada Lovelace')).not.toHaveLength(0);
+    fireEvent.change(await screen.findByLabelText('Priority'), { target: { value: 'urgent' } });
+    fireEvent.change(screen.getByLabelText('Lab Instructions'), { target: { value: 'Draw before medication' } });
+
+    const createButton = screen.getByRole('button', { name: 'Create Lab Order' });
+    expect(createButton).toBeDisabled();
+
+    fireEvent.click(await screen.findByLabelText('Complete Blood Count lab test'));
+    expect(createButton).toBeEnabled();
+    fireEvent.click(createButton);
+
+    await waitFor(() => {
+      expect(labApi.createOrder).toHaveBeenCalledWith({
+        patientId: appointment.patientId,
+        appointmentId: appointment.id,
+        medicalRecordId: null,
+        orderedByStaffId: appointment.staffProfileId,
+        priority: 'urgent',
+        notes: 'Draw before medication',
+        tests: [labTest.id],
+      });
+    });
+  });
+
+  it('saves the generated AI report as the appointment record', async () => {
+    vi.mocked(aiApi.getConsultation).mockResolvedValue(makeAiConversation({ summary: aiSummary, reportText: aiReportText }));
 
     renderPage();
 
     expect(await screen.findAllByText('Ada Lovelace')).not.toHaveLength(0);
-    fireEvent.click(await screen.findByRole('button', { name: 'Generate Summary' }));
-
-    await screen.findByText('AI report generated.');
-    fireEvent.click(screen.getByRole('button', { name: 'Save as Record' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Report text')).toHaveValue(aiReportText);
+    });
+    const saveAsRecordButton = screen.getByRole('button', { name: 'Save as Record' });
+    await waitFor(() => {
+      expect(saveAsRecordButton).toBeEnabled();
+    });
+    fireEvent.click(saveAsRecordButton);
 
     await waitFor(() => {
       expect(medicalRecordsApi.create).toHaveBeenCalledWith({

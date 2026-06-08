@@ -5,6 +5,10 @@ function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
 
+type PreviewRequestConfig = AxiosRequestConfig & {
+  skipLoginRedirect?: boolean;
+};
+
 const staffStatusParamMap: Record<string, string> = {
   active: 'ACTIVE',
   inactive: 'INACTIVE',
@@ -39,6 +43,7 @@ export interface StaffPositionType {
   id: string;
   name: string;
   defaultRoleKey?: string;
+  defaultRoleName?: string;
   isActive?: boolean;
 }
 
@@ -95,16 +100,28 @@ export interface StaffListResponse {
   };
 }
 
-export interface CreateStaffPayload {
-  userId: string;
+export interface StaffPayload {
+  userId?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  username?: string | null;
+  phone?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  personalNumber?: string | null;
   staffPositionTypeId: string;
   employeeCode: string;
-  specialization?: string;
-  employmentStatus: 'ACTIVE' | 'INACTIVE' | 'ON_LEAVE' | 'TERMINATED';
-  isPublicProfile: boolean;
-  departments: Array<{
+  specialization?: string | null;
+  licenseNumber?: string | null;
+  employmentStatus?: string;
+  hireDate?: string | null;
+  bio?: string | null;
+  isPublicProfile?: boolean;
+  departmentIds?: string[];
+  departments?: Array<{
     departmentId: string;
-    isPrimary: boolean;
+    isPrimary?: boolean;
   }>;
 }
 
@@ -139,9 +156,6 @@ export const staffApi = {
     return client(instance)
       .get<StaffListResponse>('/api/staff', { params: normalizeStaffListParams(params) })
       .then((response) => response.data);
-  },
-  create(payload: CreateStaffPayload, instance?: AxiosInstance) {
-    return client(instance).post<StaffRecord>('/api/staff', payload).then((response) => response.data);
   },
   publicList(params: StaffListParams & { staffId?: string }, instance?: AxiosInstance) {
     return client(instance)

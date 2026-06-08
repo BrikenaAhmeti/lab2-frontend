@@ -23,7 +23,6 @@ import {
 } from '../hooks/useAppointments';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import ConfirmStep from './ConfirmStep';
-import DepartmentStep from './DepartmentStep';
 import PublicPatientDetailsStep, {
   emptyPublicPatientDetails,
   normalizePublicPatientDetails,
@@ -35,10 +34,10 @@ import StaffStep from './StaffStep';
 import VoiceBookingPanel from './VoiceBookingPanel';
 import { formatAppointmentDate, getTodayInputValue } from './appointmentFormat';
 
-type BookingStep = 'Your Details' | 'Department' | 'Service' | 'Staff' | 'Slot' | 'Confirm';
+type BookingStep = 'Your Details' | 'Clinical Service' | 'Care Provider' | 'Slot' | 'Confirm';
 
-const portalSteps: BookingStep[] = ['Department', 'Service', 'Staff', 'Slot', 'Confirm'];
-const publicSteps: BookingStep[] = ['Your Details', 'Department', 'Service', 'Staff', 'Slot', 'Confirm'];
+const portalSteps: BookingStep[] = ['Care Provider', 'Clinical Service', 'Slot', 'Confirm'];
+const publicSteps: BookingStep[] = ['Care Provider', 'Clinical Service', 'Slot', 'Your Details', 'Confirm'];
 const publicBookingRegistrationKey = 'medsphere.publicBookingPatient';
 
 interface BookingWizardProps {
@@ -51,58 +50,6 @@ interface BookingWizardProps {
 
 function escapeCalendarText(value: string) {
   return value.replace(/\\/g, '\\\\').replace(/,/g, '\\,').replace(/;/g, '\\;').replace(/\n/g, '\\n');
-}
-
-function formatCalendarDate(value: string) {
-  return new Date(value).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-}
-
-function downloadAppointmentCalendar(appointment: AppointmentView) {
-  const summary = `MedSphere appointment: ${appointment.service.name}`;
-  const description = [
-    `Patient: ${appointment.patient.name}`,
-    `Department: ${appointment.department.name}`,
-    `Staff: ${appointment.staff?.displayName ?? 'Staff member'}`,
-    appointment.notes ? `Notes: ${appointment.notes}` : '',
-  ]
-    .filter(Boolean)
-    .join('\n');
-
-  const contents = [
-    'BEGIN:VCALENDAR',
-    'VERSION:2.0',
-    'PRODID:-//MedSphere//Appointments//EN',
-    'BEGIN:VEVENT',
-    `UID:${appointment.id}@medsphere`,
-    `DTSTAMP:${formatCalendarDate(new Date().toISOString())}`,
-    `DTSTART:${formatCalendarDate(appointment.scheduledAt)}`,
-    `DTEND:${formatCalendarDate(appointment.endAt)}`,
-    `SUMMARY:${escapeCalendarText(summary)}`,
-    `DESCRIPTION:${escapeCalendarText(description)}`,
-    'END:VEVENT',
-    'END:VCALENDAR',
-  ].join('\r\n');
-  const blob = new Blob([contents], { type: 'text/calendar;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-
-  link.href = url;
-  link.download = `medsphere-appointment-${appointment.id}.ics`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
-}
-
-function openPatientRegistrationFromBooking(details: typeof emptyPublicPatientDetails) {
-  try {
-    window.sessionStorage.setItem(publicBookingRegistrationKey, JSON.stringify(normalizePublicPatientDetails(details)));
-  } catch {
-    window.location.assign('/register?source=appointment');
-    return;
-  }
-
-  window.location.assign('/register?source=appointment');
 }
 
 function formatCalendarDate(value: string) {
@@ -217,28 +164,45 @@ export default function BookingWizard({
   const [now, setNow] = useState(Date.now());
   const [bookedAppointment, setBookedAppointment] = useState<AppointmentView | null>(null);
   const [submitError, setSubmitError] = useState('');
+  const [slotCheckError, setSlotCheckError] = useState('');
+  const [slotCheckLoading, setSlotCheckLoading] = useState(false);
   const [calendarError, setCalendarError] = useState('');
   const [publicPatientDetails, setPublicPatientDetails] = useState(emptyPublicPatientDetails);
   const [publicPatientSubmitted, setPublicPatientSubmitted] = useState(false);
 
   const isPublic = mode === 'public';
+  const usesPublicBookingCatalog = mode !== 'receptionist';
   const steps = isPublic ? publicSteps : portalSteps;
   const currentStep = steps[stepIndex] ?? steps[0];
+  const slotStepIndex = steps.indexOf('Slot');
   const publicPatientErrors = useMemo(
     () => validatePublicPatientDetails(publicPatientDetails),
     [publicPatientDetails]
   );
   const hasValidPublicPatient = Object.keys(publicPatientErrors).length === 0;
 
-  const departmentsQuery = useAppointmentDepartments(isPublic);
-  const servicesQuery = useAppointmentServices(department?.id ?? '', isPublic);
-  const staffQuery = useAppointmentStaff(department?.id ?? '', isPublic);
-  const slotsQuery = useAvailableSlots(staff?.id ?? '', service?.id ?? '', date, currentStep === 'Slot', isPublic);
+  const departmentsQuery = useAppointmentDepartments(usesPublicBookingCatalog);
+  const servicesQuery = useAppointmentServices(department?.id ?? '', usesPublicBookingCatalog);
+  const staffQuery = useAppointmentStaff(undefined, usesPublicBookingCatalog);
+  const shouldKeepSlotsFresh = slotStepIndex >= 0 && stepIndex >= slotStepIndex;
+  const slotsQuery = useAvailableSlots(
+    staff?.id ?? '',
+    service?.id ?? '',
+    date,
+    shouldKeepSlotsFresh,
+    usesPublicBookingCatalog
+  );
   const bookMutation = useBookAppointment();
   const publicBookMutation = usePublicBookAppointment();
   const actionLoading = bookMutation.isPending || publicBookMutation.isPending;
+  const currentDepartmentId = department?.id;
+  const liveSlots = useMemo(
+    () => (slotsQuery.data?.slots ?? []).filter((availableSlot) => new Date(availableSlot.start).getTime() > now),
+    [now, slotsQuery.data?.slots]
+  );
 
   const activePatientId = mode === 'receptionist' ? selectedPatient?.id : mode === 'patient' ? patientId : undefined;
+  const isPatientResolving = mode === 'patient' && patientResolving && !activePatientId;
   const expiresInSeconds = useMemo(() => {
     if (!slot || !slotSelectedAt) return null;
     return Math.max(0, 300 - Math.floor((now - slotSelectedAt) / 1000));
@@ -276,9 +240,8 @@ export default function BookingWizard({
 
   const canMoveNext = useMemo(() => {
     if (currentStep === 'Your Details') return hasValidPublicPatient;
-    if (currentStep === 'Department') return Boolean(department);
-    if (currentStep === 'Service') return Boolean(service);
-    if (currentStep === 'Staff') return Boolean(staff);
+    if (currentStep === 'Clinical Service') return Boolean(service);
+    if (currentStep === 'Care Provider') return Boolean(staff && department);
     if (currentStep === 'Slot') return Boolean(slot);
 
     if (isPublic) {
@@ -292,13 +255,6 @@ export default function BookingWizard({
       scheduledAt: slot?.start,
     });
   }, [activePatientId, currentStep, department, hasValidPublicPatient, isPublic, service, staff, slot]);
-
-  const resetAfterDepartment = () => {
-    setService(null);
-    setStaff(null);
-    setSlot(null);
-    setSlotSelectedAt(null);
-  };
 
   const resetAfterService = () => {
     setSlot(null);
@@ -369,6 +325,14 @@ export default function BookingWizard({
     if (mode === 'public' && !hasValidPublicPatient) return;
 
     try {
+      const slotIsStillAvailable = await verifySelectedSlot();
+
+      if (!slotIsStillAvailable) {
+        setSubmitError('Please choose another available appointment time before confirming.');
+        setStepIndex(slotStepIndex);
+        return;
+      }
+
       const appointment =
         mode === 'public'
           ? await publicBookMutation.mutateAsync(
@@ -414,6 +378,8 @@ export default function BookingWizard({
     setNotes('');
     setBookedAppointment(null);
     setSubmitError('');
+    setSlotCheckError('');
+    setSlotCheckLoading(false);
     setCalendarError('');
     setPublicPatientDetails(emptyPublicPatientDetails);
     setPublicPatientSubmitted(false);
@@ -423,10 +389,26 @@ export default function BookingWizard({
     setPublicPatientDetails((current) => ({ ...current, [field]: value }));
   };
 
-  const goNext = () => {
+  const goNext = async () => {
     if (currentStep === 'Your Details') {
       setPublicPatientSubmitted(true);
       if (!hasValidPublicPatient) return;
+
+      if (isPublic) {
+        if (!slot) {
+          setSlotCheckError('Please choose an available doctor and time before adding patient details.');
+          setStepIndex(slotStepIndex);
+          return;
+        }
+
+        const slotIsStillAvailable = await verifySelectedSlot();
+        if (!slotIsStillAvailable) return;
+      }
+    }
+
+    if (currentStep === 'Slot') {
+      const slotIsStillAvailable = await verifySelectedSlot();
+      if (!slotIsStillAvailable) return;
     }
 
     setStepIndex((current) => Math.min(steps.length - 1, current + 1));
@@ -437,8 +419,11 @@ export default function BookingWizard({
       mode={mode}
       patientId={activePatientId}
       departmentId={department?.id}
+      departmentName={department?.name}
       serviceCatalogId={service?.id}
+      serviceName={service?.name}
       staffProfileId={staff?.id}
+      staffName={staff ? getStaffName(staff) : undefined}
       scheduledAt={slot?.start}
       className="xl:sticky xl:top-4"
     />
@@ -474,12 +459,12 @@ export default function BookingWizard({
                 <dd className="font-medium text-foreground">{bookedAppointment.department.name}</dd>
               </div>
               <div>
-                <dt className="text-muted">Service</dt>
+                <dt className="text-muted">Clinical service</dt>
                 <dd className="font-medium text-foreground">{bookedAppointment.service.name}</dd>
               </div>
               <div>
-                <dt className="text-muted">Staff</dt>
-                <dd className="font-medium text-foreground">{bookedAppointment.staff?.displayName ?? 'Staff member'}</dd>
+                <dt className="text-muted">Doctor or care provider</dt>
+                <dd className="font-medium text-foreground">{bookedAppointment.staff?.displayName ?? 'Care provider'}</dd>
               </div>
               <div>
                 <dt className="text-muted">Date and time</dt>
@@ -552,13 +537,13 @@ export default function BookingWizard({
       <section className="panel p-5" aria-labelledby="manual-booking-title">
         <div className="mb-4">
           <h3 id="manual-booking-title" className="text-base font-semibold text-foreground">
-            {mode === 'receptionist' ? 'Book Appointment for Patient' : 'Book an Appointment'}
+            {mode === 'receptionist' ? 'Book Appointment for Patient' : 'Book Patient Appointment'}
           </h3>
           <p className="mt-1 text-sm text-muted">{`Step ${stepIndex + 1} of ${steps.length}: ${currentStep}`}</p>
         </div>
 
         <div className="space-y-5">
-          <nav className={`grid gap-2 ${isPublic ? 'sm:grid-cols-6' : 'sm:grid-cols-5'}`} aria-label="Booking steps">
+          <nav className={`grid gap-2 ${isPublic ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`} aria-label="Booking steps">
             {steps.map((step, index) => (
               <button
                 key={step}
@@ -582,25 +567,12 @@ export default function BookingWizard({
             />
           ) : null}
 
-          {currentStep === 'Department' ? (
-            <DepartmentStep
-              departments={departmentsQuery.data ?? []}
-              selectedId={department?.id}
-              loading={departmentsQuery.isLoading}
-              error={departmentsQuery.isError ? getApiErrorMessage(departmentsQuery.error, 'Departments could not be loaded') : undefined}
-              onSelect={(nextDepartment) => {
-                setDepartment(nextDepartment);
-                resetAfterDepartment();
-              }}
-            />
-          ) : null}
-
-          {currentStep === 'Service' ? (
+          {currentStep === 'Clinical Service' ? (
             <ServiceStep
               services={servicesQuery.data ?? []}
               selectedId={service?.id}
               loading={servicesQuery.isLoading}
-              error={servicesQuery.isError ? getApiErrorMessage(servicesQuery.error, 'Services could not be loaded') : undefined}
+              error={servicesQuery.isError ? getApiErrorMessage(servicesQuery.error, 'Clinical services could not be loaded') : undefined}
               onSelect={(nextService) => {
                 setService(nextService);
                 resetAfterService();
@@ -608,13 +580,14 @@ export default function BookingWizard({
             />
           ) : null}
 
-          {currentStep === 'Staff' ? (
+          {currentStep === 'Care Provider' ? (
             <StaffStep
               staff={staffQuery.data ?? []}
               selectedId={staff?.id}
               loading={staffQuery.isLoading}
-              error={staffQuery.isError ? getApiErrorMessage(staffQuery.error, 'Staff could not be loaded') : undefined}
+              error={staffQuery.isError ? getApiErrorMessage(staffQuery.error, 'Care providers could not be loaded') : undefined}
               onSelect={(nextStaff) => {
+                setDepartment(inferDepartmentFromStaff(nextStaff, departmentsQuery.data ?? []));
                 setStaff(nextStaff);
                 resetAfterStaff();
               }}
@@ -624,7 +597,7 @@ export default function BookingWizard({
           {currentStep === 'Slot' ? (
             <SlotStep
               date={date}
-              slots={slotsQuery.data?.slots ?? []}
+              slots={liveSlots}
               selectedSlot={slot}
               expiresInSeconds={expiresInSeconds}
               loading={slotsQuery.isLoading}
@@ -633,11 +606,13 @@ export default function BookingWizard({
                 setDate(nextDate);
                 setSlot(null);
                 setSlotSelectedAt(null);
+                setSlotCheckError('');
               }}
               onSlotSelect={(nextSlot) => {
                 setSlot(nextSlot);
                 setSlotSelectedAt(Date.now());
                 setNow(Date.now());
+                setSlotCheckError('');
               }}
             />
           ) : null}
@@ -650,6 +625,7 @@ export default function BookingWizard({
               staff={staff}
               slot={slot}
               patientId={activePatientId}
+              patientResolving={isPatientResolving}
               selectedPatient={selectedPatient}
               publicPatientDetails={publicPatientDetails}
               notes={notes}
@@ -658,6 +634,25 @@ export default function BookingWizard({
             />
           ) : null}
 
+          {currentStep === 'Care Provider' && staff && !department ? (
+            <FeedbackMessage
+              type="error"
+              message="This doctor does not have an active department assignment for online booking."
+            />
+          ) : null}
+          {currentStep === 'Clinical Service' && department ? (
+            <FeedbackMessage
+              type="success"
+              message={`Department selected from doctor: ${department.name}. Choose a clinical service to continue.`}
+            />
+          ) : null}
+          {slotCheckError ? <FeedbackMessage type="error" message={slotCheckError} /> : null}
+          {currentStep === 'Your Details' && slot && !slotCheckError ? (
+            <FeedbackMessage
+              type="success"
+              message={`The backend has this doctor and ${slot.startTime} slot available. Add patient details to continue.`}
+            />
+          ) : null}
           {submitError ? <FeedbackMessage type="error" message={submitError} /> : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -672,7 +667,8 @@ export default function BookingWizard({
             {stepIndex < steps.length - 1 ? (
               <Button
                 type="button"
-                disabled={currentStep !== 'Your Details' && !canMoveNext}
+                disabled={slotCheckLoading || (currentStep !== 'Your Details' && !canMoveNext)}
+                loading={slotCheckLoading && currentStep === 'Slot'}
                 onClick={goNext}
               >
                 Next

@@ -1,6 +1,6 @@
 import { type FormEvent, type InputHTMLAttributes, type ReactNode, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, UserPlus } from 'lucide-react';
 import AuthPageShell from '@/features/auth/components/AuthPageShell';
@@ -51,9 +51,12 @@ export default function LoginPage() {
   const { t } = useTranslation('common');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const hasVerifiedEmail = searchParams.get('verified') === '1' || searchParams.get('verified') === 'true';
@@ -88,27 +91,63 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative grid min-h-screen place-items-center overflow-hidden px-4 py-10">
-      <div className="pointer-events-none absolute inset-0 grid place-items-center" aria-hidden="true">
-        <img
-          src="/medsphere.png"
-          alt=""
-          className="h-80 w-80 rounded-[2rem] object-cover opacity-10 blur-[1px] grayscale brightness-125 sm:h-[28rem] sm:w-[28rem]"
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-      <form onSubmit={onSubmit} className="relative z-10 w-full max-w-md">
-        <Card title={t('auth.loginTitle')} subtitle={t('auth.loginSubtitle')}>
-          <div className="space-y-4">
-            <Input
-              id="email"
-              type="text"
-              label={t('auth.loginIdentifier')}
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="user@example.com or username"
-              autoComplete="username"
+    <AuthPageShell
+      compact
+      eyebrow={t('auth.portalAccess')}
+      title={t('auth.loginTitle')}
+      subtitle={t('auth.loginSubtitle')}
+    >
+      <form onSubmit={onSubmit} className="space-y-5">
+        {hasVerifiedEmail ? (
+          <p className="flex items-start gap-2 rounded-lg border border-success/25 bg-success/10 px-3 py-2.5 text-sm font-medium text-success">
+            <CheckCircle2 size={17} className="mt-0.5 shrink-0" aria-hidden="true" />
+            {t('auth.emailVerifiedCanLogin')}
+          </p>
+        ) : null}
+
+        <div className="space-y-4">
+          <LoginField
+            id="email"
+            type="text"
+            label={t('auth.loginIdentifier')}
+            icon={<Mail size={18} aria-hidden="true" />}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder={t('auth.loginIdentifierPlaceholder')}
+            autoComplete="username"
+          />
+          <LoginField
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            label={t('auth.password')}
+            icon={<LockKeyhole size={18} aria-hidden="true" />}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={t('auth.passwordPlaceholder')}
+            autoComplete="current-password"
+            trailing={
+              <button
+                type="button"
+                className="rounded-lg p-1 text-cobalt-950/45 transition hover:bg-cobalt-50 hover:text-cobalt-700"
+                onClick={() => setShowPassword((current) => !current)}
+                aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+              >
+                {showPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            }
+          />
+        </div>
+
+        {errorMessage ? <p className="rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{errorMessage}</p> : null}
+
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+          <label htmlFor="remember-me" className="inline-flex items-center gap-2 font-medium text-cobalt-950/70">
+            <input
+              id="remember-me"
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => setRememberMe(event.target.checked)}
+              className="h-4 w-4 rounded border-border text-cobalt-600 focus:ring-cobalt-500/30"
             />
             {t('auth.rememberMe')}
           </label>

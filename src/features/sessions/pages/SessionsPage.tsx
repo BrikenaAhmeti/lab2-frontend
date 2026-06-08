@@ -2,18 +2,25 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
+import { useSearchParams } from 'react-router-dom';
+import Forbidden from '@/components/common/Forbidden';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
+import CalendarDateTimePicker from '@/ui/molecules/CalendarDateTimePicker';
 import { sessionsApi, type SessionDto, type SessionLogDto, type SessionUserDto } from '@/lib/api/auth-api';
 import { useAppSelector } from '@/app/hooks';
 import { hasAnyRole } from '@/features/auth/utils/permission';
 import { getUserRoleNames } from '@/features/auth/utils/roles';
 import { VapiCallLogsPanel } from '@/features/vapi/pages/VapiCallLogsPage';
 
-type SessionTab = 'sessions' | 'logs';
+type SessionTab = 'sessions' | 'logs' | 'voice-ai';
 
 const logActions = [
+  'chat.attachment.uploaded',
+  'chat.message.sent',
+  'chat.room.opened',
+  'chat.room.read',
   'login.success',
   'login.failed',
   'logout',
@@ -27,6 +34,8 @@ const logActions = [
   'email.verification.resent',
   'user.registered',
   'user.created.admin',
+  'user.provisioned',
+  'user.updated',
 ] as const;
 
 function formatDate(date?: string | null) {
@@ -103,6 +112,10 @@ function actionVariant(action: string): 'success' | 'warning' | 'danger' | 'info
 
 function humanAction(action: string) {
   const labels: Record<string, string> = {
+    'chat.attachment.uploaded': 'Chat attachment uploaded',
+    'chat.message.sent': 'Chat message sent',
+    'chat.room.opened': 'Chat room opened',
+    'chat.room.read': 'Chat room read',
     'login.success': 'Login succeeded',
     'login.failed': 'Login failed',
     logout: 'Logged out',
@@ -116,6 +129,8 @@ function humanAction(action: string) {
     'email.verification.resent': 'Verification resent',
     'user.registered': 'User registered',
     'user.created.admin': 'User created by admin',
+    'user.provisioned': 'User provisioned',
+    'user.updated': 'User updated',
   };
 
   return labels[action] ?? toTitle(action);
@@ -161,6 +176,12 @@ function localDateToIso(value: string) {
   if (!value) return undefined;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+function resolveSessionTab(tab: string | null, canSeeVoiceAiLogs: boolean): SessionTab {
+  if (tab === 'logs') return 'logs';
+  if (tab === 'voice-ai' && canSeeVoiceAiLogs) return 'voice-ai';
+  return 'sessions';
 }
 
 function SessionOwner({ user }: { user?: SessionUserDto | null }) {
@@ -285,10 +306,23 @@ function LogCard({ log }: { log: SessionLogDto }) {
 export default function SessionsPage() {
   const { t } = useTranslation('common');
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAppSelector((state) => state.auth.user);
-  const roles = user?.roles ?? [];
-  const isAdmin = roles.includes('Admin') || roles.includes('Super Admin');
-  const [activeTab, setActiveTab] = useState<SessionTab>('sessions');
+  const roles = getUserRoleNames(user);
+  const isSuperAdmin = hasAnyRole(roles, ['Super Admin']);
+  const activeTab = resolveSessionTab(searchParams.get('tab'), isSuperAdmin);
+  const tabs = useMemo<Array<{ key: SessionTab; label: string }>>(() => {
+    const visibleTabs: Array<{ key: SessionTab; label: string }> = [
+      { key: 'sessions', label: 'Active sessions' },
+      { key: 'logs', label: 'Logs' },
+    ];
+
+    if (isSuperAdmin) {
+      visibleTabs.push({ key: 'voice-ai', label: 'Voice AI Logs' });
+    }
+
+    return visibleTabs;
+  }, [isSuperAdmin]);
   const [filters, setFilters] = useState({
     userSearch: '',
     action: '',
@@ -319,12 +353,6 @@ export default function SessionsPage() {
     enabled: isSuperAdmin && activeTab === 'logs',
   });
 
-  const logsQuery = useQuery({
-    queryKey: ['auth', 'session-logs', logParams],
-    queryFn: () => sessionsApi.logs(logParams),
-    enabled: activeTab === 'logs',
-  });
-
   const revokeMutation = useMutation({
     mutationFn: ({ sessionId, admin }: { sessionId: string; admin: boolean }) =>
       admin ? sessionsApi.adminRevoke(sessionId) : sessionsApi.revoke(sessionId),
@@ -344,128 +372,27 @@ export default function SessionsPage() {
     setFilters({ userSearch: '', action: '', from: '', to: '', changed: '' });
   };
 
+  const selectTab = (tab: SessionTab) => {
+    const nextParams = new URLSearchParams(searchParams);
+
+    if (tab === 'sessions') {
+      nextParams.delete('tab');
+    } else {
+      nextParams.set('tab', tab);
+    }
+
+    setSearchParams(nextParams, { replace: true });
+  };
+
+  if (!isSuperAdmin) {
+    return <Forbidden />;
+  }
+
   return (
-    <Card title={t('auth.sessionsTitle')} subtitle="Monitor active devices and review security activity">
-      <div className="space-y-4">
-        <div className="flex flex-wrap gap-2 border-b border-border pb-3" role="tablist" aria-label="Session views">
-          {[
-            { key: 'sessions' as const, label: 'Active sessions' },
-            { key: 'logs' as const, label: 'Logs' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              role="tab"
-              aria-selected={activeTab === tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={clsx(
-                'rounded-lg border px-3 py-2 text-sm font-medium transition',
-                activeTab === tab.key
-                  ? 'border-primary bg-primary text-primary-foreground'
-                  : 'border-border bg-card text-muted hover:text-foreground'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'sessions' ? (
-          <div className="space-y-3">
-            {sessionsQuery.isLoading ? <p className="text-sm text-muted">{t('loading')}</p> : null}
-            {sessionsQuery.isError ? <p className="text-sm text-danger">{t('auth.operationFailed')}</p> : null}
-            {!sessionsQuery.isLoading && !sessionsQuery.isError && sessionsQuery.data?.length === 0 ? (
-              <p className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
-                No active sessions found.
-              </p>
-            ) : null}
-            {sessionsQuery.data?.map((session) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                isAdmin={isAdmin}
-                currentUserId={user?.id}
-                loading={revokeMutation.isPending}
-                onRevoke={(sessionId, admin) => revokeMutation.mutate({ sessionId, admin })}
-              />
-            ))}
-          </div>
-        ) : null}
-
-        {activeTab === 'logs' ? (
-          <div className="space-y-4">
-            <div className="grid gap-3 rounded-xl border border-border bg-surface/60 p-3 md:grid-cols-2 xl:grid-cols-5">
-              <label className="space-y-1 text-xs font-medium text-muted">
-                User
-                <input
-                  value={filters.userSearch}
-                  onChange={(event) => updateFilter('userSearch', event.target.value)}
-                  placeholder="Name, username, email"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
-                Action
-                <select
-                  value={filters.action}
-                  onChange={(event) => updateFilter('action', event.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                >
-                  <option value="">All actions</option>
-                  {logActions.map((action) => (
-                    <option key={action} value={action}>{humanAction(action)}</option>
-                  ))}
-                </select>
-              </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
-                From
-                <input
-                  type="datetime-local"
-                  value={filters.from}
-                  onChange={(event) => updateFilter('from', event.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
-                To
-                <input
-                  type="datetime-local"
-                  value={filters.to}
-                  onChange={(event) => updateFilter('to', event.target.value)}
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </label>
-              <label className="space-y-1 text-xs font-medium text-muted">
-                Change or detail
-                <div className="flex gap-2">
-                  <input
-                    value={filters.changed}
-                    onChange={(event) => updateFilter('changed', event.target.value)}
-                    placeholder="IP, device, field"
-                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  />
-                  <Button type="button" variant="secondary" size="sm" onClick={clearFilters}>Clear</Button>
-                </div>
-              </label>
-            </div>
-
-            {logsQuery.isLoading ? <p className="text-sm text-muted">{t('loading')}</p> : null}
-            {logsQuery.isError ? <p className="text-sm text-danger">{t('auth.operationFailed')}</p> : null}
-            {!logsQuery.isLoading && !logsQuery.isError && logsQuery.data?.items.length === 0 ? (
-              <p className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
-                No logs match these filters.
-              </p>
-            ) : null}
-            <div className="space-y-3">
-              {logsQuery.data?.items.map((log) => <LogCard key={log.id} log={log} />)}
-            </div>
-            {logsQuery.data?.meta ? (
-              <p className="text-xs text-muted">
-                Showing {logsQuery.data.items.length} of {logsQuery.data.meta.total} log entries.
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+    <div className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">{t('auth.sessionsTitle')}</h1>
+        <p className="mt-1 text-sm text-muted">Monitor active devices and review security activity.</p>
       </div>
 
       <div className="space-y-4">

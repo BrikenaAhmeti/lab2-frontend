@@ -34,6 +34,8 @@ import Skeleton from '@/ui/atoms/Skeleton';
 
 const ConsultationRecorder = lazy(() => import('../components/ConsultationRecorder'));
 const ConsultationAiReportPanel = lazy(() => import('../components/ConsultationAiReportPanel'));
+const emptyRecords: MedicalRecordView[] = [];
+const emptyPrescriptions: PrescriptionView[] = [];
 
 function findAppointmentRecord(records: MedicalRecordView[], appointmentId: string) {
   return records.find((record) => record.appointmentId === appointmentId) ?? null;
@@ -266,10 +268,14 @@ export default function ConsultationPage() {
             prescriptions={prescriptions}
             loading={patientQuery.isLoading || prescriptionsQuery.isLoading}
           />
-          <Suspense fallback={<Skeleton className="h-40" />}>
-            <ConsultationRecorder appointment={appointment} disabled={closed} />
-          </Suspense>
-          <LabOrderPlaceholder />
+          <LabOrderPlaceholder
+            appointment={appointment}
+            medicalRecordId={record?.id ?? null}
+            disabled={closed}
+            onCreated={() => {
+              void medicalRecordsQuery.refetch();
+            }}
+          />
         </div>
 
         <div className="space-y-4">

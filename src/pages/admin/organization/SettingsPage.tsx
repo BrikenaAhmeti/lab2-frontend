@@ -73,56 +73,6 @@ function WorkingHoursDisplay({ setting }: { setting: SettingRecord }) {
   );
 }
 
-function WorkingHoursEditor({
-  rows,
-  onChange,
-}: {
-  rows: WorkingHoursRow[];
-  onChange: (rows: WorkingHoursRow[]) => void;
-}) {
-  const updateRow = (day: string, values: Partial<WorkingHoursRow>) => {
-    onChange(rows.map((row) => (row.day === day ? { ...row, ...values } : row)));
-  };
-
-  return (
-    <div className="space-y-2 rounded-xl border border-border bg-surface/40 p-3">
-      {rows.map((row) => (
-        <div key={row.day} className="grid gap-2 rounded-lg bg-card p-3 md:grid-cols-[140px_1fr_1fr] md:items-center">
-          <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <input
-              type="checkbox"
-              checked={row.isOpen}
-              onChange={(event) => updateRow(row.day, { isOpen: event.target.checked })}
-              className="h-4 w-4 rounded border-border"
-            />
-            {row.label}
-          </label>
-          <label className="block space-y-1">
-            <span className="text-xs font-medium text-muted">Start</span>
-            <input
-              type="time"
-              value={row.startTime}
-              disabled={!row.isOpen}
-              onChange={(event) => updateRow(row.day, { startTime: event.target.value })}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition disabled:opacity-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </label>
-          <label className="block space-y-1">
-            <span className="text-xs font-medium text-muted">End</span>
-            <input
-              type="time"
-              value={row.endTime}
-              disabled={!row.isOpen}
-              onChange={(event) => updateRow(row.day, { endTime: event.target.value })}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition disabled:opacity-50 focus:border-primary focus:ring-2 focus:ring-primary/20"
-            />
-          </label>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 export default function SettingsPage() {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
@@ -240,6 +190,7 @@ export default function SettingsPage() {
                                 {isEditing ? (
                                   isWorkingHours ? (
                                     <WorkingHoursEditor
+                                      idPrefix={`setting-${setting.key}`}
                                       rows={draftToWorkingHoursRows(drafts[setting.key] ?? '', setting.value)}
                                       onChange={(rows) => updateWorkingHoursDraft(setting, rows)}
                                     />

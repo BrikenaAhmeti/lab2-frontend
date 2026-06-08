@@ -90,9 +90,16 @@ export const patientRegistrationService = {
     return response;
   },
   async verifyEmail(payload: VerifyEmailRequest) {
+    if ('token' in payload) {
+      const response = await authApi.verifyEmail({ token: payload.token });
+      clearPatientRegistrationIdentity();
+      return response;
+    }
+
     const personalNumber = resolveVerificationPersonalNumber(payload.email, payload.personalNumber);
     const response = await authApi.verifyEmail({
-      ...payload,
+      email: payload.email,
+      code: payload.code,
       ...(personalNumber ? { personalNumber } : {}),
     });
     clearPatientRegistrationIdentity(payload.email);

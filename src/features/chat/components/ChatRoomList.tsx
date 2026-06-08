@@ -21,13 +21,6 @@ function initials(value: string) {
   return `${first ?? ''}${second ?? ''}`.toUpperCase();
 }
 
-function initials(value: string) {
-  const parts = value.split(/\s+/).filter(Boolean);
-  const first = parts[0]?.[0] ?? 'M';
-  const second = parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1];
-  return `${first ?? ''}${second ?? ''}`.toUpperCase();
-}
-
 export default function ChatRoomList({
   rooms,
   activeRoomId,
@@ -53,7 +46,7 @@ export default function ChatRoomList({
     <ul className="divide-y divide-border">
       {rooms.map((room) => {
         const active = room.id === activeRoomId;
-        const title = roomTitle(room, currentUserId);
+        const title = roomTitle(room, currentUserId, participantLookup);
 
         return (
           <li key={room.id}>

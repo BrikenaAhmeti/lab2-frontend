@@ -4,7 +4,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import Input from '@/ui/atoms/Input';
 import PublicPageShell from '@/features/public/components/PublicPageShell';
 import PublicDoctorCard from '@/features/public/components/PublicDoctorCard';
-import { usePublicStaffList } from '@/features/staff/hooks/useStaff';
+import { usePublicStaffList, useStaffPreviewDetail } from '@/features/staff/hooks/useStaff';
 import { usePublicDepartments } from '@/features/public/hooks/usePublicCatalog';
 import { isDoctorProfile } from '@/features/public/utils/publicStaffPresentation';
 
@@ -27,7 +27,13 @@ export default function PublicDoctorsPage() {
   const staffQuery = usePublicStaffList(params);
   const previewQuery = useStaffPreviewDetail(isStaffPreview ? staffId ?? '' : '');
   const departmentsQuery = usePublicDepartments();
-  const rows = (staffQuery.data?.items ?? []).filter((staff) => (!staffId || staff.id === staffId) && isDoctorProfile(staff));
+  const publicRows = (staffQuery.data?.items ?? []).filter((staff) => (!staffId || staff.id === staffId) && isDoctorProfile(staff));
+  const rows = isStaffPreview && previewQuery.data ? [previewQuery.data] : publicRows;
+  const loading = staffQuery.isLoading || (isStaffPreview && previewQuery.isLoading);
+  const error = isStaffPreview ? staffQuery.isError && previewQuery.isError : staffQuery.isError;
+  const countLabel = isStaffPreview
+    ? `${rows.length} profile${rows.length === 1 ? '' : 's'}`
+    : `${rows.length} published doctor${rows.length === 1 ? '' : 's'}`;
 
   return (
     <PublicPageShell
@@ -46,7 +52,7 @@ export default function PublicDoctorsPage() {
               </p>
             </div>
             <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm font-medium text-muted shadow-panel">
-              {staffQuery.isLoading ? 'Loading profiles' : `${rows.length} published doctor${rows.length === 1 ? '' : 's'}`}
+              {loading ? 'Loading profiles' : countLabel}
             </div>
           </div>
 
@@ -78,7 +84,7 @@ export default function PublicDoctorsPage() {
             </div>
           </div>
 
-          {staffQuery.isLoading ? (
+          {loading ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="min-h-96 animate-pulse rounded-lg border border-border bg-card shadow-panel">
@@ -93,13 +99,13 @@ export default function PublicDoctorsPage() {
             </div>
           ) : null}
 
-          {!staffQuery.isLoading && staffQuery.isError ? (
+          {!loading && error ? (
             <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm text-muted">
               Public doctor profiles are not available right now.
             </div>
           ) : null}
 
-          {!staffQuery.isLoading && !staffQuery.isError && rows.length > 0 ? (
+          {!loading && !error && rows.length > 0 ? (
             <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
               {rows.map((staff, index) => (
                 <PublicDoctorCard key={staff.id} staff={staff} index={index} />
@@ -107,7 +113,7 @@ export default function PublicDoctorsPage() {
             </div>
           ) : null}
 
-          {!staffQuery.isLoading && !staffQuery.isError && rows.length === 0 ? (
+          {!loading && !error && rows.length === 0 ? (
             <div className="mt-8 rounded-lg border border-border bg-card p-5 text-sm text-muted">
               No public doctor profiles match these filters.
             </div>

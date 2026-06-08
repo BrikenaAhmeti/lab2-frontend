@@ -1,7 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
-import { CalendarPlus, LogIn } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  Building2,
+  CalendarPlus,
+  ClipboardList,
+  Home,
+  Info,
+  LogIn,
+  Menu,
+  PhoneCall,
+  Stethoscope,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { formatWorkingHoursLine } from '@/features/settings/workingHours';
 import type { PublicSiteSettings } from '@/features/public/hooks/usePublicSiteSettings';
 
@@ -25,41 +37,101 @@ interface PublicLayoutProps {
 
 export default function PublicLayout({ children, siteSettings }: PublicLayoutProps) {
   const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const hoursPreview = siteSettings.workingHours.filter((row) => row.isOpen).slice(0, 3);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-30 border-b border-border/80 bg-card/90 backdrop-blur-xl">
         <nav className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-          <Link to="/" className="flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-cobalt-900 p-1.5 shadow-soft">
-              <img src="/medsphere.png" alt="" className="h-full w-full rounded-lg bg-white object-cover" loading="lazy" decoding="async" />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-base font-semibold leading-5 text-foreground">{siteSettings.facilityName}</span>
-              <span className="block truncate text-xs font-medium text-muted">{siteSettings.tagline}</span>
-            </span>
-          </Link>
-          <div className="-mx-1 flex max-w-full items-center gap-1 overflow-x-auto px-1 pb-1 text-sm lg:mx-0 lg:pb-0">
-            {links.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={clsx(
-                  'shrink-0 rounded-lg px-3 py-2 font-medium transition',
-                  isActive(location.pathname, link.to)
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted hover:bg-surface hover:text-foreground'
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link className="inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 font-medium text-primary hover:bg-primary/10" to="/login">
+          <div className="flex items-center justify-between gap-3">
+            <Link to="/" className="flex min-w-0 items-center gap-3" onClick={() => setIsMenuOpen(false)}>
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-cobalt-900 p-1.5 shadow-soft">
+                <img src="/medsphere.png" alt="" className="h-full w-full rounded-lg bg-white object-cover" loading="lazy" decoding="async" />
+              </span>
+              <span className="min-w-0">
+                <span className="block truncate text-base font-semibold leading-5 text-foreground">{siteSettings.facilityName}</span>
+                <span className="block truncate text-xs font-medium text-muted">{siteSettings.tagline}</span>
+              </span>
+            </Link>
+            <button
+              type="button"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground shadow-sm transition hover:bg-surface focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card lg:hidden"
+              aria-controls="public-mobile-navigation"
+              aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              onClick={() => setIsMenuOpen((open) => !open)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+            </button>
+          </div>
+          <div id="public-mobile-navigation" className={clsx('grid gap-2 border-t border-border/80 pt-3 text-sm lg:hidden', !isMenuOpen && 'hidden')}>
+            {links.map((link) => {
+              const Icon = link.icon;
+              const active = isActive(location.pathname, link.to);
+
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  aria-current={active ? 'page' : undefined}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={clsx(
+                    'flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium transition',
+                    active ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-surface hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{link.label}</span>
+                </Link>
+              );
+            })}
+            <Link
+              className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium text-primary transition hover:bg-primary/10"
+              to="/login"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Portal</span>
+            </Link>
+            <Link
+              className="flex items-center gap-3 rounded-lg bg-cobalt-900 px-3.5 py-2.5 font-semibold text-white shadow-soft transition hover:bg-cobalt-800"
+              to="/book-appointment"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              <CalendarPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>Book</span>
+            </Link>
+          </div>
+          <div className="hidden items-center gap-0.5 text-sm lg:flex xl:gap-1">
+            {links.map((link) => {
+              const Icon = link.icon;
+              const active = isActive(location.pathname, link.to);
+
+              return (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  aria-current={active ? 'page' : undefined}
+                  className={clsx(
+                    'inline-flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium transition xl:px-3',
+                    active ? 'bg-primary/10 text-primary' : 'text-muted hover:bg-surface hover:text-foreground'
+                  )}
+                >
+                  <Icon className="hidden h-4 w-4 xl:block" aria-hidden="true" />
+                  {link.label}
+                </Link>
+              );
+            })}
+            <Link className="inline-flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium text-primary transition hover:bg-primary/10 xl:px-3" to="/login">
               <LogIn className="h-4 w-4" aria-hidden="true" />
               <span>Portal</span>
             </Link>
-            <Link className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-cobalt-900 px-3.5 py-2 font-semibold text-white shadow-soft hover:bg-cobalt-800" to="/book-appointment">
+            <Link className="inline-flex items-center gap-2 rounded-lg bg-cobalt-900 px-3 py-2 font-semibold text-white shadow-soft transition hover:bg-cobalt-800 xl:px-3.5" to="/book-appointment">
               <CalendarPlus className="h-4 w-4" aria-hidden="true" />
               <span>Book</span>
             </Link>

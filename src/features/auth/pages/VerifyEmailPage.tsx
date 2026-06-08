@@ -5,6 +5,7 @@ import { z } from 'zod';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
+import AuthPageShell from '@/features/auth/components/AuthPageShell';
 import ResendVerificationForm from '@/features/auth/components/ResendVerificationForm';
 import { getAuthApiErrorMessage } from '@/features/auth/utils/errors';
 import {
@@ -29,6 +30,7 @@ export default function VerifyEmailPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const token = params.get('token')?.trim() ?? '';
   const locationState = location.state as VerifyEmailLocationState | null;
   const stateEmail = locationState?.email ?? '';
   const initialEmail = stateEmail || params.get('email') || '';
@@ -99,7 +101,7 @@ export default function VerifyEmailPage() {
         ...validation.data,
         ...(initialPersonalNumber ? { personalNumber: initialPersonalNumber } : {}),
       });
-      setStatus('success');
+      navigate('/login?verified=1', { replace: true, state: { verified: true } });
     } catch (verifyError) {
       setStatus('error');
       setError(getAuthApiErrorMessage(verifyError, t('auth.verifyInvalidOrExpired')));

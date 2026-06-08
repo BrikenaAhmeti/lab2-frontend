@@ -1,6 +1,6 @@
-import { useEffect, useMemo } from 'react';
-import { useLocation, useParams } from 'react-router-dom';
-import { MessageSquare, MessagesSquare } from 'lucide-react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { MessageCirclePlus, MessageSquare, MessagesSquare } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import { selectAuthUser } from '@/features/auth/authSelectors';
 import ChatContactPicker from '../components/ChatContactPicker';
@@ -136,44 +136,70 @@ export default function ChatPage() {
             <p className="truncate text-sm text-muted">Internal chat with your care team and staff</p>
           </div>
         </div>
-        <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted">
-          <span className="h-2 w-2 rounded-full bg-success" />
-          {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted">
+            <span className="h-2 w-2 rounded-full bg-success" />
+            {rooms.length} {rooms.length === 1 ? 'room' : 'rooms'}
+          </div>
+          {activeRoomId ? (
+            <div className="inline-flex w-fit items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted">
+              <span className={isConnected ? 'h-2 w-2 rounded-full bg-success' : 'h-2 w-2 rounded-full bg-warning'} />
+              {isConnected ? 'Live' : 'Connecting'}
+            </div>
+          ) : null}
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[22rem_minmax(0,1fr)] lg:grid-rows-none">
-        <aside className="min-h-0 max-h-64 border-b border-border bg-surface/45 lg:max-h-none lg:border-b-0 lg:border-r">
-          <div className="flex items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3">
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">Conversations</h2>
-              <p className="text-xs text-muted">Recent rooms</p>
+      <div className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden lg:grid-cols-[24rem_minmax(0,1fr)] lg:grid-rows-none">
+        <aside className="flex min-h-0 max-h-[34rem] flex-col border-b border-border bg-surface/45 lg:max-h-none lg:border-b-0 lg:border-r">
+          <ChatContactPicker
+            contacts={contactsQuery.data ?? []}
+            search={contactSearch}
+            onSearchChange={setContactSearch}
+            onStartConversation={(contact) => {
+              void startConversation(contact);
+            }}
+            isLoading={contactsQuery.isLoading}
+            isError={contactsQuery.isError}
+            error={startError}
+            startingContactId={startingContactId}
+          />
+
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="flex items-center justify-between gap-3 border-b border-border bg-card/80 px-4 py-3">
+              <div>
+                <h2 className="text-sm font-semibold text-foreground">Conversations</h2>
+                <p className="text-xs text-muted">Recent rooms</p>
+              </div>
             </div>
-          </div>
-          <div className="max-h-52 overflow-y-auto lg:max-h-none">
-            <ChatRoomList
-              rooms={rooms}
-              activeRoomId={activeRoomId}
-              currentUserId={user?.id}
-              basePath={basePath}
-              isLoading={roomsQuery.isLoading}
-              isError={roomsQuery.isError}
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <ChatRoomList
+                rooms={rooms}
+                activeRoomId={activeRoomId}
+                currentUserId={user?.id}
+                basePath={basePath}
+                isLoading={roomsQuery.isLoading}
+                isError={roomsQuery.isError}
+                participantLookup={participantLookup}
+              />
+            </div>
           </div>
         </aside>
 
         <section className="flex min-h-0 min-w-0 flex-col bg-background/70">
           {activeRoomId && activeRoom ? (
             <>
-              <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
-                  <MessageSquare className="h-5 w-5" aria-hidden="true" />
-                </span>
-                <div className="min-w-0">
-                  <h2 className="truncate text-sm font-semibold text-foreground">
-                    {roomTitle(activeRoom, user?.id)}
-                  </h2>
-                  <p className="text-xs text-muted">Direct message</p>
+              <header className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
+                    <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-sm font-semibold text-foreground">
+                      {roomTitle(activeRoom, user?.id, participantLookup)}
+                    </h2>
+                    <p className="text-xs text-muted">{typingLabel || 'Direct message'}</p>
+                  </div>
                 </div>
                 <span className="hidden items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted sm:inline-flex">
                   <span className={isConnected ? 'h-2 w-2 rounded-full bg-success' : 'h-2 w-2 rounded-full bg-warning'} />
@@ -216,10 +242,10 @@ export default function ChatPage() {
             <div className="grid flex-1 place-items-center px-4 py-12 text-center">
               <div>
                 <span className="mx-auto grid h-12 w-12 place-items-center rounded-lg bg-primary/10 text-primary">
-                  <MessageSquare className="h-5 w-5" aria-hidden="true" />
+                  <MessageCirclePlus className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <p className="mt-4 text-sm font-medium text-foreground">Select a conversation</p>
-                <p className="mt-1 text-sm text-muted">Your messages will appear here.</p>
+                <p className="mt-4 text-sm font-medium text-foreground">No conversation selected</p>
+                <p className="mt-1 text-sm text-muted">Choose a person or room to continue.</p>
               </div>
             </div>
           )}

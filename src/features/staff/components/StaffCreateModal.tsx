@@ -49,6 +49,13 @@ const genderOptions = [
   { value: 'other', label: 'Other' },
 ];
 
+function isDoctorPosition(positionType?: StaffPositionTypeRecord) {
+  const roleKey = positionType?.defaultRoleKey?.toLowerCase() ?? '';
+  const name = positionType?.name?.toLowerCase() ?? '';
+
+  return roleKey.includes('doctor') || name.includes('doctor') || name.includes('physician');
+}
+
 function validateStaff(values: StaffCreateFormValues) {
   const errors: Partial<Record<keyof StaffCreateFormValues, string>> = {};
 
@@ -101,6 +108,16 @@ export default function StaffCreateModal({
 
   const update = <K extends keyof StaffCreateFormValues>(name: K, value: StaffCreateFormValues[K]) => {
     setValues((current) => ({ ...current, [name]: value }));
+  };
+
+  const updatePositionType = (staffPositionTypeId: string) => {
+    const selectedPositionType = positionTypes.find((positionType) => positionType.id === staffPositionTypeId);
+
+    setValues((current) => ({
+      ...current,
+      staffPositionTypeId,
+      isPublicProfile: isDoctorPosition(selectedPositionType) ? true : current.isPublicProfile,
+    }));
   };
 
   const toggleDepartment = (departmentId: string) => {
@@ -207,7 +224,7 @@ export default function StaffCreateModal({
             label="Position"
             value={values.staffPositionTypeId}
             required
-            onChange={(event) => update('staffPositionTypeId', event.target.value)}
+            onChange={(event) => updatePositionType(event.target.value)}
             error={fieldErrors.staffPositionTypeId}
           >
             <option value="">Choose position</option>

@@ -81,6 +81,22 @@ vi.mock('@/lib/api/appointments-api', async () => {
   };
 });
 
+vi.mock('@/lib/api/patients-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/patients-api')>('@/lib/api/patients-api');
+
+  return {
+    ...actual,
+    patientsApi: {
+      me: vi.fn(),
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      timeline: vi.fn(),
+    },
+  };
+});
+
 const department: DepartmentRecord = {
   id: 'department-1',
   name: 'Cardiology',
@@ -244,6 +260,21 @@ function renderPublicWizard() {
   );
 }
 
+function renderReceptionistWizard() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BookingWizard mode="receptionist" />
+    </QueryClientProvider>
+  );
+}
+
 async function moveToConfirmStep() {
   expect(await screen.findByText('Department: Cardiology')).toBeInTheDocument();
   fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
@@ -284,32 +315,6 @@ async function movePublicToConfirmStep() {
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
   await screen.findByLabelText('Notes');
-}
-
-async function movePublicToConfirmStep() {
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByText('Please complete the required patient details before choosing an appointment.')).toBeInTheDocument();
-
-  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Arta' } });
-  fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Krasniqi' } });
-  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'arta@example.com' } });
-  fireEvent.change(screen.getByLabelText(/phone number/i), { target: { value: '+38344111222' } });
-  fireEvent.change(screen.getByLabelText(/personal number/i), { target: { value: '1234567890' } });
-  fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '1995-03-12' } });
-  fireEvent.change(screen.getByLabelText(/gender/i), { target: { value: 'female' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: /cardiology/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 }
 
 describe('BookingWizard', () => {
@@ -484,33 +489,6 @@ describe('BookingWizard', () => {
         serviceCatalogId: 'service-1',
         staffProfileId: 'staff-1',
         scheduledAt: '2030-05-20T09:00:00.000Z',
-        notes: 'New patient website request',
-      });
-    });
-    expect(await screen.findByText('Appointment booked')).toBeInTheDocument();
-  });
-
-  it('collects public patient details and posts the unauthenticated booking payload', async () => {
-    renderPublicWizard();
-    await movePublicToConfirmStep();
-
-    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'New patient website request' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm appointment' }));
-
-    await waitFor(() => {
-      expect(appointmentsApi.publicCreate).toHaveBeenCalledWith({
-        patient: {
-          firstName: 'Arta',
-          lastName: 'Krasniqi',
-          email: 'arta@example.com',
-          phone: '+38344111222',
-          personalNumber: '1234567890',
-          dateOfBirth: '1995-03-12',
-          gender: 'female',
-        },
-        serviceCatalogId: 'service-1',
-        staffProfileId: 'staff-1',
-        scheduledAt: '2026-05-20T09:00:00.000Z',
         notes: 'New patient website request',
       });
     });
