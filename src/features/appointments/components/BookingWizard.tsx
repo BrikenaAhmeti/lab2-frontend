@@ -5,6 +5,7 @@ import type { ServiceRecord } from '@/lib/api/services-api';
 import type { StaffDepartment, StaffRecord } from '@/lib/api/staff-api';
 import type { AppointmentType, AvailableSlot, AppointmentView } from '@/lib/api/appointments-api';
 import type { PatientRecord } from '@/lib/api/patients-api';
+import { getStaffName } from '@/features/staff/hooks/useStaff';
 import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
@@ -163,6 +164,7 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   const [publicPatientSubmitted, setPublicPatientSubmitted] = useState(false);
 
   const isPublic = mode === 'public';
+  const usesPublicBookingCatalog = mode !== 'receptionist';
   const steps = isPublic ? publicSteps : portalSteps;
   const currentStep = steps[stepIndex] ?? steps[0];
   const slotStepIndex = steps.indexOf('Slot');
@@ -172,16 +174,16 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   );
   const hasValidPublicPatient = Object.keys(publicPatientErrors).length === 0;
 
-  const departmentsQuery = useAppointmentDepartments(isPublic);
-  const servicesQuery = useAppointmentServices(department?.id ?? '', isPublic);
-  const staffQuery = useAppointmentStaff(undefined, isPublic);
+  const departmentsQuery = useAppointmentDepartments(usesPublicBookingCatalog);
+  const servicesQuery = useAppointmentServices(department?.id ?? '', usesPublicBookingCatalog);
+  const staffQuery = useAppointmentStaff(undefined, usesPublicBookingCatalog);
   const shouldKeepSlotsFresh = slotStepIndex >= 0 && stepIndex >= slotStepIndex;
   const slotsQuery = useAvailableSlots(
     staff?.id ?? '',
     service?.id ?? '',
     date,
     shouldKeepSlotsFresh,
-    isPublic
+    usesPublicBookingCatalog
   );
   const bookMutation = useBookAppointment();
   const publicBookMutation = usePublicBookAppointment();
@@ -402,8 +404,11 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
       mode={mode}
       patientId={activePatientId}
       departmentId={department?.id}
+      departmentName={department?.name}
       serviceCatalogId={service?.id}
+      serviceName={service?.name}
       staffProfileId={staff?.id}
+      staffName={staff ? getStaffName(staff) : undefined}
       scheduledAt={slot?.start}
       className="xl:sticky xl:top-4"
     />

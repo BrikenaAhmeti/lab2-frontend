@@ -13,14 +13,22 @@ import Card from '@/ui/atoms/Card';
 import Badge from '@/ui/atoms/Badge';
 import PatientBillingPanel from '@/features/billing/components/PatientBillingPanel';
 import HistoryTimeline from './HistoryTimeline';
-import PatientTabs, { type PatientProfileTab } from './PatientTabs';
+import PatientTabs, { type PatientProfileTab, type PatientProfileTabDefinition } from './PatientTabs';
 import { AppointmentsPanel, EmptyTabPanel, MedicalPanel, PersonalPanel } from './PatientInfoPanels';
 import { formatDate } from './patientFormat';
 
 const allowedTabs: PatientProfileTab[] = ['personal', 'medical', 'history', 'documents', 'appointments', 'billing'];
+const tabLabels: Record<PatientProfileTab, string> = {
+  personal: 'Personal',
+  medical: 'Medical',
+  history: 'History Timeline',
+  documents: 'Documents',
+  appointments: 'Appointments',
+  billing: 'Billing',
+};
 
-function getTab(value: string | null): PatientProfileTab {
-  return allowedTabs.includes(value as PatientProfileTab) ? (value as PatientProfileTab) : 'personal';
+function getTab(value: string | null, tabs: PatientProfileTab[]): PatientProfileTab {
+  return tabs.includes(value as PatientProfileTab) ? (value as PatientProfileTab) : 'personal';
 }
 
 export default function PatientProfileLayout({
@@ -33,7 +41,15 @@ export default function PatientProfileLayout({
   basePath: string;
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = getTab(searchParams.get('tab'));
+  const availableTabs = useMemo(
+    () => (basePath === '/nurse' ? allowedTabs.filter((tab) => tab !== 'billing') : allowedTabs),
+    [basePath]
+  );
+  const tabDefinitions = useMemo<PatientProfileTabDefinition[]>(
+    () => availableTabs.map((tab) => ({ id: tab, label: tabLabels[tab] })),
+    [availableTabs]
+  );
+  const activeTab = getTab(searchParams.get('tab'), availableTabs);
   const timelineQuery = usePatientTimeline(patient.id);
   const appointmentParams = useMemo(() => ({ page: 1, limit: 50, patientId: patient.id }), [patient.id]);
   const appointmentsQuery = useAppointmentList(
@@ -45,7 +61,7 @@ export default function PatientProfileLayout({
     medicalRecordParams,
     activeTab === 'medical' && Boolean(patient.id)
   );
-  const patientListPath = basePath === '/receptionist' ? '/receptionist/patients' : '/admin/patients';
+  const patientListPath = `${basePath}/patients`;
 
   return (
     <Card
@@ -72,7 +88,7 @@ export default function PatientProfileLayout({
             Staff-entered medical fields are shown read-only.
           </p>
         ) : null}
-        <PatientTabs activeTab={activeTab} onChange={(tab) => setSearchParams({ tab })} />
+        <PatientTabs activeTab={activeTab} tabs={tabDefinitions} onChange={(tab) => setSearchParams({ tab })} />
         {activeTab === 'personal' ? <PersonalPanel patient={patient} selfView={selfView} /> : null}
         {activeTab === 'medical' ? (
           <MedicalPanel

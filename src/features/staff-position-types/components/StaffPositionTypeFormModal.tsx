@@ -9,6 +9,7 @@ import Modal from '@/ui/molecules/Modal';
 import SelectField from '@/ui/molecules/SelectField';
 import SwitchField from '@/ui/molecules/SwitchField';
 import TextareaField from '@/ui/molecules/TextareaField';
+import { isProtectedAdminRole } from '@/features/auth/utils/adminAccess';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { StaffPositionTypeRecord } from '@/lib/api/staff-position-types-api';
 import {
@@ -24,6 +25,7 @@ interface StaffPositionTypeFormModalProps {
   record: StaffPositionTypeRecord | null;
   loading: boolean;
   submitError: string;
+  allowProtectedRoles?: boolean;
   onClose: () => void;
   onSubmit: (values: StaffPositionTypeFormValues) => void;
 }
@@ -59,6 +61,7 @@ export default function StaffPositionTypeFormModal({
   record,
   loading,
   submitError,
+  allowProtectedRoles = true,
   onClose,
   onSubmit,
 }: StaffPositionTypeFormModalProps) {
@@ -89,13 +92,25 @@ export default function StaffPositionTypeFormModal({
     reset(emptyStaffPositionTypeFormValues);
   }, [open, record, reset]);
 
+  const baseRoleOptions = useMemo(
+    () =>
+      allowProtectedRoles
+        ? roleOptions
+        : roleOptions.filter((option) => !isProtectedAdminRole(option.value) && !isProtectedAdminRole(option.label)),
+    [allowProtectedRoles]
+  );
+
   const roleKeyOptions = useMemo(() => {
-    if (!selectedRoleKey || roleOptions.some((option) => option.value === selectedRoleKey)) {
-      return roleOptions;
+    if (!selectedRoleKey || baseRoleOptions.some((option) => option.value === selectedRoleKey)) {
+      return baseRoleOptions;
     }
 
-    return [...roleOptions, { value: selectedRoleKey, label: formatRoleKeyLabel(selectedRoleKey) }];
-  }, [selectedRoleKey]);
+    if (!allowProtectedRoles && isProtectedAdminRole(selectedRoleKey)) {
+      return baseRoleOptions;
+    }
+
+    return [...baseRoleOptions, { value: selectedRoleKey, label: formatRoleKeyLabel(selectedRoleKey) }];
+  }, [allowProtectedRoles, baseRoleOptions, selectedRoleKey]);
 
   return (
     <Modal

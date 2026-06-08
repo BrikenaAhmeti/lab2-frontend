@@ -8,6 +8,7 @@ import type { StaffRecord } from '@/lib/api/staff-api';
 interface StaffDirectoryTableProps {
   rows: StaffRecord[];
   onDeactivate: (staff: StaffRecord) => void;
+  canDeactivate?: (staff: StaffRecord) => boolean;
   loading?: boolean;
 }
 
@@ -15,7 +16,7 @@ function statusVariant(status: string): 'success' | 'neutral' {
   return status.toLowerCase() === 'active' ? 'success' : 'neutral';
 }
 
-function StaffDirectoryTable({ rows, loading, onDeactivate }: StaffDirectoryTableProps) {
+function StaffDirectoryTable({ rows, loading, onDeactivate, canDeactivate }: StaffDirectoryTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
@@ -31,6 +32,7 @@ function StaffDirectoryTable({ rows, loading, onDeactivate }: StaffDirectoryTabl
         <tbody>
           {rows.map((staff) => {
             const status = getStaffStatus(staff);
+            const allowDeactivate = canDeactivate ? canDeactivate(staff) : true;
 
             return (
               <tr key={staff.id} className="border-t border-border">
@@ -56,9 +58,11 @@ function StaffDirectoryTable({ rows, loading, onDeactivate }: StaffDirectoryTabl
                     <Link to={`/admin/staff/${staff.id}`}>
                       <Button size="sm" variant="secondary">View</Button>
                     </Link>
-                    <Button size="sm" variant="danger" loading={loading} onClick={() => onDeactivate(staff)}>
-                      Deactivate
-                    </Button>
+                    {allowDeactivate ? (
+                      <Button size="sm" variant="danger" loading={loading} onClick={() => onDeactivate(staff)}>
+                        Deactivate
+                      </Button>
+                    ) : null}
                   </div>
                 </td>
               </tr>

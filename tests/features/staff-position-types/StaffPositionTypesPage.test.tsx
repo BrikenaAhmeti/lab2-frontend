@@ -234,7 +234,8 @@ describe('StaffPositionTypesPage', () => {
     expect(await screen.findByText('Radiologic Technologist')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Staff Position Type' }));
-    expect(screen.getByRole('option', { name: 'Admin' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Super Admin' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Create staff position type' }));
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
@@ -310,6 +311,36 @@ describe('StaffPositionTypesPage', () => {
     );
 
     expect(await screen.findByText('Staff position type updated successfully')).toBeInTheDocument();
+  });
+
+  it('keeps admin position types read-only for clinical admins', async () => {
+    setUserSession(['staff-position-types:manage:all']);
+    vi.mocked(staffPositionTypesApi.list).mockResolvedValue({
+      ...listResponse,
+      items: [
+        {
+          ...listResponse.items[0],
+          id: 'type-admin',
+          name: 'Clinical Administrator',
+          defaultRoleKey: 'admin',
+          defaultRoleName: 'Admin',
+        },
+        listResponse.items[1],
+      ],
+    });
+
+    renderStaffPositionTypesPage();
+
+    const adminRow = (await screen.findByText('Clinical Administrator')).closest('tr');
+    const nurseRow = screen.getByText('Triage Coordinator').closest('tr');
+
+    expect(adminRow).not.toBeNull();
+    expect(nurseRow).not.toBeNull();
+    expect(within(adminRow as HTMLElement).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(within(adminRow as HTMLElement).queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(within(adminRow as HTMLElement).getByText('Read only')).toBeInTheDocument();
+    expect(within(nurseRow as HTMLElement).getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(within(nurseRow as HTMLElement).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
   it('shows a clear delete guard message for backend conflicts', async () => {

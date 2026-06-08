@@ -146,6 +146,9 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Care',
         items: [
           { to: '/nurse', label: 'Dashboard' },
+          { to: '/nurse/appointments', label: 'Appointments' },
+          { to: '/nurse/patients', label: 'Patients' },
+          { to: '/nurse/medical-records', label: 'Medical Records' },
           { to: '/nurse/messages', label: 'Messages' },
           { to: '/nurse/profile', label: 'Profile' },
         ],

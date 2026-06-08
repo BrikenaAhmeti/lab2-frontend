@@ -74,7 +74,7 @@ describe('UsersPage', () => {
     expect(screen.getByText('auth.forbiddenTitle')).toBeInTheDocument();
   });
 
-  it('submits the admin create user form with multiple roles', async () => {
+  it('prevents clinical admins from creating admin-role users', async () => {
     store.dispatch(clearSession());
     store.dispatch(
       setSession({
@@ -93,7 +93,7 @@ describe('UsersPage', () => {
       firstName: 'Grace',
       lastName: 'Hopper',
       email: 'grace@example.com',
-      roles: ['Admin', 'Doctor'],
+      roles: ['Patient', 'Doctor'],
     });
 
     renderUsersPage();
@@ -102,6 +102,8 @@ describe('UsersPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'auth.addUser' }));
     expect(document.getElementById('create-user-password')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Admin')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Super Admin')).not.toBeInTheDocument();
     fireEvent.change(inputById('create-user-first-name'), { target: { value: 'Grace' } });
     fireEvent.change(inputById('create-user-last-name'), { target: { value: 'Hopper' } });
     fireEvent.change(inputById('create-user-email'), { target: { value: 'grace@example.com' } });
@@ -110,9 +112,7 @@ describe('UsersPage', () => {
     fireEvent.change(inputById('create-user-gender'), { target: { value: 'Female' } });
     fireEvent.change(inputById('create-user-personal-number'), { target: { value: 'EMP-1001' } });
 
-    fireEvent.click(screen.getByLabelText('Admin'));
     fireEvent.click(screen.getByLabelText('Doctor'));
-    fireEvent.click(screen.getByLabelText('Patient'));
     fireEvent.click(screen.getByRole('button', { name: 'auth.createUser' }));
 
     await waitFor(() =>
@@ -124,7 +124,7 @@ describe('UsersPage', () => {
         dateOfBirth: '1980-12-09',
         gender: 'Female',
         personalNumber: 'EMP-1001',
-        roles: ['Admin', 'Doctor'],
+        roles: ['Patient', 'Doctor'],
       })
     );
 

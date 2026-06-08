@@ -12,11 +12,13 @@ import AppointmentCard from '../components/AppointmentCard';
 import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import CancelAppointmentDialog from '../components/CancelAppointmentDialog';
 import RescheduleAppointmentDialog from '../components/RescheduleAppointmentDialog';
-import { getApiErrorMessage, resolvePatientId, type BookingMode, useAppointmentList, useCancelAppointment, useRescheduleAppointment } from '../hooks/useAppointments';
+import { getApiErrorMessage, resolvePatientId, useAppointmentList, useCancelAppointment, useRescheduleAppointment } from '../hooks/useAppointments';
 import { isPastAppointment } from '../components/appointmentFormat';
 
+type AppointmentsPageMode = 'patient' | 'receptionist' | 'nurse';
+
 interface AppointmentsPageProps {
-  mode: BookingMode;
+  mode: AppointmentsPageMode;
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -30,8 +32,10 @@ function EmptyState({ label }: { label: string }) {
 export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
   const user = useAppSelector((state) => state.auth.user);
   const patientId = mode === 'patient' ? resolvePatientId(user) : undefined;
-  const root = mode === 'patient' ? '/patient' : '/receptionist';
-  const label = mode === 'patient' ? 'Patient' : 'Receptionist';
+  const root = mode === 'patient' ? '/patient' : mode === 'nurse' ? '/nurse' : '/receptionist';
+  const label = mode === 'patient' ? 'Patient' : mode === 'nurse' ? 'Nurse' : 'Receptionist';
+  const canBookAppointments = mode !== 'nurse';
+  const showScheduleActions = mode !== 'nurse';
   const [detailAppointment, setDetailAppointment] = useState<AppointmentView | null>(null);
   const [cancelAppointment, setCancelAppointment] = useState<AppointmentView | null>(null);
   const [rescheduleAppointment, setRescheduleAppointment] = useState<AppointmentView | null>(null);
@@ -46,7 +50,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
     }),
     [patientId]
   );
-  const appointmentsQuery = useAppointmentList(params, mode === 'receptionist' || Boolean(patientId));
+  const appointmentsQuery = useAppointmentList(params, mode !== 'patient' || Boolean(patientId));
   const cancelMutation = useCancelAppointment();
   const rescheduleMutation = useRescheduleAppointment();
   const appointments = appointmentsQuery.data?.items ?? [];
@@ -82,29 +86,39 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
 
       <Card
         title={mode === 'patient' ? 'My Appointments' : 'Appointments'}
-        subtitle={mode === 'patient' ? 'Upcoming and past appointment history' : 'Facility appointment list'}
+        subtitle={
+          mode === 'patient'
+            ? 'Upcoming and past appointment history'
+            : mode === 'nurse'
+              ? 'View facility appointments and patient visit details'
+              : 'Facility appointment list'
+        }
         actions={
           <div className="flex flex-wrap justify-end gap-2">
             {mode !== 'patient' ? <ExportButton entity="appointments" /> : null}
-            <Link to={`${root}/book-appointment`}>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                leftIcon={<PhoneCall className="h-4 w-4" aria-hidden="true" />}
-              >
-                Call
-              </Button>
-            </Link>
-            <Link to={`${root}/book-appointment`}>
-              <Button
-                type="button"
-                size="sm"
-                leftIcon={<CalendarPlus className="h-4 w-4" aria-hidden="true" />}
-              >
-                Book Appointment
-              </Button>
-            </Link>
+            {canBookAppointments ? (
+              <>
+                <Link to={`${root}/book-appointment`}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    leftIcon={<PhoneCall className="h-4 w-4" aria-hidden="true" />}
+                  >
+                    Call
+                  </Button>
+                </Link>
+                <Link to={`${root}/book-appointment`}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    leftIcon={<CalendarPlus className="h-4 w-4" aria-hidden="true" />}
+                  >
+                    Book Appointment
+                  </Button>
+                </Link>
+              </>
+            ) : null}
           </div>
         }
       >
@@ -136,6 +150,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
+                        showScheduleActions={showScheduleActions}
                         onCancel={(nextAppointment) => {
                           setCancelAppointment(nextAppointment);
                           setActionError('');
@@ -161,6 +176,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
+                        showScheduleActions={showScheduleActions}
                         onCancel={(nextAppointment) => {
                           setCancelAppointment(nextAppointment);
                           setActionError('');
@@ -182,7 +198,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
 
       <AppointmentDetailModal
         appointment={detailAppointment}
-        showClinicalReport={mode === 'patient'}
+        showClinicalReport={mode === 'patient' || mode === 'nurse'}
         onClose={() => setDetailAppointment(null)}
       />
       <CancelAppointmentDialog

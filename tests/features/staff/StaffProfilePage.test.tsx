@@ -154,4 +154,27 @@ describe('StaffProfilePage', () => {
 
     await waitFor(() => expect(staffApi.deactivate).toHaveBeenCalledWith('staff-1'));
   });
+
+  it('keeps admin-type staff records read-only for clinical admins', async () => {
+    vi.mocked(staffApi.get).mockResolvedValue({
+      ...staff,
+      id: 'staff-admin',
+      user: {
+        ...staff.user,
+        email: 'clinic.admin@example.com',
+      },
+      positionType: {
+        id: 'type-admin',
+        name: 'Clinical Admin',
+        defaultRoleKey: 'admin',
+        defaultRoleName: 'Admin',
+      },
+    });
+
+    renderProfile('/admin/staff/staff-admin?tab=schedule');
+
+    expect(await screen.findByText('Weekly schedule')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save schedule' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
+  });
 });

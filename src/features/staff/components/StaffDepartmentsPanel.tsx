@@ -12,7 +12,7 @@ import {
 } from '@/features/staff/hooks/useStaff';
 import type { StaffRecord } from '@/lib/api/staff-api';
 
-export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord }) {
+export default function StaffDepartmentsPanel({ staff, editable = true }: { staff: StaffRecord; editable?: boolean }) {
   const [departmentId, setDepartmentId] = useState('');
   const [error, setError] = useState('');
   const departmentsQuery = useStaffDepartments();
@@ -23,6 +23,7 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
   const pending = assignMutation.isPending || removeMutation.isPending;
 
   const addDepartment = async () => {
+    if (!editable) return;
     if (!departmentId) return;
     setError('');
 
@@ -35,6 +36,8 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
   };
 
   const removeDepartment = async (id: string) => {
+    if (!editable) return;
+
     setError('');
 
     try {
@@ -54,14 +57,16 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
           staff.departments.map((department) => (
             <span key={department.id} className="inline-flex items-center gap-2 rounded-full border border-border bg-surface px-2 py-1">
               <Badge>{getStaffDepartmentName(department)}</Badge>
-              <button
-                type="button"
-                disabled={pending}
-                onClick={() => removeDepartment(getStaffDepartmentId(department))}
-                className="text-xs font-medium text-danger disabled:opacity-50"
-              >
-                Remove
-              </button>
+              {editable ? (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => removeDepartment(getStaffDepartmentId(department))}
+                  className="text-xs font-medium text-danger disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              ) : null}
             </span>
           ))
         ) : (
@@ -69,26 +74,28 @@ export default function StaffDepartmentsPanel({ staff }: { staff: StaffRecord })
         )}
       </div>
 
-      <div className="grid gap-3 md:grid-cols-[1fr_auto]">
-        <label htmlFor="staff-department" className="block space-y-1.5">
-          <span className="text-sm font-medium text-foreground">Add department</span>
-          <select
-            id="staff-department"
-            value={departmentId}
-            disabled={departmentsQuery.isLoading || pending}
-            onChange={(event) => setDepartmentId(event.target.value)}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
-          >
-            <option value="">Select department</option>
-            {availableDepartments.map((department) => (
-              <option key={department.id} value={department.id}>{department.name}</option>
-            ))}
-          </select>
-        </label>
-        <Button type="button" className="self-end" loading={assignMutation.isPending} disabled={!departmentId} onClick={addDepartment}>
-          Add
-        </Button>
-      </div>
+      {editable ? (
+        <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+          <label htmlFor="staff-department" className="block space-y-1.5">
+            <span className="text-sm font-medium text-foreground">Add department</span>
+            <select
+              id="staff-department"
+              value={departmentId}
+              disabled={departmentsQuery.isLoading || pending}
+              onChange={(event) => setDepartmentId(event.target.value)}
+              className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground"
+            >
+              <option value="">Select department</option>
+              {availableDepartments.map((department) => (
+                <option key={department.id} value={department.id}>{department.name}</option>
+              ))}
+            </select>
+          </label>
+          <Button type="button" className="self-end" loading={assignMutation.isPending} disabled={!departmentId} onClick={addDepartment}>
+            Add
+          </Button>
+        </div>
+      ) : null}
     </section>
   );
 }

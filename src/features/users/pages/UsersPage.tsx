@@ -12,6 +12,7 @@ import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import UsersTable from '@/ui/organisms/users/UsersTable';
 import CreateUserModal from '@/ui/organisms/users/CreateUserModal';
 import { type CreateUserPayload, usersApi } from '@/lib/api/auth-api';
+import { filterProtectedAdminRoles, isSuperAdmin } from '@/features/auth/utils/adminAccess';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 
 const roleOptions = ['Super Admin', 'Admin', 'Doctor', 'Nurse', 'Lab Technician', 'Pharmacist', 'Receptionist', 'Patient'];
@@ -37,9 +38,16 @@ export default function UsersPage() {
   const user = useAppSelector((state) => state.auth.user);
   const roles = user?.roles ?? [];
   const permissions = user?.permissions ?? [];
-  const canManageUsers =
+  const canReadUsers =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
+  const canCreateUsers =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, ['users:create'], 'any');
+  const canCreateProtectedAdminUsers = isSuperAdmin(roles);
+  const availableRoleOptions = useMemo(
+    () => filterProtectedAdminRoles(roleOptions, canCreateProtectedAdminUsers),
+    [canCreateProtectedAdminUsers]
+  );
 
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -55,14 +63,18 @@ export default function UsersPage() {
     roles: ['Patient'],
   });
 
-  const validation = useMemo(() => createUserSchema.safeParse(form), [form]);
+  const selectedRoles = useMemo(
+    () => filterProtectedAdminRoles(form.roles, canCreateProtectedAdminUsers),
+    [canCreateProtectedAdminUsers, form.roles]
+  );
+  const validation = useMemo(() => createUserSchema.safeParse({ ...form, roles: selectedRoles }), [form, selectedRoles]);
 
   const createUserPayload = (): CreateUserPayload => {
     const payload: CreateUserPayload = {
       firstName: form.firstName.trim(),
       lastName: form.lastName.trim(),
       email: form.email.trim(),
-      roles: form.roles,
+      roles: selectedRoles,
     };
 
     if (form.phone.trim()) payload.phone = form.phone.trim();
@@ -83,7 +95,7 @@ export default function UsersPage() {
     queryKey: ['users', search],
     queryFn: () => usersApi.list(search),
     retry: false,
-    enabled: canManageUsers,
+    enabled: canReadUsers,
   });
 
   const createMutation = useMutation({
@@ -114,7 +126,7 @@ export default function UsersPage() {
 
   const rows = useMemo(() => usersQuery.data ?? [], [usersQuery.data]);
 
-  if (!canManageUsers) {
+  if (!canReadUsers) {
     return <Forbidden />;
   }
 
@@ -127,7 +139,7 @@ export default function UsersPage() {
     <Card
       title={t('auth.usersTitle')}
       subtitle={t('auth.usersSubtitle')}
-      actions={<Button onClick={() => setShowModal(true)}>{t('auth.addUser')}</Button>}
+      actions={canCreateUsers ? <Button onClick={() => setShowModal(true)}>{t('auth.addUser')}</Button> : null}
     >
       <div className="mb-4 space-y-3">
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('auth.searchUsers')} />
@@ -165,8 +177,8 @@ export default function UsersPage() {
           cancel: t('auth.cancel'),
           submit: t('auth.createUser'),
         }}
-        roleOptions={roleOptions}
-        values={form}
+        roleOptions={availableRoleOptions}
+        values={{ ...form, roles: selectedRoles }}
         errors={{
           firstName: fieldError('firstName'),
           lastName: fieldError('lastName'),
@@ -174,10 +186,21 @@ export default function UsersPage() {
           roles: fieldError('roles'),
         }}
         loading={createMutation.isPending}
-        onChange={(field, value) => setForm((prev) => ({ ...prev, [field]: value }))}
+        onChange={(field, value) => {
+          setForm((prev) => ({
+            ...prev,
+            [field]: field === 'roles' && Array.isArray(value)
+              ? filterProtectedAdminRoles(value, canCreateProtectedAdminUsers)
+              : value,
+          }));
+        }}
         onClose={() => setShowModal(false)}
         onSubmit={() => {
           setFeedback(null);
+          if (!canCreateUsers) {
+            setFeedback({ type: 'error', message: t('auth.forbiddenDescription') });
+            return;
+          }
           if (!validation.success) {
             setFeedback({ type: 'error', message: t('auth.fixFormErrors') });
             return;

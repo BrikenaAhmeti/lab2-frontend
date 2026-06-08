@@ -66,4 +66,17 @@ describe('portalConfigs', () => {
       expect.objectContaining({ label: 'Profile', to: '/patient/profile' }),
     ]);
   });
+
+  it('wires nurse clinical detail links', () => {
+    const care = portalConfigs.nurse.navGroups.find((group) => group.label === 'Care');
+
+    expect(care?.items).toEqual([
+      expect.objectContaining({ label: 'Dashboard', to: '/nurse' }),
+      expect.objectContaining({ label: 'Appointments', to: '/nurse/appointments' }),
+      expect.objectContaining({ label: 'Patients', to: '/nurse/patients' }),
+      expect.objectContaining({ label: 'Medical Records', to: '/nurse/medical-records' }),
+      expect.objectContaining({ label: 'Messages', to: '/nurse/messages' }),
+      expect.objectContaining({ label: 'Profile', to: '/nurse/profile' }),
+    ]);
+  });
 });

@@ -26,8 +26,14 @@ export interface PatientRegisterRequest {
 export interface AuthUserDto {
   id: string;
   email: string;
+  username?: string | null;
+  firstName?: string;
+  lastName?: string;
   roles: string[];
   permissions: string[];
+  patientId?: string;
+  patientProfileId?: string;
+  profileId?: string;
 }
 
 export interface AuthResponse {

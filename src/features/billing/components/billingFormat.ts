@@ -1,4 +1,5 @@
 import type { AuthUser } from '@/features/auth/authSlice';
+import { resolveSessionPatientId } from '@/features/auth/utils/patientSession';
 import type { BillingStatus, BillingView, PaymentMethod } from '@/lib/api/billing-api';
 
 export const billingStatusLabels: Record<BillingStatus, string> = {
@@ -75,7 +76,7 @@ export function canPayBilling(billing: BillingView) {
 }
 
 export function resolveBillingPatientId(user: AuthUser | null | undefined) {
-  return user?.patientId ?? user?.patientProfileId ?? user?.profileId ?? user?.id ?? '';
+  return resolveSessionPatientId(user);
 }
 
 export function getBillingPeriodRange(period: 'today' | 'week' | 'month') {

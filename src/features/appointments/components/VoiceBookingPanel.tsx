@@ -7,14 +7,32 @@ import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import type { BookingMode } from '../hooks/useAppointments';
 import type Vapi from '@vapi-ai/web';
 
+type VapiAssistantOverrides = NonNullable<Parameters<Vapi['start']>[1]>;
+
 interface VoiceBookingPanelProps {
   mode: BookingMode;
   patientId?: string;
   departmentId?: string;
+  departmentName?: string;
   serviceCatalogId?: string;
+  serviceName?: string;
   staffProfileId?: string;
+  staffName?: string;
   scheduledAt?: string;
   className?: string;
+}
+
+interface VoiceBookingContext {
+  mode: BookingMode;
+  patientId?: string | null;
+  departmentId?: string | null;
+  departmentName?: string | null;
+  serviceCatalogId?: string | null;
+  serviceName?: string | null;
+  staffProfileId?: string | null;
+  staffName?: string | null;
+  scheduledAt?: string | null;
+  assistantId?: string | null;
 }
 
 type CallStatus = 'idle' | 'connecting' | 'listening' | 'ended' | 'error';
@@ -22,12 +40,42 @@ type CallStatus = 'idle' | 'connecting' | 'listening' | 'ended' | 'error';
 const waveformBars = [18, 30, 46, 64, 38, 52, 72, 42, 58, 34, 48, 26];
 const wideWaveformBars = [18, 32, 48, 72, 96, 62, 84, 108, 70, 92, 58, 78, 46, 66, 40];
 
+function textValue(value?: string | null) {
+  return value?.trim() ?? '';
+}
+
+export function buildVapiAssistantOverrides(context: VoiceBookingContext): VapiAssistantOverrides {
+  const variableValues = {
+    bookingMode: context.mode,
+    patientId: textValue(context.patientId),
+    departmentId: textValue(context.departmentId),
+    departmentName: textValue(context.departmentName),
+    serviceCatalogId: textValue(context.serviceCatalogId),
+    serviceName: textValue(context.serviceName),
+    staffProfileId: textValue(context.staffProfileId),
+    doctorName: textValue(context.staffName),
+    scheduledAt: textValue(context.scheduledAt),
+  };
+
+  return {
+    variableValues,
+    metadata: {
+      source: 'medsphere-appointment-booking',
+      assistantId: context.assistantId ?? null,
+      bookingContext: variableValues,
+    },
+  };
+}
+
 export default function VoiceBookingPanel({
   mode,
   patientId,
   departmentId,
+  departmentName,
   serviceCatalogId,
+  serviceName,
   staffProfileId,
+  staffName,
   scheduledAt,
   className = '',
 }: VoiceBookingPanelProps) {
@@ -105,7 +153,9 @@ export default function VoiceBookingPanel({
 
     setVoiceError('');
 
-    if (!isConfigured) {
+    const assistantId = env.VAPI_ASSISTANT_ID;
+
+    if (!env.VAPI_PUBLIC_KEY || !assistantId) {
       setCallStatus('error');
       setVoiceError(
         'MedSphere AI Assistant needs VITE_VAPI_PUBLIC_KEY and VITE_VAPI_ASSISTANT_ID before voice calls can start.'
@@ -121,17 +171,21 @@ export default function VoiceBookingPanel({
       mode,
       patientId: patientId || null,
       departmentId: departmentId || null,
+      departmentName: departmentName || null,
       serviceCatalogId: serviceCatalogId || null,
+      serviceName: serviceName || null,
       staffProfileId: staffProfileId || null,
+      staffName: staffName || null,
       scheduledAt: scheduledAt || null,
-      assistantId: env.VAPI_ASSISTANT_ID || null,
+      assistantId,
     };
+    const assistantOverrides = buildVapiAssistantOverrides(detail);
 
     window.dispatchEvent(new CustomEvent('medsphere:vapi-booking-requested', { detail }));
 
     try {
       const vapi = await getVapi();
-      await vapi.start(env.VAPI_ASSISTANT_ID);
+      await vapi.start(assistantId, assistantOverrides);
       setCallStatus((current) => (current === 'connecting' ? 'listening' : current));
     } catch {
       setCallStatus('error');

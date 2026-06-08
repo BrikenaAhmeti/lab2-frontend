@@ -9,12 +9,22 @@ interface AppointmentCardProps {
   onCancel: (appointment: AppointmentView) => void;
   onDetail: (appointment: AppointmentView) => void;
   onReschedule: (appointment: AppointmentView) => void;
+  showScheduleActions?: boolean;
 }
 
-function AppointmentCard({ appointment, onCancel, onDetail, onReschedule }: AppointmentCardProps) {
+function AppointmentCard({
+  appointment,
+  onCancel,
+  onDetail,
+  onReschedule,
+  showScheduleActions = true,
+}: AppointmentCardProps) {
   const canChange = useMemo(
-    () => !isFinalAppointment(appointment.status) && new Date(appointment.scheduledAt).getTime() > Date.now(),
-    [appointment.scheduledAt, appointment.status]
+    () =>
+      showScheduleActions &&
+      !isFinalAppointment(appointment.status) &&
+      new Date(appointment.scheduledAt).getTime() > Date.now(),
+    [appointment.scheduledAt, appointment.status, showScheduleActions]
   );
 
   return (

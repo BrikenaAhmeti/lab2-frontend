@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ArrowLeft, BriefcaseMedical, Building2, Eye, Mail, UserX } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import { canManageProtectedAdminTargets, isProtectedStaffRecord } from '@/features/auth/utils/adminAccess';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
@@ -59,6 +60,9 @@ export default function StaffProfilePage() {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
+  const canManage =
+    hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, ['staff:manage'], 'any');
+  const canManageProtectedAdmins = canManageProtectedAdminTargets(roles);
   const [staffToDeactivate, setStaffToDeactivate] = useState<StaffRecord | null>(null);
   const [deactivateError, setDeactivateError] = useState('');
   const [feedback, setFeedback] = useState('');
@@ -70,6 +74,9 @@ export default function StaffProfilePage() {
   const staffStatus = staff ? getStaffStatus(staff) : '';
   const primaryDepartment = staff?.departments?.find((department) => department.isPrimary) ?? staff?.departments?.[0];
   const primaryDepartmentName = primaryDepartment ? getStaffDepartmentName(primaryDepartment) : null;
+  const canEditStaff = Boolean(
+    staff && canManage && (canManageProtectedAdmins || !isProtectedStaffRecord(staff))
+  );
 
   if (!canReadStaff(permissions, roles)) {
     return <Forbidden />;
@@ -81,6 +88,10 @@ export default function StaffProfilePage() {
 
   const confirmDeactivate = async () => {
     if (!staffToDeactivate) return;
+    if (!canEditStaff) {
+      setDeactivateError('Only Super Admins can deactivate admin staff accounts');
+      return;
+    }
 
     setDeactivateError('');
     setFeedback('');
@@ -146,14 +157,16 @@ export default function StaffProfilePage() {
                     Public preview
                   </Button>
                 </Link>
-                <Button
-                  type="button"
-                  variant="danger"
-                  leftIcon={<UserX className="h-4 w-4" />}
-                  onClick={() => setStaffToDeactivate(staff)}
-                >
-                  Deactivate
-                </Button>
+                {canEditStaff ? (
+                  <Button
+                    type="button"
+                    variant="danger"
+                    leftIcon={<UserX className="h-4 w-4" />}
+                    onClick={() => setStaffToDeactivate(staff)}
+                  >
+                    Deactivate
+                  </Button>
+                ) : null}
               </div>
             </div>
             <div className="p-4">
@@ -163,9 +176,9 @@ export default function StaffProfilePage() {
 
           {feedback ? <FeedbackMessage type="success" message={feedback} /> : null}
           {activeTab === 'info' ? <StaffInfoPanel staff={staff} /> : null}
-          {activeTab === 'departments' ? <StaffDepartmentsPanel staff={staff} /> : null}
-          {activeTab === 'schedule' ? <StaffSchedulePanel staffId={staff.id} /> : null}
-          {activeTab === 'exceptions' ? <StaffExceptionsPanel staffId={staff.id} /> : null}
+          {activeTab === 'departments' ? <StaffDepartmentsPanel staff={staff} editable={canEditStaff} /> : null}
+          {activeTab === 'schedule' ? <StaffSchedulePanel staffId={staff.id} editable={canEditStaff} /> : null}
+          {activeTab === 'exceptions' ? <StaffExceptionsPanel staffId={staff.id} editable={canEditStaff} /> : null}
         </div>
       ) : null}
 

@@ -5,7 +5,6 @@ import { patientsApi, type PatientListParams, type PatientPayload, type PatientR
 export const patientQueryKey = {
   all: ['patients'] as const,
   list: (params: PatientListParams) => [...patientQueryKey.all, 'list', params] as const,
-  me: () => [...patientQueryKey.all, 'me'] as const,
   detail: (id: string) => [...patientQueryKey.all, 'detail', id] as const,
   timeline: (id: string) => [...patientQueryKey.detail(id), 'timeline'] as const,
 };
@@ -28,10 +27,11 @@ export function usePatientDetail(id: string) {
   });
 }
 
-export function usePatientSelfProfile() {
+export function usePatientSelfProfile(patientId: string) {
   return useQuery({
-    queryKey: patientQueryKey.me(),
-    queryFn: () => patientsApi.me(),
+    queryKey: patientQueryKey.detail(patientId),
+    queryFn: () => patientsApi.get(patientId),
+    enabled: Boolean(patientId),
     retry: false,
   });
 }

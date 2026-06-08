@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import BookingWizard from '@/features/appointments/components/BookingWizard';
+import { buildVapiAssistantOverrides } from '@/features/appointments/components/VoiceBookingPanel';
 import { departmentsApi, type DepartmentRecord } from '@/lib/api/departments-api';
 import { servicesApi, type ServiceRecord } from '@/lib/api/services-api';
 import { staffApi, type StaffRecord } from '@/lib/api/staff-api';
@@ -309,6 +310,77 @@ describe('BookingWizard', () => {
       });
     });
     expect(await screen.findByText('Appointment booked')).toBeInTheDocument();
+  });
+
+  it('uses public booking catalog reads for patient appointments', async () => {
+    renderWizard('patient-1');
+
+    expect(await screen.findByText('Department: Cardiology')).toBeInTheDocument();
+    expect(departmentsApi.publicList).toHaveBeenCalledWith(
+      expect.objectContaining({ isActive: true }),
+      expect.anything()
+    );
+    expect(staffApi.publicList).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 100 }),
+      expect.anything()
+    );
+    expect(departmentsApi.list).not.toHaveBeenCalled();
+
+    fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByRole('button', { name: /general consultation/i })).toBeInTheDocument();
+    expect(servicesApi.publicList).toHaveBeenCalledWith(
+      expect.objectContaining({ departmentId: 'department-1', isActive: true }),
+      expect.anything()
+    );
+    expect(servicesApi.list).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /general consultation/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    expect(await screen.findByRole('button', { name: '09:00' })).toBeInTheDocument();
+    expect(appointmentsApi.publicAvailableSlots).toHaveBeenCalledWith(
+      'staff-1',
+      expect.objectContaining({ serviceId: 'service-1' }),
+      expect.anything()
+    );
+    expect(appointmentsApi.availableSlots).not.toHaveBeenCalled();
+  });
+
+  it('builds Vapi assistant overrides with selected booking context', () => {
+    const overrides = buildVapiAssistantOverrides({
+      mode: 'patient',
+      patientId: 'patient-1',
+      departmentId: 'department-1',
+      departmentName: 'Cardiology',
+      serviceCatalogId: 'service-1',
+      serviceName: 'General Consultation',
+      staffProfileId: 'staff-1',
+      staffName: 'Dr. Rivera',
+      scheduledAt: '2030-05-20T09:00:00.000Z',
+      assistantId: 'assistant-1',
+    });
+
+    expect(overrides.variableValues).toMatchObject({
+      bookingMode: 'patient',
+      patientId: 'patient-1',
+      departmentId: 'department-1',
+      departmentName: 'Cardiology',
+      serviceCatalogId: 'service-1',
+      serviceName: 'General Consultation',
+      staffProfileId: 'staff-1',
+      doctorName: 'Dr. Rivera',
+      scheduledAt: '2030-05-20T09:00:00.000Z',
+    });
+    expect(overrides.metadata).toMatchObject({
+      source: 'medsphere-appointment-booking',
+      assistantId: 'assistant-1',
+      bookingContext: expect.objectContaining({
+        serviceName: 'General Consultation',
+        doctorName: 'Dr. Rivera',
+      }),
+    });
   });
 
   it('keeps confirm disabled when the patient id is missing', async () => {

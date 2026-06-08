@@ -14,6 +14,7 @@ import {
   type UpdateAppointmentStatusPayload,
 } from '@/lib/api/appointments-api';
 import type { AuthUser } from '@/features/auth/authSlice';
+import { resolveSessionPatientId } from '@/features/auth/utils/patientSession';
 import { publicCoreApiClient } from '@/lib/api/axios';
 
 export type BookingMode = 'patient' | 'receptionist' | 'public';
@@ -189,7 +190,7 @@ export function useCancelAppointment() {
 }
 
 export function resolvePatientId(user: AuthUser | null | undefined) {
-  return user?.patientId ?? user?.patientProfileId ?? user?.profileId ?? user?.id ?? '';
+  return resolveSessionPatientId(user);
 }
 
 export function buildAppointmentPayload(input: {

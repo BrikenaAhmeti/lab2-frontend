@@ -32,13 +32,13 @@ import Pagination from '@/ui/molecules/Pagination';
 import SelectField from '@/ui/molecules/SelectField';
 import { TableSkeleton } from '@/ui/atoms/Skeleton';
 
-type BasePath = '/admin/patients' | '/receptionist/patients';
+type BasePath = '/admin/patients' | '/receptionist/patients' | '/nurse/patients';
 type GenderFilter = 'all' | 'female' | 'male' | 'other';
 type ActiveFilter = 'all' | 'active' | 'inactive';
 
 function canReadPatients(permissions: string[], roles: string[]) {
   return (
-    hasAnyRole(roles, ['Admin', 'Super Admin', 'Receptionist']) ||
+    hasAnyRole(roles, ['Admin', 'Super Admin', 'Receptionist', 'Nurse']) ||
     hasAnyPermission(permissions, ['patients:read', 'patients:read:all', 'patients:create', 'patients:update'], 'any')
   );
 }
@@ -67,6 +67,18 @@ function todayInputValue() {
   const today = new Date();
   const offset = today.getTimezoneOffset() * 60 * 1000;
   return new Date(today.getTime() - offset).toISOString().slice(0, 10);
+}
+
+function portalLabelFromBasePath(basePath: BasePath) {
+  if (basePath.startsWith('/admin')) return 'Admin';
+  if (basePath.startsWith('/nurse')) return 'Nurse';
+  return 'Receptionist';
+}
+
+function portalRootFromBasePath(basePath: BasePath) {
+  if (basePath.startsWith('/admin')) return '/admin';
+  if (basePath.startsWith('/nurse')) return '/nurse';
+  return '/receptionist';
 }
 
 export default function PatientsPage({ basePath = '/admin/patients' }: { basePath?: BasePath }) {
@@ -105,16 +117,13 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
   const patientsQuery = usePatientList(params);
   const rows = patientsQuery.data?.items ?? [];
   const paginationMeta = patientsQuery.data?.meta;
+  const refetchPatients = patientsQuery.refetch;
 
   useEffect(() => {
     if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
       setPage(paginationMeta.totalPages);
     }
   }, [page, paginationMeta]);
-
-  if (!canReadPatients(permissions, roles)) {
-    return <Forbidden />;
-  }
 
   const updateSearch = (value: string) => {
     setSearch(value);
@@ -164,8 +173,8 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
   }, []);
   const handleImportCompleted = useCallback(() => {
     setFeedback('Patients imported successfully');
-    void patientsQuery.refetch();
-  }, [patientsQuery.refetch]);
+    void refetchPatients();
+  }, [refetchPatients]);
 
   const submitPatient = useCallback(async (values: Record<string, string>) => {
     setFormError('');
@@ -181,6 +190,10 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
       setFormError(getApiErrorMessage(error, 'Patient could not be registered'));
     }
   }, [createMutation]);
+
+  if (!canReadPatients(permissions, roles)) {
+    return <Forbidden />;
+  }
 
   const filterChips: FilterSummaryChip[] = [];
   const trimmedSearch = search.trim();
@@ -219,7 +232,7 @@ export default function PatientsPage({ basePath = '/admin/patients' }: { basePat
 
   return (
     <div className="space-y-4">
-      <Breadcrumbs items={[{ label: basePath.startsWith('/admin') ? 'Admin' : 'Receptionist', to: basePath.startsWith('/admin') ? '/admin' : '/receptionist' }, { label: 'Patients' }]} />
+      <Breadcrumbs items={[{ label: portalLabelFromBasePath(basePath), to: portalRootFromBasePath(basePath) }, { label: 'Patients' }]} />
 
       <Card
         title="Patients"

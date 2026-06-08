@@ -60,6 +60,7 @@ const AdvancedSearchPage = lazy(() => import('@/features/search/pages/AdvancedSe
 const PatientLabResultsPage = lazy(() => import('@/features/patient-portal/pages/PatientLabResultsPage'));
 const PatientPrescriptionsPage = lazy(() => import('@/features/patient-portal/pages/PatientPrescriptionsPage'));
 const PatientMedicalRecordsPage = lazy(() => import('@/features/patient-portal/pages/PatientMedicalRecordsPage'));
+const NurseMedicalRecordsPage = lazy(() => import('@/features/medical-records/pages/NurseMedicalRecordsPage'));
 const CmsPagesPage = lazy(() => import('@/features/cms/pages/CmsPagesPage'));
 const CmsPageEditorPage = lazy(() => import('@/features/cms/pages/CmsPageEditorPage'));
 const CmsBannersPage = lazy(() => import('@/features/cms/pages/CmsBannersPage'));
@@ -285,7 +286,15 @@ export const router = createBrowserRouter([
             {lazyRoute(<NurseLayout />)}
           </RoleGuard>
         ),
-        children: portalRoutes(<NurseDashboardPage />),
+        children: [
+          ...portalRoutes(<NurseDashboardPage />),
+          { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="nurse" />) },
+          { path: 'appointments/:id', element: <Navigate to="/nurse/appointments" replace /> },
+          { path: 'patients', element: lazyRoute(<PatientsPage basePath="/nurse/patients" />) },
+          { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/nurse" />) },
+          { path: 'medical-records', element: lazyRoute(<NurseMedicalRecordsPage />) },
+          { path: 'medical-records/:id', element: lazyRoute(<NurseMedicalRecordsPage />) },
+        ],
       },
       {
         path: '/lab',

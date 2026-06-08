@@ -18,7 +18,6 @@ vi.mock('@/lib/api/patients-api', async () => {
     ...actual,
     patientsApi: {
       list: vi.fn(),
-      me: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -210,10 +209,24 @@ function setPatientSession() {
   );
 }
 
+function setPatientSessionWithoutPatientId() {
+  store.dispatch(clearSession());
+  store.dispatch(
+    setSession({
+      accessToken: 'access',
+      user: {
+        id: 'user-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+      },
+    })
+  );
+}
+
 describe('Patient profile pages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(patientsApi.me).mockResolvedValue(patient);
     vi.mocked(patientsApi.get).mockResolvedValue(patient);
     vi.mocked(patientsApi.timeline).mockResolvedValue([
       {
@@ -302,7 +315,7 @@ describe('Patient profile pages', () => {
     expect(screen.getByText('This patient does not have any appointments yet.')).toBeInTheDocument();
   });
 
-  it('uses the current patient endpoint for patient self-view', async () => {
+  it('loads patient self-view from the resolved patient id', async () => {
     setPatientSession();
 
     render(
@@ -323,8 +336,27 @@ describe('Patient profile pages', () => {
     expect(screen.getByText('Dental pain visit')).toBeInTheDocument();
     expect(await screen.findByText('Stable exam')).toBeInTheDocument();
     expect(screen.queryByText(JSON.stringify(patient.medicalNotes))).not.toBeInTheDocument();
-    expect(patientsApi.me).toHaveBeenCalledTimes(1);
-    expect(patientsApi.get).not.toHaveBeenCalled();
+    expect(patientsApi.get).toHaveBeenCalledWith('patient-1');
     expect(medicalRecordsApi.list).toHaveBeenCalledWith({ page: 1, limit: 5, patientId: 'patient-1' });
+  });
+
+  it('does not request patient self-view when the session has no patient profile id', async () => {
+    setPatientSessionWithoutPatientId();
+
+    render(
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient()}>
+          <MemoryRouter initialEntries={['/patient/profile']}>
+            <Routes>
+              <Route path="/patient/profile" element={<PatientSelfProfilePage />} />
+            </Routes>
+          </MemoryRouter>
+        </QueryClientProvider>
+      </Provider>
+    );
+
+    expect(await screen.findByText('Patient profile could not be resolved from your session')).toBeInTheDocument();
+    expect(patientsApi.get).not.toHaveBeenCalled();
+    expect(medicalRecordsApi.list).not.toHaveBeenCalled();
   });
 });

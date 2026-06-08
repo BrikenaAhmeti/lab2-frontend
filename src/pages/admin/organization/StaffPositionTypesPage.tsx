@@ -15,6 +15,7 @@ import StaffPositionTypesTable from '@/features/staff-position-types/components/
 import StaffPositionTypeFormModal from '@/features/staff-position-types/components/StaffPositionTypeFormModal';
 import DeleteStaffPositionTypeDialog from '@/features/staff-position-types/components/DeleteStaffPositionTypeDialog';
 import type { StaffPositionTypeFormValues } from '@/features/staff-position-types/staffPositionTypes.schemas';
+import { canManageProtectedAdminTargets, isProtectedStaffPosition } from '@/features/auth/utils/adminAccess';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import type { StaffPositionTypeRecord } from '@/lib/api/staff-position-types-api';
 import Card from '@/ui/atoms/Card';
@@ -38,6 +39,7 @@ export default function StaffPositionTypesPage() {
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
   const isAdmin = hasAnyRole(roles, ['Admin', 'Super Admin']);
+  const canManageProtectedAdmins = canManageProtectedAdminTargets(roles);
   const canRead =
     isAdmin ||
     hasAnyPermission(
@@ -143,6 +145,10 @@ export default function StaffPositionTypesPage() {
   };
 
   const openEditModal = (record: StaffPositionTypeRecord) => {
+    if (!canManagePositionType(record)) {
+      return;
+    }
+
     setFeedback(null);
     setFormError('');
     setEditingRecord(record);
@@ -161,6 +167,11 @@ export default function StaffPositionTypesPage() {
 
     const payload = toStaffPositionTypePayload(values);
 
+    if (!canManageProtectedAdmins && isProtectedStaffPosition(payload)) {
+      setFormError('Only Super Admins can create or edit admin position types');
+      return;
+    }
+
     try {
       if (editingRecord) {
         await updateMutation.mutateAsync({ id: editingRecord.id, payload });
@@ -178,6 +189,11 @@ export default function StaffPositionTypesPage() {
 
   const confirmDelete = async () => {
     if (!recordToDelete) {
+      return;
+    }
+
+    if (!canManagePositionType(recordToDelete)) {
+      setDeleteError('Only Super Admins can delete admin position types');
       return;
     }
 
@@ -215,6 +231,10 @@ export default function StaffPositionTypesPage() {
       label: statusFilter === 'active' ? 'Active only' : 'Inactive only',
       onRemove: () => updateStatusFilter('all'),
     });
+  }
+
+  function canManagePositionType(record: StaffPositionTypeRecord) {
+    return canManage && (canManageProtectedAdmins || !isProtectedStaffPosition(record));
   }
 
   return (
@@ -331,6 +351,7 @@ export default function StaffPositionTypesPage() {
               rows={rows}
               departments={departments}
               canManage={canManage}
+              canManageRecord={canManagePositionType}
               mutationPending={mutationPending}
               onEdit={openEditModal}
               onDelete={setRecordToDelete}
@@ -360,6 +381,7 @@ export default function StaffPositionTypesPage() {
           record={editingRecord}
           loading={createMutation.isPending || updateMutation.isPending}
           submitError={formError}
+          allowProtectedRoles={canManageProtectedAdmins}
           onClose={closeFormModal}
           onSubmit={submitForm}
         />
