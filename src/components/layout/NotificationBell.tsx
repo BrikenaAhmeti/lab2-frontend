@@ -19,6 +19,9 @@ import {
   useUnreadNotificationCount,
 } from '@/features/notifications/useNotifications';
 import type { Notification } from '@/features/notifications/notificationTypes';
+import { useAppSelector } from '@/app/hooks';
+import { selectAuthUser } from '@/features/auth/authSelectors';
+import { resolveNotificationDestination } from '@/features/notifications/notificationDestinations';
 
 function relativeTime(value: string) {
   const timestamp = new Date(value).getTime();
@@ -58,6 +61,7 @@ export default function NotificationBell() {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const user = useAppSelector(selectAuthUser);
   const { data: notifications = [], isLoading } = useRecentNotifications();
   const { data: unreadCount = 0 } = useUnreadNotificationCount();
   const { markAsRead, markAllAsRead } = useNotificationActions();
@@ -86,15 +90,8 @@ export default function NotificationBell() {
   }, [open]);
 
   const goToNotification = (notification: Notification) => {
-    const link = notification.link?.trim();
-    if (!link) return;
-
-    if (/^https?:\/\//.test(link)) {
-      window.location.assign(link);
-      return;
-    }
-
-    navigate(link.startsWith('/') ? link : `/${link}`);
+    const destination = resolveNotificationDestination(notification, user);
+    if (destination) navigate(destination);
   };
 
   const onNotificationClick = async (notification: Notification) => {

@@ -1,21 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import { PdfDocumentPanel, PdfInfoGrid, PdfSection } from '@/components/pdf/PdfDocumentPanel';
 import { resolvePatientId } from '@/features/appointments/hooks/useAppointments';
 import { getConsultationErrorMessage, useMedicalRecords } from '@/features/consultation/hooks/useConsultation';
-import { medicalRecordsApi, type MedicalRecordView } from '@/lib/api/medical-records-api';
+import type { MedicalRecordView } from '@/lib/api/medical-records-api';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import { PatientPortalEmptyState, PatientPortalLoadingState } from '../components/PatientPortalStates';
-import { downloadPatientPdf, formatPatientPortalDate } from '../components/patientPortalFormat';
-
-function fileName(record: MedicalRecordView) {
-  return `medical-record-${record.id}.pdf`;
-}
+import { downloadElementPdf } from '../components/patientPdfExport';
+import { formatPatientPortalDate, getMedicalRecordPdfFileName } from '../components/patientPortalFormat';
 
 export default function PatientMedicalRecordsPage() {
   const user = useAppSelector((state) => state.auth.user);
@@ -25,14 +22,20 @@ export default function PatientMedicalRecordsPage() {
   const records = (recordsQuery.data?.items ?? []).filter((record) => record.isFinalized);
   const [downloadId, setDownloadId] = useState('');
   const [downloadError, setDownloadError] = useState('');
+  const previewRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const downloadPdf = async (record: MedicalRecordView) => {
     setDownloadId(record.id);
     setDownloadError('');
 
     try {
-      const pdf = await medicalRecordsApi.downloadPdf(record.id);
-      downloadPatientPdf(pdf, fileName(record));
+      const previewElement = previewRefs.current[record.id];
+
+      if (!previewElement) {
+        throw new Error('Medical record preview is not ready yet');
+      }
+
+      await downloadElementPdf(previewElement, getMedicalRecordPdfFileName(record));
     } catch (error) {
       setDownloadError(getConsultationErrorMessage(error, 'Medical record PDF could not be downloaded'));
     } finally {
@@ -61,64 +64,65 @@ export default function PatientMedicalRecordsPage() {
           ) : null}
 
           {records.map((record) => (
-            <PdfDocumentPanel
+            <div
               key={record.id}
-              documentLabel="Medical Record PDF"
-              title={record.diagnosis || 'Consultation record'}
-              subtitle={formatPatientPortalDate(record.createdAt)}
-              accent="teal"
-              status={
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                  <Badge variant="success">Finalized</Badge>
-                  <Badge>{record.department.name}</Badge>
-                </div>
-              }
-              actions={
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  leftIcon={<Download size={16} />}
-                  loading={downloadId === record.id}
-                  onClick={() => downloadPdf(record)}
-                >
-                  Download PDF
-                </Button>
-              }
-              meta={[
-                { label: 'Doctor', value: record.staff.displayName },
-                { label: 'Department', value: record.department.name },
-                { label: 'Appointment', value: formatPatientPortalDate(record.appointment?.scheduledAt) },
-                { label: 'Record ID', value: record.id },
-              ]}
+              ref={(element) => {
+                previewRefs.current[record.id] = element;
+              }}
             >
-              <PdfSection title="Clinical summary" accent="teal">
-                <PdfInfoGrid
-                  columns="two"
-                  items={[
-                    { label: 'Chief complaint', value: record.chiefComplaint },
-                    { label: 'Diagnosis', value: record.diagnosis },
-                    { label: 'Follow-up', value: record.followUpInstructions },
-                  ]}
-                />
-              </PdfSection>
+              <PdfDocumentPanel
+                documentLabel="Medical Record PDF"
+                title={record.diagnosis || 'Consultation record'}
+                subtitle={formatPatientPortalDate(record.createdAt)}
+                accent="teal"
+                status={
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    <Badge variant="success">Finalized</Badge>
+                    <Badge>{record.department.name}</Badge>
+                  </div>
+                }
+                actions={
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    leftIcon={<Download size={16} />}
+                    loading={downloadId === record.id}
+                    onClick={() => downloadPdf(record)}
+                  >
+                    Download PDF
+                  </Button>
+                }
+                meta={[
+                  { label: 'Patient', value: record.patient.name },
+                  { label: 'Doctor', value: record.staff.displayName },
+                  { label: 'Department', value: record.department.name },
+                  { label: 'Appointment', value: formatPatientPortalDate(record.appointment?.scheduledAt) },
+                ]}
+              >
+                <PdfSection title="Clinical summary" accent="teal">
+                  <PdfInfoGrid
+                    columns="two"
+                    items={[
+                      { label: 'Chief complaint', value: record.chiefComplaint },
+                      { label: 'Diagnosis', value: record.diagnosis },
+                      { label: 'Follow-up', value: record.followUpInstructions },
+                    ]}
+                  />
+                </PdfSection>
 
-              <details className="rounded-lg border border-border bg-surface/50 p-3">
-                <summary className="cursor-pointer text-sm font-medium text-foreground">View details</summary>
-                <PdfInfoGrid
-                  className="mt-4"
-                  columns="two"
-                  items={[
-                    { label: 'Doctor', value: record.staff.displayName },
-                    { label: 'Chief complaint', value: record.chiefComplaint },
-                    { label: 'Diagnosis', value: record.diagnosis },
-                    { label: 'Treatment plan', value: record.treatmentPlan },
-                    { label: 'Follow-up', value: record.followUpInstructions },
-                    { label: 'Notes', value: record.notes },
-                  ]}
-                />
-              </details>
-            </PdfDocumentPanel>
+                <PdfSection title="Record details" accent="blue">
+                  <PdfInfoGrid
+                    columns="two"
+                    items={[
+                      { label: 'Treatment plan', value: record.treatmentPlan },
+                      { label: 'Notes', value: record.notes },
+                      { label: 'Record ID', value: record.id },
+                    ]}
+                  />
+                </PdfSection>
+              </PdfDocumentPanel>
+            </div>
           ))}
         </div>
       </Card>

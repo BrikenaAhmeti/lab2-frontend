@@ -98,6 +98,9 @@ export const patientsApi = {
   list(params: PatientListParams, instance?: AxiosInstance) {
     return client(instance).get<PatientListResponse>('/api/patients', { params }).then((response) => response.data);
   },
+  me(instance?: AxiosInstance) {
+    return client(instance).get<PatientRecord>('/api/patients/me').then((response) => response.data);
+  },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<PatientRecord>(`/api/patients/${id}`).then((response) => response.data);
   },

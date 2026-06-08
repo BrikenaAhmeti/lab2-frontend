@@ -18,6 +18,7 @@ vi.mock('@/lib/api/patients-api', async () => {
     ...actual,
     patientsApi: {
       list: vi.fn(),
+      me: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -212,6 +213,7 @@ function setPatientSession() {
 describe('Patient profile pages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(patientsApi.me).mockResolvedValue(patient);
     vi.mocked(patientsApi.get).mockResolvedValue(patient);
     vi.mocked(patientsApi.timeline).mockResolvedValue([
       {
@@ -300,7 +302,7 @@ describe('Patient profile pages', () => {
     expect(screen.getByText('This patient does not have any appointments yet.')).toBeInTheDocument();
   });
 
-  it('uses the patient profile id from session for patient self-view', async () => {
+  it('uses the current patient endpoint for patient self-view', async () => {
     setPatientSession();
 
     render(
@@ -321,7 +323,8 @@ describe('Patient profile pages', () => {
     expect(screen.getByText('Dental pain visit')).toBeInTheDocument();
     expect(await screen.findByText('Stable exam')).toBeInTheDocument();
     expect(screen.queryByText(JSON.stringify(patient.medicalNotes))).not.toBeInTheDocument();
-    expect(patientsApi.get).toHaveBeenCalledWith('patient-1');
+    expect(patientsApi.me).toHaveBeenCalledTimes(1);
+    expect(patientsApi.get).not.toHaveBeenCalled();
     expect(medicalRecordsApi.list).toHaveBeenCalledWith({ page: 1, limit: 5, patientId: 'patient-1' });
   });
 });

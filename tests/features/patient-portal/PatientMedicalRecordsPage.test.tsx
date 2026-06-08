@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PatientMedicalRecordsPage from '@/features/patient-portal/pages/PatientMedicalRecordsPage';
 import { medicalRecordsApi, type MedicalRecordView } from '@/lib/api/medical-records-api';
 import authReducer from '@/features/auth/authSlice';
+import { downloadElementPdf } from '@/features/patient-portal/components/patientPdfExport';
 
 vi.mock('@/lib/api/medical-records-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/medical-records-api')>('@/lib/api/medical-records-api');
@@ -20,6 +21,10 @@ vi.mock('@/lib/api/medical-records-api', async () => {
     },
   };
 });
+
+vi.mock('@/features/patient-portal/components/patientPdfExport', () => ({
+  downloadElementPdf: vi.fn(),
+}));
 
 const medicalRecord: MedicalRecordView = {
   id: 'record-1',
@@ -111,25 +116,25 @@ describe('PatientMedicalRecordsPage', () => {
       items: [medicalRecord],
       meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
     });
-    vi.mocked(medicalRecordsApi.downloadPdf).mockResolvedValue(new Blob(['pdf'], { type: 'application/pdf' }));
-    Object.defineProperty(window.URL, 'createObjectURL', { value: vi.fn(() => 'blob:record'), writable: true });
-    Object.defineProperty(window.URL, 'revokeObjectURL', { value: vi.fn(), writable: true });
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    vi.mocked(downloadElementPdf).mockResolvedValue(undefined);
   });
 
-  it('shows finalized patient records and downloads the backend PDF', async () => {
+  it('shows finalized patient records and downloads the preview PDF with a descriptive name', async () => {
     renderPage();
 
     expect(await screen.findAllByText('Stable exam')).not.toHaveLength(0);
     expect(medicalRecordsApi.list).toHaveBeenCalledWith({ page: 1, limit: 50, patientId: 'patient-1' });
 
-    fireEvent.click(screen.getByText('View details'));
     expect(screen.getByText('Continue monitoring')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Download PDF' }));
 
     await waitFor(() => {
-      expect(medicalRecordsApi.downloadPdf).toHaveBeenCalledWith('record-1');
+      expect(downloadElementPdf).toHaveBeenCalledWith(
+        expect.any(HTMLDivElement),
+        'medical-record-arta-krasniqi-stable-exam-2030-01-02.pdf'
+      );
     });
+    expect(medicalRecordsApi.downloadPdf).not.toHaveBeenCalled();
   });
 });

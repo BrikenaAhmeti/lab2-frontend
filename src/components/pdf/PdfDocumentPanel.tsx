@@ -95,7 +95,11 @@ export function PdfDocumentPanel({
               {documentLabel}
             </span>
             {status ? <div>{status}</div> : null}
-            {actions ? <div className="pt-1">{actions}</div> : null}
+            {actions ? (
+              <div className="pt-1" data-pdf-export-ignore>
+                {actions}
+              </div>
+            ) : null}
           </div>
         </div>
 

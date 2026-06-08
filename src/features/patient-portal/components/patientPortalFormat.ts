@@ -1,4 +1,5 @@
 import type { PharmacyStatus, PrescriptionLifecycleStatus } from '@/lib/api/prescriptions-api';
+import type { MedicalRecordView } from '@/lib/api/medical-records-api';
 
 export function formatPatientPortalDate(value?: string | null) {
   if (!value) return '-';
@@ -27,4 +28,28 @@ export function downloadPatientPdf(blob: Blob, fileName: string) {
   link.download = fileName;
   link.click();
   window.URL.revokeObjectURL(url);
+}
+
+function filenamePart(value?: string | null, fallback = 'document') {
+  const normalized = value
+    ?.normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return normalized || fallback;
+}
+
+function dateFilePart(value?: string | null) {
+  return value?.slice(0, 10) || 'undated';
+}
+
+export function getMedicalRecordPdfFileName(record: MedicalRecordView) {
+  const patientName = record.patient.name || `${record.patient.firstName} ${record.patient.lastName}`;
+  const patient = filenamePart(patientName, 'patient');
+  const recordTopic = filenamePart(record.diagnosis || record.chiefComplaint, 'consultation-record');
+  const date = dateFilePart(record.appointment?.scheduledAt ?? record.createdAt);
+
+  return `medical-record-${patient}-${recordTopic}-${date}.pdf`;
 }

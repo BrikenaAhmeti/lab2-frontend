@@ -92,7 +92,7 @@ function makeActivity(overrides: Partial<DashboardActivity> = {}): DashboardActi
     description: 'Arta Krasniqi checked in for General Consultation',
     actorName: 'Reception Desk',
     entityLabel: 'Open appointment',
-    entityLink: '/admin/appointments/appointment-1',
+    entityLink: '/admin/search/appointments',
     createdAt: '2026-05-27T09:50:00.000Z',
     ...overrides,
   };
@@ -160,7 +160,7 @@ describe('AdminDashboardPage', () => {
     expect(await screen.findByText('Arta Krasniqi checked in for General Consultation')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Open appointment' })).toHaveAttribute(
       'href',
-      '/admin/appointments/appointment-1'
+      '/admin/search/appointments'
     );
     expect(dashboardApi.stats).toHaveBeenCalledTimes(1);
     expect(dashboardApi.activity).toHaveBeenCalledWith({ page: 1, limit: 20 });
