@@ -90,7 +90,6 @@ function portalRoutes(home: ReactNode) {
     { path: 'messages', element: lazyRoute(<ChatPage />) },
     { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
     { path: 'profile', element: lazyRoute(<ProfilePage />) },
-    { path: 'sessions', element: lazyRoute(<SessionsPage />) },
   ];
 }
 
@@ -185,6 +184,14 @@ export const router = createBrowserRouter([
         ),
         children: [
           ...portalRoutes(<AdminDashboardPage />),
+          {
+            path: 'sessions',
+            element: (
+              <RoleGuard allowedRoles={['Super Admin']}>
+                {lazyRoute(<SessionsPage />)}
+              </RoleGuard>
+            ),
+          },
           { path: 'departments', element: lazyRoute(<DepartmentsPage />) },
           { path: 'staff', element: lazyRoute(<StaffDirectoryPage />) },
           { path: 'staff/schedules', element: lazyRoute(<StaffScheduleOverviewPage />) },
@@ -194,7 +201,14 @@ export const router = createBrowserRouter([
           { path: 'inventory', element: lazyRoute(<InventoryPage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
           { path: 'reports', element: lazyRoute(<ReportBuilderPage />) },
-          { path: 'voice-ai', element: <Navigate to="/admin/sessions?tab=voice-ai" replace /> },
+          {
+            path: 'voice-ai',
+            element: (
+              <RoleGuard allowedRoles={['Super Admin']}>
+                <Navigate to="/admin/sessions?tab=voice-ai" replace />
+              </RoleGuard>
+            ),
+          },
           { path: 'search', element: <Navigate to="/admin/search/patients" replace /> },
           { path: 'search/:resource', element: lazyRoute(<AdvancedSearchPage />) },
           { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="admin" />) },
@@ -229,7 +243,6 @@ export const router = createBrowserRouter([
           { path: 'billing', element: lazyRoute(<PatientBillingPage />) },
           { path: 'feedback', element: lazyRoute(<PatientFeedbackPage />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
-          { path: 'sessions', element: lazyRoute(<SessionsPage />) },
         ],
       },
       {

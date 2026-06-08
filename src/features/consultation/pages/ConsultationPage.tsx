@@ -1,8 +1,9 @@
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import type { MedicalRecordView } from '@/lib/api/medical-records-api';
-import type { CreatePrescriptionPayload } from '@/lib/api/prescriptions-api';
+import type { CreatePrescriptionPayload, PrescriptionView } from '@/lib/api/prescriptions-api';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
@@ -33,6 +34,8 @@ import Skeleton from '@/ui/atoms/Skeleton';
 
 const ConsultationRecorder = lazy(() => import('../components/ConsultationRecorder'));
 const ConsultationAiReportPanel = lazy(() => import('../components/ConsultationAiReportPanel'));
+const emptyRecords: MedicalRecordView[] = [];
+const emptyPrescriptions: PrescriptionView[] = [];
 
 function findAppointmentRecord(records: MedicalRecordView[], appointmentId: string) {
   return records.find((record) => record.appointmentId === appointmentId) ?? null;
@@ -42,9 +45,23 @@ function isClosedAppointment(appointment: AppointmentView | null) {
   return appointment ? isFinalAppointment(appointment.status) : true;
 }
 
+function ConsultationHeader() {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <Breadcrumbs items={[{ label: 'Doctor', to: '/doctor' }, { label: 'Consultation' }]} />
+      <Link
+        to="/doctor"
+        className="inline-flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground transition hover:bg-surface/80 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to dashboard
+      </Link>
+    </div>
+  );
+}
+
 export default function ConsultationPage() {
   const { appointmentId = '' } = useParams();
-  const navigate = useNavigate();
   const appointmentQuery = useAppointmentDetail(appointmentId);
   const appointment = appointmentQuery.data ?? null;
   const patientQuery = usePatientDetail(appointment?.patientId ?? '');
@@ -61,8 +78,8 @@ export default function ConsultationPage() {
   const finalizeRecordMutation = useFinalizeMedicalRecord();
   const createPrescriptionMutation = useCreatePrescription();
   const updateStatusMutation = useUpdateAppointmentStatus();
-  const records = medicalRecordsQuery.data?.items ?? [];
-  const prescriptions = prescriptionsQuery.data?.items ?? [];
+  const records = medicalRecordsQuery.data?.items ?? emptyRecords;
+  const prescriptions = prescriptionsQuery.data?.items ?? emptyPrescriptions;
   const appointmentRecord = useMemo(
     () => findAppointmentRecord(records, appointmentId),
     [appointmentId, records]
@@ -167,11 +184,10 @@ export default function ConsultationPage() {
     }
   }, [appointment, updateStatusMutation]);
 
-  const goBack = useCallback(() => navigate('/doctor'), [navigate]);
-
   if (appointmentQuery.isLoading) {
     return (
       <div className="space-y-4">
+        <ConsultationHeader />
         <Skeleton className="h-6 w-56" />
         <Skeleton className="h-32" />
         <div className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
@@ -184,10 +200,13 @@ export default function ConsultationPage() {
 
   if (appointmentQuery.isError || !appointment) {
     return (
-      <FeedbackMessage
-        type="error"
-        message={getApiErrorMessage(appointmentQuery.error, 'Consultation appointment could not be loaded')}
-      />
+      <div className="space-y-4">
+        <ConsultationHeader />
+        <FeedbackMessage
+          type="error"
+          message={getApiErrorMessage(appointmentQuery.error, 'Consultation appointment could not be loaded')}
+        />
+      </div>
     );
   }
 
@@ -195,7 +214,7 @@ export default function ConsultationPage() {
 
   return (
     <div className="space-y-4">
-      <Breadcrumbs items={[{ label: 'Doctor', to: '/doctor' }, { label: 'Consultation' }]} />
+      <ConsultationHeader />
 
       <Card
         title={appointment.patient.name}
@@ -211,9 +230,6 @@ export default function ConsultationPage() {
               onClick={completeAppointment}
             >
               Complete Appointment
-            </Button>
-            <Button type="button" variant="ghost" onClick={goBack}>
-              Back
             </Button>
           </div>
         }
@@ -243,16 +259,23 @@ export default function ConsultationPage() {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
         <div className="space-y-4">
+          <Suspense fallback={<Skeleton className="h-40" />}>
+            <ConsultationRecorder appointment={appointment} disabled={closed} />
+          </Suspense>
           <PatientSummaryPanel
             patient={patientQuery.data ?? null}
             records={records}
             prescriptions={prescriptions}
             loading={patientQuery.isLoading || prescriptionsQuery.isLoading}
           />
-          <Suspense fallback={<Skeleton className="h-40" />}>
-            <ConsultationRecorder appointment={appointment} disabled={closed} />
-          </Suspense>
-          <LabOrderPlaceholder />
+          <LabOrderPlaceholder
+            appointment={appointment}
+            medicalRecordId={record?.id ?? null}
+            disabled={closed}
+            onCreated={() => {
+              void medicalRecordsQuery.refetch();
+            }}
+          />
         </div>
 
         <div className="space-y-4">

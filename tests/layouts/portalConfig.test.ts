@@ -37,6 +37,20 @@ describe('portalConfigs', () => {
     ]));
   });
 
+  it('keeps sessions visible only to super admins', () => {
+    const allItems = Object.values(portalConfigs).flatMap((config) =>
+      config.navGroups.flatMap((group) => group.items.map((item) => ({ ...item, portal: config.key })))
+    );
+
+    expect(allItems.filter((item) => item.label === 'Sessions')).toEqual([
+      expect.objectContaining({
+        portal: 'admin',
+        to: '/admin/sessions',
+        requiredRoles: ['Super Admin'],
+      }),
+    ]);
+  });
+
   it('wires the patient portal links required by MS-55', () => {
     const care = portalConfigs.patient.navGroups.find((group) => group.label === 'Care');
 

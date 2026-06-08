@@ -1,5 +1,4 @@
 import clsx from 'clsx';
-import i18n from 'i18next';
 import {
   Activity,
   BadgeHelp,
@@ -35,6 +34,7 @@ import { useThemeMode } from '@/hooks/useThemeMode';
 import type { PortalConfig, PortalNavItem } from '@/layouts/portalConfig';
 
 function canSeeItem(item: PortalNavItem, permissions: string[], roles: string[]) {
+  if (item.requiredRoles?.length && !hasAnyRole(roles, item.requiredRoles)) return false;
   if (!item.requiredPermissions?.length) return true;
   if (hasAnyRole(roles, ['Admin', 'Super Admin'])) return true;
   return hasAnyPermission(permissions, item.requiredPermissions, 'any');
@@ -71,14 +71,8 @@ const navIcons: Record<string, LucideIcon> = {
   Queue: Pill,
 };
 
-const languages = [
-  { code: 'en', label: 'EN' },
-  { code: 'de', label: 'DE' },
-];
-
 function SidebarControls() {
   const { mode, setMode } = useThemeMode();
-  const currentLanguage = i18n.language.slice(0, 2).toLowerCase();
   const themeOptions = [
     { mode: 'light' as const, label: 'Light', icon: Sun },
     { mode: 'dark' as const, label: 'Dark', icon: Moon },
@@ -87,26 +81,7 @@ function SidebarControls() {
 
   return (
     <div className="border-t border-white/10 p-3">
-      <div className="flex items-center justify-between gap-2 rounded-lg bg-white/5 p-1">
-        <div className="flex items-center gap-1">
-          {languages.map((language) => (
-            <button
-              key={language.code}
-              type="button"
-              className={clsx(
-                'h-7 rounded-md px-2 text-[11px] font-semibold transition',
-                currentLanguage === language.code
-                  ? 'bg-cyan-400 text-slate-950'
-                  : 'text-slate-300 hover:bg-white/10 hover:text-white'
-              )}
-              onClick={() => i18n.changeLanguage(language.code)}
-              aria-label={`Change language to ${language.label}`}
-              title={language.label}
-            >
-              {language.label}
-            </button>
-          ))}
-        </div>
+      <div className="flex items-center justify-end gap-2 rounded-lg bg-white/5 p-1">
         <div className="flex items-center gap-1">
           {themeOptions.map((option) => {
             const Icon = option.icon;

@@ -12,7 +12,7 @@ import {
   useUpdateAiConsultationSummary,
 } from '../hooks/useConsultation';
 import type { MedicalRecordFormValues } from './MedicalRecordForm';
-import { medicalRecordValuesFromAiReport, reportTextFromConversation } from './aiReportFormat';
+import { isStubTranscription, medicalRecordValuesFromAiReport, reportTextFromConversation } from './aiReportFormat';
 
 interface ConsultationAiReportPanelProps {
   appointment: AppointmentView;
@@ -38,15 +38,23 @@ export default function ConsultationAiReportPanel({
   const [reportText, setReportText] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const transcript = conversation?.transcription?.trim() ?? '';
-  const summaryText = useMemo(() => reportTextFromConversation(conversation ?? {}), [conversation]);
+  const rawTranscript = conversation?.transcription?.trim() ?? '';
+  const hasStubTranscript = isStubTranscription(rawTranscript);
+  const transcript = hasStubTranscript ? '' : rawTranscript;
+  const summaryText = useMemo(() => {
+    if (hasStubTranscript) return '';
+    return reportTextFromConversation(conversation ?? {});
+  }, [conversation, hasStubTranscript]);
   const canEdit = !disabled && appointment.status === 'IN_PROGRESS';
+  const summaryStatus = hasStubTranscript ? undefined : conversation?.summaryStatus;
 
   useEffect(() => {
     if (summaryText) {
       setReportText(summaryText);
+    } else if (hasStubTranscript) {
+      setReportText('');
     }
-  }, [summaryText]);
+  }, [hasStubTranscript, summaryText]);
 
   const generateSummary = async () => {
     if (!transcript) return;
@@ -59,13 +67,6 @@ export default function ConsultationAiReportPanel({
         patientId: appointment.patientId,
         staffId: appointment.staffProfileId ?? undefined,
         transcription: transcript,
-        context: {
-          patientName: appointment.patient.name,
-          service: appointment.service.name,
-          department: appointment.department.name,
-          appointmentType: appointment.appointmentType,
-          scheduledAt: appointment.scheduledAt,
-        },
       });
 
       setReportText(result.reportText || reportTextFromConversation(result.conversation ?? { summary: result.summary }));
@@ -114,7 +115,7 @@ export default function ConsultationAiReportPanel({
       title="AI Consultation Report"
       subtitle="Generated from the recorded conversation"
       actions={
-        <Badge variant={statusTone(conversation?.summaryStatus)}>{conversation?.summaryStatus ?? 'not generated'}</Badge>
+        <Badge variant={statusTone(summaryStatus)}>{summaryStatus ?? 'not generated'}</Badge>
       }
     >
       <div className="space-y-4">

@@ -2,8 +2,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import {
   labApi,
+  type CreateLabOrderPayload,
   type EnterLabResultsPayload,
   type LabOrderListParams,
+  type LabTestListParams,
   type LabOrderStatusInput,
   type ReviewLabOrderPayload,
 } from '@/lib/api/lab-api';
@@ -11,11 +13,23 @@ import { aiApi } from '@/lib/api/ai-api';
 
 export const labQueryKey = {
   all: ['lab-orders'] as const,
+  labTests: ['lab-tests'] as const,
+  labTestList: (params: LabTestListParams) => [...labQueryKey.labTests, 'list', params] as const,
   pending: ['lab-orders', 'pending'] as const,
   list: (params: LabOrderListParams) => [...labQueryKey.all, 'list', params] as const,
   detail: (id: string) => [...labQueryKey.all, 'detail', id] as const,
   aiInterpretation: (labOrderId: string) => [...labQueryKey.all, 'ai-interpretation', labOrderId] as const,
 };
+
+export function useLabTests(params: LabTestListParams, enabled = true) {
+  return useQuery({
+    queryKey: labQueryKey.labTestList(params),
+    queryFn: () => labApi.listTests(params),
+    enabled,
+    placeholderData: (previousData) => previousData,
+    retry: false,
+  });
+}
 
 export function usePendingLabOrders() {
   return useQuery({
@@ -41,6 +55,19 @@ export function useLabOrder(id: string) {
     queryKey: labQueryKey.detail(id),
     queryFn: () => labApi.getOrder(id),
     enabled: Boolean(id),
+    retry: false,
+  });
+}
+
+export function useCreateLabOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: CreateLabOrderPayload) => labApi.createOrder(payload),
+    onSuccess: async (order) => {
+      queryClient.setQueryData(labQueryKey.detail(order.id), order);
+      await queryClient.invalidateQueries({ queryKey: labQueryKey.all });
+    },
     retry: false,
   });
 }

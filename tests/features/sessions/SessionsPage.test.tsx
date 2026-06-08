@@ -202,12 +202,15 @@ describe('SessionsPage', () => {
     expect(aiApi.listVapiCalls).toHaveBeenCalledWith({ limit: 50 });
   });
 
-  it('does not expose voice AI logs to regular admins', async () => {
+  it('does not expose sessions or voice AI logs to regular admins', () => {
     setAdminSession(['Admin']);
     renderSessionsPage();
 
-    expect(await screen.findByText('Chrome on macOS')).toBeInTheDocument();
+    expect(screen.getByText('auth.forbiddenTitle')).toBeInTheDocument();
+    expect(screen.queryByText('Chrome on macOS')).not.toBeInTheDocument();
     expect(screen.queryByRole('tab', { name: 'Voice AI Logs' })).not.toBeInTheDocument();
+    expect(sessionsApi.list).not.toHaveBeenCalled();
+    expect(sessionsApi.logs).not.toHaveBeenCalled();
     expect(aiApi.listVapiCalls).not.toHaveBeenCalled();
   });
 });

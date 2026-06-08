@@ -8,6 +8,14 @@ export interface ConsultationSummary {
   assessmentAndDiagnosis: string;
   treatmentPlan: string;
   followUpInstructions: string;
+  aiReview?: string;
+}
+
+export type ConsultationSpeaker = 'doctor' | 'patient' | 'unknown';
+
+export interface ConsultationConversationTurn {
+  speaker: ConsultationSpeaker;
+  text: string;
 }
 
 export interface AiConsultationConversation {
@@ -20,6 +28,7 @@ export interface AiConsultationConversation {
   audioMimeType?: string | null;
   audioSizeBytes?: number | null;
   transcription?: string | null;
+  conversationTurns?: ConsultationConversationTurn[];
   summary?: ConsultationSummary | null;
   reportText?: string | null;
   summaryStatus?: 'draft' | 'approved' | 'discarded';
@@ -37,6 +46,7 @@ export interface TranscriptionView {
   text: string;
   model: string;
   audioFileUrl?: string | null;
+  conversationTurns?: ConsultationConversationTurn[];
 }
 
 export interface ConsultationSummaryResponse {

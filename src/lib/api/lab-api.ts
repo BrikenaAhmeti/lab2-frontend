@@ -7,6 +7,20 @@ export type LabOrderPriority = 'normal' | 'urgent';
 export type LabResultStatus = 'PENDING' | 'ENTERED' | 'REVIEWED' | 'ABNORMAL' | 'CRITICAL';
 export type LabResultFlag = 'pending' | 'normal' | 'abnormal' | 'critical' | 'unavailable';
 
+export interface LabTestView {
+  id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  sampleType: string | null;
+  defaultPrice: number | string | null;
+  referenceRange: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface LabOrderItemView {
   id: string;
   labTestId: string;
@@ -92,6 +106,24 @@ export interface LabOrderListParams {
   to?: string;
 }
 
+export interface LabTestListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  isActive?: boolean;
+}
+
+export interface LabTestListResponse {
+  items: LabTestView[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export interface LabOrderListResponse {
   items: LabOrderView[];
   meta: {
@@ -100,6 +132,16 @@ export interface LabOrderListResponse {
     total: number;
     totalPages: number;
   };
+}
+
+export interface CreateLabOrderPayload {
+  patientId: string;
+  appointmentId: string;
+  medicalRecordId?: string | null;
+  orderedByStaffId: string;
+  priority?: LabOrderPriority | null;
+  notes?: string | null;
+  tests: string[];
 }
 
 export interface EnterLabResultsPayload {
@@ -126,10 +168,18 @@ function client(instance?: AxiosInstance) {
 }
 
 export const labApi = {
+  listTests(params: LabTestListParams, instance?: AxiosInstance) {
+    return client(instance)
+      .get<LabTestListResponse>('/api/lab-tests', { params })
+      .then((response) => response.data);
+  },
   listOrders(params: LabOrderListParams, instance?: AxiosInstance) {
     return client(instance)
       .get<LabOrderListResponse>('/api/lab-orders', { params })
       .then((response) => response.data);
+  },
+  createOrder(payload: CreateLabOrderPayload, instance?: AxiosInstance) {
+    return client(instance).post<LabOrderView>('/api/lab-orders', payload).then((response) => response.data);
   },
   pendingOrders(instance?: AxiosInstance) {
     return client(instance).get<LabOrderView[]>('/api/lab-orders/pending').then((response) => response.data);

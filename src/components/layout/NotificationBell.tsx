@@ -10,6 +10,7 @@ import {
   MessageSquare,
   PackageCheck,
   Pill,
+  Receipt,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -42,6 +43,7 @@ function notificationIcon(type: string): LucideIcon {
   const normalized = type.toLowerCase();
   if (normalized.includes('appointment')) return CalendarClock;
   if (normalized.includes('lab')) return FlaskConical;
+  if (normalized.includes('billing') || normalized.includes('invoice')) return Receipt;
   if (normalized.includes('prescription') || normalized.includes('pharmacy')) return Pill;
   if (normalized.includes('inventory') || normalized.includes('stock')) return PackageCheck;
   if (normalized.includes('chat') || normalized.includes('message')) return MessageSquare;

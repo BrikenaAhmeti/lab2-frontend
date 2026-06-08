@@ -3,7 +3,10 @@ import type { PatientRecord } from '@/lib/api/patients-api';
 import type { PrescriptionView } from '@/lib/api/prescriptions-api';
 import Badge from '@/ui/atoms/Badge';
 import Card from '@/ui/atoms/Card';
-import { formatBloodType } from '@/features/patients/components/patientFormat';
+import {
+  formatBloodType,
+  getStructuredValueEntries,
+} from '@/features/patients/components/patientFormat';
 import { formatClinicalValue, formatDateTime } from './clinicalFormat';
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -22,6 +25,28 @@ function currentMedicationLabels(prescriptions: PrescriptionView[]) {
       prescription.items.map((item) => `${item.medicationName} ${item.dosage}`.trim())
     )
     .slice(0, 6);
+}
+
+function MedicalNotes({ value }: { value: unknown }) {
+  const entries = getStructuredValueEntries(value);
+
+  if (entries.length === 0) {
+    return <Field label="Medical notes" value={formatClinicalValue(value)} />;
+  }
+
+  return (
+    <div className="sm:col-span-2">
+      <dt className="text-xs font-medium uppercase text-muted">Medical notes</dt>
+      <dd className="mt-2 grid gap-2 sm:grid-cols-2">
+        {entries.map((entry) => (
+          <div key={entry.label} className="rounded-lg border border-border/70 bg-surface/50 p-3">
+            <p className="text-xs font-medium uppercase text-muted">{entry.label}</p>
+            <p className="mt-1 break-words text-sm text-foreground">{entry.value}</p>
+          </div>
+        ))}
+      </dd>
+    </div>
+  );
 }
 
 export default function PatientSummaryPanel({
@@ -51,7 +76,7 @@ export default function PatientSummaryPanel({
             <Field label="Phone" value={patient.phone ?? '-'} />
             <Field label="Blood type" value={formatBloodType(patient.bloodType)} />
             <Field label="Allergies" value={formatClinicalValue(patient.allergies)} />
-            <Field label="Medical notes" value={formatClinicalValue(patient.medicalNotes)} />
+            <MedicalNotes value={patient.medicalNotes} />
           </dl>
 
           <section className="space-y-2">

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FileAudio, Mic, Square } from 'lucide-react';
+import { CircleStop, FileAudio, Mic } from 'lucide-react';
+import type { ConsultationConversationTurn } from '@/lib/api/ai-api';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
@@ -8,12 +9,28 @@ import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
   getConsultationErrorMessage,
   useAiConsultation,
+  useSummarizeConsultation,
   useTranscribeConsultation,
 } from '../hooks/useConsultation';
+import { isStubTranscription } from './aiReportFormat';
 
 interface ConsultationRecorderProps {
   appointment: AppointmentView;
   disabled?: boolean;
+}
+
+type RecordingProcessingStage = 'idle' | 'saving' | 'transcribing' | 'summarizing';
+
+function speakerLabel(speaker: ConsultationConversationTurn['speaker']) {
+  if (speaker === 'doctor') return 'Doctor';
+  if (speaker === 'patient') return 'Patient';
+  return 'Speaker';
+}
+
+function speakerTone(speaker: ConsultationConversationTurn['speaker']) {
+  if (speaker === 'doctor') return 'bg-primary/10 text-primary';
+  if (speaker === 'patient') return 'bg-emerald-50 text-emerald-700';
+  return 'bg-surface text-muted';
 }
 
 function formatElapsed(seconds: number) {
@@ -36,6 +53,7 @@ function bestAudioMimeType() {
 export default function ConsultationRecorder({ appointment, disabled }: ConsultationRecorderProps) {
   const conversationQuery = useAiConsultation(appointment.id);
   const transcribeMutation = useTranscribeConsultation();
+  const summarizeMutation = useSummarizeConsultation();
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
@@ -44,11 +62,21 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [localAudioUrl, setLocalAudioUrl] = useState('');
   const [latestTranscript, setLatestTranscript] = useState('');
+  const [latestConversationTurns, setLatestConversationTurns] = useState<ConsultationConversationTurn[]>([]);
+  const [processingStage, setProcessingStage] = useState<RecordingProcessingStage>('idle');
   const [error, setError] = useState('');
   const conversation = conversationQuery.data ?? null;
-  const transcript = latestTranscript || conversation?.transcription || '';
+  const rawTranscript = latestTranscript || conversation?.transcription || '';
+  const hasStubTranscript = isStubTranscription(rawTranscript);
+  const transcript = hasStubTranscript ? '' : rawTranscript;
+  const conversationTurns = hasStubTranscript
+    ? []
+    : latestConversationTurns.length > 0
+      ? latestConversationTurns
+      : conversation?.conversationTurns ?? [];
   const audioUrl = localAudioUrl || conversation?.audioFileUrl || '';
   const canRecord = !disabled && appointment.status === 'IN_PROGRESS';
+  const isProcessingRecording = processingStage !== 'idle' || transcribeMutation.isPending || summarizeMutation.isPending;
 
   useEffect(() => {
     if (!isRecording) return undefined;
@@ -72,10 +100,36 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
 
   const statusLabel = useMemo(() => {
     if (isRecording) return 'Recording';
-    if (transcribeMutation.isPending) return 'Processing';
-    if (conversation?.transcription) return 'Transcript saved';
+    if (processingStage === 'saving') return 'Saving recording';
+    if (processingStage === 'transcribing' || transcribeMutation.isPending) return 'Transcribing';
+    if (processingStage === 'summarizing' || summarizeMutation.isPending) return 'Generating summary';
+    if (transcript) return 'Transcript saved';
     return 'Ready';
-  }, [conversation?.transcription, isRecording, transcribeMutation.isPending]);
+  }, [isRecording, processingStage, summarizeMutation.isPending, transcript, transcribeMutation.isPending]);
+
+  const recordingStatusText = useMemo(() => {
+    if (isRecording) return 'Recording in progress';
+    if (processingStage === 'saving') return 'Saving recording';
+    if (processingStage === 'transcribing' || transcribeMutation.isPending) return 'Recording saved. Transcribing conversation';
+    if (processingStage === 'summarizing' || summarizeMutation.isPending) return 'Transcript ready. Generating AI summary';
+    if (audioUrl) return 'Recording saved';
+    return 'No recording saved yet';
+  }, [audioUrl, isRecording, processingStage, summarizeMutation.isPending, transcribeMutation.isPending]);
+
+  const transcriptStatusText = useMemo(() => {
+    if (transcript) return '';
+    if (processingStage === 'saving') return 'Saving the recording before transcription starts.';
+    if (processingStage === 'transcribing' || transcribeMutation.isPending) {
+      return 'Recording saved. AI is transcribing the conversation now.';
+    }
+    if (processingStage === 'summarizing' || summarizeMutation.isPending) {
+      return 'Transcript is ready. AI is preparing the consultation summary.';
+    }
+    if (hasStubTranscript) {
+      return 'Previous transcript was generated in demo mode. Record again to replace it.';
+    }
+    return 'Record the appointment conversation to generate a transcript.';
+  }, [hasStubTranscript, processingStage, summarizeMutation.isPending, transcript, transcribeMutation.isPending]);
 
   const startRecording = async () => {
     setError('');
@@ -116,6 +170,7 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
     const recorder = mediaRecorderRef.current;
 
     if (!recorder || recorder.state === 'inactive') return;
+    setProcessingStage('saving');
     recorder.stop();
     setIsRecording(false);
     streamRef.current?.getTracks().forEach((track) => track.stop());
@@ -138,6 +193,8 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
     objectUrlRef.current = localUrl;
     setLocalAudioUrl(localUrl);
     setLatestTranscript('');
+    setLatestConversationTurns([]);
+    setProcessingStage('transcribing');
 
     try {
       const transcription = await transcribeMutation.mutateAsync({
@@ -151,8 +208,33 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
       });
 
       setLatestTranscript(transcription.text);
+      setLatestConversationTurns(transcription.conversationTurns ?? []);
+
+      const transcriptText = transcription.text.trim();
+
+      if (!transcriptText || isStubTranscription(transcriptText)) {
+        if (isStubTranscription(transcriptText)) {
+          setError('AI service returned a demo transcript. Record again after the AI service is restarted.');
+        }
+        setProcessingStage('idle');
+        return;
+      }
+
+      try {
+        setProcessingStage('summarizing');
+        await summarizeMutation.mutateAsync({
+          appointmentId: appointment.id,
+          patientId: appointment.patientId,
+          staffId: appointment.staffProfileId ?? undefined,
+          transcription: transcriptText,
+        });
+      } catch (summaryError) {
+        setError(getConsultationErrorMessage(summaryError, 'Transcript saved, but AI report could not be generated'));
+      }
     } catch (transcriptionError) {
       setError(getConsultationErrorMessage(transcriptionError, 'Recording could not be transcribed'));
+    } finally {
+      setProcessingStage('idle');
     }
   };
 
@@ -160,7 +242,11 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
     <Card
       title="Conversation Recorder"
       subtitle="Appointment audio and transcript"
-      actions={<Badge variant={isRecording ? 'danger' : transcribeMutation.isPending ? 'warning' : 'info'}>{statusLabel}</Badge>}
+      actions={
+        <Badge variant={isRecording ? 'danger' : isProcessingRecording ? 'warning' : 'info'}>
+          {statusLabel}
+        </Badge>
+      }
     >
       <div className="space-y-4">
         {error ? <FeedbackMessage type="error" message={error} /> : null}
@@ -169,22 +255,28 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-foreground">{formatElapsed(elapsedSeconds)}</p>
-              <p className="mt-1 text-xs text-muted">{audioUrl ? 'Recording available' : 'No recording saved yet'}</p>
+              <p className="mt-1 text-xs text-muted">{recordingStatusText}</p>
             </div>
             {isRecording ? (
               <Button
                 type="button"
                 variant="danger"
-                leftIcon={<Square className="h-4 w-4" aria-hidden="true" />}
+                className="shadow-sm shadow-danger/20"
+                leftIcon={
+                  <span className="relative flex h-4 w-4 items-center justify-center">
+                    <span className="absolute h-3 w-3 animate-ping rounded-full bg-white/50" />
+                    <CircleStop className="relative h-4 w-4" aria-hidden="true" />
+                  </span>
+                }
                 onClick={stopRecording}
               >
-                Stop
+                Stop Recording
               </Button>
             ) : (
               <Button
                 type="button"
                 variant="secondary"
-                disabled={!canRecord || transcribeMutation.isPending}
+                disabled={!canRecord || isProcessingRecording}
                 leftIcon={<Mic className="h-4 w-4" aria-hidden="true" />}
                 onClick={startRecording}
               >
@@ -206,10 +298,26 @@ export default function ConsultationRecorder({ appointment, disabled }: Consulta
             <h3 className="text-sm font-semibold text-foreground">Conversation transcript</h3>
           </div>
           {conversationQuery.isLoading ? <p className="text-sm text-muted">Loading transcript...</p> : null}
-          {!conversationQuery.isLoading && !transcript ? (
-            <p className="text-sm text-muted">Record the appointment conversation to generate a transcript.</p>
+          {!conversationQuery.isLoading && !transcript && transcriptStatusText ? (
+            <p className="text-sm text-muted">{transcriptStatusText}</p>
           ) : null}
-          {transcript ? <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{transcript}</p> : null}
+          {transcript && conversationTurns.length > 0 ? (
+            <ol className="space-y-3">
+              {conversationTurns.map((turn, index) => (
+                <li key={`${turn.speaker}-${index}-${turn.text.slice(0, 12)}`} className="space-y-1.5">
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${speakerTone(turn.speaker)}`}
+                  >
+                    {speakerLabel(turn.speaker)}
+                  </span>
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{turn.text}</p>
+                </li>
+              ))}
+            </ol>
+          ) : null}
+          {transcript && conversationTurns.length === 0 ? (
+            <p className="whitespace-pre-wrap text-sm leading-6 text-foreground">{transcript}</p>
+          ) : null}
         </div>
       </div>
     </Card>

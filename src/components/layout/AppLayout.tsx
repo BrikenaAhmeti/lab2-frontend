@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const navItems = [
   { to: '/dashboard', labelKey: 'auth.navDashboard' },
   { to: '/dashboard/profile', labelKey: 'auth.navProfile' },
-  { to: '/dashboard/sessions', labelKey: 'auth.navSessions' },
+  { to: '/dashboard/sessions', labelKey: 'auth.navSessions', requiresSuperAdmin: true },
   { to: '/dashboard/departments', labelKey: 'auth.navDepartments' },
   { to: '/dashboard/inventory', labelKey: 'auth.navInventory', requiresInventory: true },
   { to: '/dashboard/admin/organization/services', labelKey: 'auth.navServices', requiresOrganizationAdmin: true },
@@ -53,6 +53,10 @@ export default function AppLayout() {
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
   const visibleNavItems = navItems.filter((item) => {
+    if (item.requiresSuperAdmin) {
+      return hasAnyRole(roles, ['Super Admin']);
+    }
+
     if (item.requiresOrganizationAdmin) {
       return canAccessOrganizationSetup;
     }

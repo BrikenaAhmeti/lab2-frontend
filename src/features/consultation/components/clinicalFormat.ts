@@ -1,8 +1,9 @@
+import { formatUnknownValue } from '@/features/patients/components/patientFormat';
+
 export function formatClinicalValue(value: unknown) {
-  if (typeof value === 'string') return value || '-';
-  if (Array.isArray(value)) return value.filter(Boolean).join(', ') || '-';
-  if (value && typeof value === 'object') return JSON.stringify(value);
-  return '-';
+  const formatted = formatUnknownValue(value);
+
+  return formatted === 'None recorded' ? '-' : formatted;
 }
 
 export function formatDateTime(value?: string | null) {

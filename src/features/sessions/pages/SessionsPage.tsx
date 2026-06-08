@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useSearchParams } from 'react-router-dom';
+import Forbidden from '@/components/common/Forbidden';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
@@ -308,7 +309,6 @@ export default function SessionsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useAppSelector((state) => state.auth.user);
   const roles = getUserRoleNames(user);
-  const isAdmin = hasAnyRole(roles, ['Admin', 'Super Admin']);
   const isSuperAdmin = hasAnyRole(roles, ['Super Admin']);
   const activeTab = resolveSessionTab(searchParams.get('tab'), isSuperAdmin);
   const tabs = useMemo<Array<{ key: SessionTab; label: string }>>(() => {
@@ -344,12 +344,13 @@ export default function SessionsPage() {
   const sessionsQuery = useQuery({
     queryKey: ['auth', 'sessions'],
     queryFn: () => sessionsApi.list(),
+    enabled: isSuperAdmin,
   });
 
   const logsQuery = useQuery({
     queryKey: ['auth', 'session-logs', logParams],
     queryFn: () => sessionsApi.logs(logParams),
-    enabled: activeTab === 'logs',
+    enabled: isSuperAdmin && activeTab === 'logs',
   });
 
   const revokeMutation = useMutation({
@@ -382,6 +383,10 @@ export default function SessionsPage() {
 
     setSearchParams(nextParams, { replace: true });
   };
+
+  if (!isSuperAdmin) {
+    return <Forbidden />;
+  }
 
   return (
     <div className="space-y-5">
@@ -424,7 +429,7 @@ export default function SessionsPage() {
               <SessionCard
                 key={session.id}
                 session={session}
-                isAdmin={isAdmin}
+                isAdmin={isSuperAdmin}
                 currentUserId={user?.id}
                 loading={revokeMutation.isPending}
                 onRevoke={(sessionId, admin) => revokeMutation.mutate({ sessionId, admin })}

@@ -97,19 +97,19 @@ const openingMessageByRole: Record<string, string> = {
   'Super Admin':
     'Hi, I can help with facility management: dashboard, users, departments, services, staff, patients, inventory, billing, reports, CMS, settings, feedback, contact inbox, profile, and sessions.',
   Admin:
-    'Hi, I can help with facility management: dashboard, users, departments, services, staff, patients, inventory, billing, reports, CMS, settings, feedback, contact inbox, profile, and sessions.',
+    'Hi, I can help with facility management: dashboard, users, departments, services, staff, patients, inventory, billing, reports, CMS, settings, feedback, contact inbox, and profile.',
   Receptionist:
     'Hi, I can help with front-desk tasks: today\'s schedule, booking, check-in, no-show, patient registration, billing support, and messages.',
   Doctor:
     'Hi, I can help with your Doctor Portal: today\'s consultations, patient context, records, prescriptions, lab reviews, AI summaries, and messages.',
   Nurse:
-    'Hi, I can help with your Nurse Portal: department queue, patient preparation, care handoff, messages, profile, and sessions.',
+    'Hi, I can help with your Nurse Portal: department queue, patient preparation, care handoff, messages, and profile.',
   'Lab Technician':
     'Hi, I can help with your Lab Portal: lab queues, order status, result entry, flags, completed results, and messages.',
   Pharmacist:
     'Hi, I can help with the Pharmacy Portal: queue, prescription details, dispensing, out-of-stock handling, fulfillment, and messages.',
   Patient:
-    'Hi, I can help you use your Patient Portal: appointments, lab results, prescriptions, billing, messages, profile, and sessions.',
+    'Hi, I can help you use your Patient Portal: appointments, lab results, prescriptions, billing, messages, and profile.',
 };
 
 const portalRoleByTitle: Record<string, string> = {
@@ -185,7 +185,7 @@ function getSuggestedPrompts(role?: string) {
 
 function getOpeningMessage(role?: string) {
   if (!role) {
-    return 'Hi, I can help you use MedSphere: appointments, lab results, prescriptions, billing, messages, profile, and sessions.';
+    return 'Hi, I can help you use MedSphere: appointments, lab results, prescriptions, billing, messages, and profile.';
   }
 
   return openingMessageByRole[role] ?? 'Hi, I can help you use your MedSphere portal.';
