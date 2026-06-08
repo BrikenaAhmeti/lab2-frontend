@@ -76,6 +76,16 @@ export interface ChatMessagesPage {
   meta: ChatMeta;
 }
 
+export interface ChatContact {
+  id: string;
+  name: string;
+  email?: string | null;
+  role: ChatParticipantRole;
+  roleLabel: string;
+  subtitle?: string;
+  source?: 'chat' | 'user' | 'staff' | 'patient';
+}
+
 export interface ChatAttachment {
   fileName: string;
   fileUrl: string;
@@ -100,4 +110,12 @@ export interface ChatReadPayload {
   userId: string;
   readAt: string;
   readCount: number;
+}
+
+export interface ChatTypingPayload {
+  roomId: string;
+  userId: string;
+  userName?: string;
+  isTyping?: boolean;
+  typing?: boolean;
 }

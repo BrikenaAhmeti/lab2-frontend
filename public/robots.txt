@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /patient/
+Disallow: /doctor/
+Disallow: /nurse/
+Disallow: /lab/
+Disallow: /pharmacy/
+Disallow: /receptionist/
+Disallow: /dashboard/
+Disallow: /messages/
+Disallow: /login
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /resend-verification
+Disallow: /401
+Disallow: /403
+
+Sitemap: https://medsphere.vercel.app/sitemap.xml

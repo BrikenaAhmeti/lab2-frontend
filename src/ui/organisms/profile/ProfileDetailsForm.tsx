@@ -1,6 +1,8 @@
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
+import BirthdayField from '@/ui/molecules/BirthdayField';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import SelectField from '@/ui/molecules/SelectField';
 
 interface ProfileFormValues {
   firstName: string;

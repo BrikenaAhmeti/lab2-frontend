@@ -22,6 +22,14 @@ const changePasswordSchema = z
     message: 'auth.passwordsMustMatch',
   });
 
+type ChangePasswordField = 'currentPassword' | 'newPassword' | 'confirmNewPassword';
+
+const initialPasswordTouched: Record<ChangePasswordField, boolean> = {
+  currentPassword: false,
+  newPassword: false,
+  confirmNewPassword: false,
+};
+
 function getStatusCode(error: unknown) {
   return error instanceof AxiosError ? error.response?.status : undefined;
 }
@@ -47,6 +55,8 @@ export default function ProfilePage() {
     newPassword: '',
     confirmNewPassword: '',
   });
+  const [passwordTouched, setPasswordTouched] = useState(initialPasswordTouched);
+  const [passwordSubmitAttempted, setPasswordSubmitAttempted] = useState(false);
   const [profileFeedback, setProfileFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -73,7 +83,8 @@ export default function ProfilePage() {
     [changePasswordForm]
   );
 
-  const passwordFieldError = (field: 'currentPassword' | 'newPassword' | 'confirmNewPassword') => {
+  const passwordFieldError = (field: ChangePasswordField) => {
+    if (!passwordTouched[field] && !passwordSubmitAttempted) return '';
     if (passwordValidation.success) return '';
     const issue = passwordValidation.error.issues.find((item) => item.path[0] === field);
     return issue ? t(issue.message) : '';
@@ -123,6 +134,8 @@ export default function ProfilePage() {
         newPassword: '',
         confirmNewPassword: '',
       });
+      setPasswordTouched(initialPasswordTouched);
+      setPasswordSubmitAttempted(false);
     },
     onError: (error) => {
       const status = getStatusCode(error);
@@ -185,9 +198,14 @@ export default function ProfilePage() {
           requirements={passwordRequirementKeys.map((key) => t(key))}
           loading={changePasswordMutation.isPending}
           feedback={passwordFeedback}
-          onChange={(field, value) => setChangePasswordForm((prev) => ({ ...prev, [field]: value }))}
+          onChange={(field, value) => {
+            setChangePasswordForm((prev) => ({ ...prev, [field]: value }));
+            setPasswordTouched((prev) => ({ ...prev, [field]: true }));
+          }}
+          onBlur={(field) => setPasswordTouched((prev) => ({ ...prev, [field]: true }))}
           onSubmit={() => {
             setPasswordFeedback(null);
+            setPasswordSubmitAttempted(true);
 
             if (!passwordValidation.success) {
               setPasswordFeedback({ type: 'error', message: t('auth.fixFormErrors') });

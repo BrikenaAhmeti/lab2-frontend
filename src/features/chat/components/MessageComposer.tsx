@@ -1,4 +1,4 @@
-import { FormEvent, KeyboardEvent, useRef, useState } from 'react';
+import { FormEvent, KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { Paperclip, Send, X } from 'lucide-react';
 import Button from '@/ui/atoms/Button';
 
@@ -7,6 +7,7 @@ interface MessageComposerProps {
   loading?: boolean;
   onSendText: (content: string) => Promise<unknown>;
   onSendAttachment: (file: File, caption?: string) => Promise<unknown>;
+  onTypingChange?: (isTyping: boolean) => void;
 }
 
 export default function MessageComposer({
@@ -14,16 +15,55 @@ export default function MessageComposer({
   loading = false,
   onSendText,
   onSendAttachment,
+  onTypingChange,
 }: MessageComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isTypingRef = useRef(false);
   const [content, setContent] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const trimmed = content.trim();
   const canSend = !disabled && !loading && (trimmed.length > 0 || file);
 
+  const stopTyping = useCallback(() => {
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = null;
+    }
+
+    if (isTypingRef.current) {
+      isTypingRef.current = false;
+      onTypingChange?.(false);
+    }
+  }, [onTypingChange]);
+
+  const scheduleTypingStop = useCallback(() => {
+    if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
+    typingTimerRef.current = setTimeout(stopTyping, 1200);
+  }, [stopTyping]);
+
+  const updateContent = (value: string) => {
+    setContent(value);
+
+    if (value.trim()) {
+      if (!isTypingRef.current) {
+        isTypingRef.current = true;
+        onTypingChange?.(true);
+      }
+      scheduleTypingStop();
+      return;
+    }
+
+    stopTyping();
+  };
+
+  useEffect(() => stopTyping, [stopTyping]);
+
   const submit = async (event?: FormEvent) => {
     event?.preventDefault();
     if (!canSend) return;
+
+    stopTyping();
 
     if (file) {
       await onSendAttachment(file, trimmed);
@@ -80,7 +120,7 @@ export default function MessageComposer({
         <textarea
           rows={1}
           value={content}
-          onChange={(event) => setContent(event.target.value)}
+          onChange={(event) => updateContent(event.target.value)}
           onKeyDown={onKeyDown}
           placeholder="Write a message..."
           disabled={disabled || loading}

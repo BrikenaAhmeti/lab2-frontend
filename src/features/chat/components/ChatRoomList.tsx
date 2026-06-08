@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import Badge from '@/ui/atoms/Badge';
-import { previewText, roomTitle, timeLabel } from '../chatFormat';
+import { previewText, roomTitle, timeLabel, type ChatParticipantLookup } from '../chatFormat';
 import type { ChatRoom } from '../chatTypes';
 
 interface ChatRoomListProps {
@@ -11,6 +11,14 @@ interface ChatRoomListProps {
   basePath: string;
   isLoading?: boolean;
   isError?: boolean;
+  participantLookup?: ChatParticipantLookup;
+}
+
+function initials(value: string) {
+  const parts = value.split(/\s+/).filter(Boolean);
+  const first = parts[0]?.[0] ?? 'M';
+  const second = parts.length > 1 ? parts[1]?.[0] : parts[0]?.[1];
+  return `${first ?? ''}${second ?? ''}`.toUpperCase();
 }
 
 function initials(value: string) {
@@ -27,6 +35,7 @@ export default function ChatRoomList({
   basePath,
   isLoading = false,
   isError = false,
+  participantLookup,
 }: ChatRoomListProps) {
   if (isLoading) {
     return <p className="px-4 py-6 text-sm text-muted">Loading conversations...</p>;

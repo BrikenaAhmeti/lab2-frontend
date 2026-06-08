@@ -20,6 +20,8 @@ export default function ContactMessageCard({
   onReplyNoteChange,
   onStatusChange,
 }: ContactMessageCardProps) {
+  const hasReplyText = replyNote.trim().length > 0;
+
   return (
     <article className="rounded-xl border border-border bg-background p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -36,18 +38,22 @@ export default function ContactMessageCard({
       <p className="mt-3 text-xs text-muted">{formatContactDate(message.createdAt)}</p>
 
       {message.replyNotes ? (
-        <p className="mt-3 rounded-xl border border-border bg-surface/60 px-3 py-2 text-sm text-muted">
-          {message.replyNotes}
-        </p>
+        <div className="mt-3 rounded-xl border border-success/25 bg-success/8 px-3 py-2 text-sm text-foreground">
+          <p className="text-xs font-semibold uppercase tracking-normal text-success">
+            Replied{message.repliedAt ? ` ${formatContactDate(message.repliedAt)}` : ''}
+          </p>
+          <p className="mt-1 whitespace-pre-wrap">{message.replyNotes}</p>
+        </div>
       ) : null}
 
       {canManage && message.status !== 'replied' ? (
         <div className="mt-4 space-y-3">
           <label className="block space-y-1.5">
-            <span className="text-sm font-medium text-foreground">Reply notes</span>
+            <span className="text-sm font-medium text-foreground">Reply</span>
             <textarea
               value={replyNote}
               onChange={(event) => onReplyNoteChange(event.target.value)}
+              placeholder={`Write a reply to ${message.email}`}
               className="min-h-20 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </label>
@@ -63,8 +69,14 @@ export default function ContactMessageCard({
                 Mark Read
               </Button>
             ) : null}
-            <Button type="button" size="sm" loading={loading} onClick={() => onStatusChange(message, 'replied')}>
-              Mark Replied
+            <Button
+              type="button"
+              size="sm"
+              loading={loading}
+              disabled={!hasReplyText}
+              onClick={() => onStatusChange(message, 'replied')}
+            >
+              Reply
             </Button>
           </div>
         </div>

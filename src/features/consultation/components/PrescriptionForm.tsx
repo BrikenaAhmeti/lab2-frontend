@@ -5,6 +5,7 @@ import type { CreatePrescriptionPayload } from '@/lib/api/prescriptions-api';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 
 const prescriptionItemSchema = z.object({
@@ -81,6 +82,8 @@ export default function PrescriptionForm({
     handleSubmit,
     reset,
     control,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<PrescriptionFormValues>({
     resolver: zodResolver(prescriptionFormSchema),
@@ -88,6 +91,7 @@ export default function PrescriptionForm({
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const formDisabled = disabled || !medicalRecordId || loading;
+  const expiresAt = watch('expiresAt') ?? '';
 
   const submit = async (values: PrescriptionFormValues) => {
     if (!medicalRecordId) return;
@@ -102,13 +106,13 @@ export default function PrescriptionForm({
         {!medicalRecordId ? <FeedbackMessage type="error" message="Create the medical record before adding prescriptions." /> : null}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Input
+          <CalendarDatePicker
             id="prescription-expires-at"
             label="Expires At"
-            type="date"
+            value={expiresAt}
             disabled={formDisabled}
             error={errors.expiresAt?.message}
-            {...register('expiresAt')}
+            onChange={(value) => setValue('expiresAt', value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
           />
           <Input
             id="prescription-notes"

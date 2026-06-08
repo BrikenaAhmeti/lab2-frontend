@@ -41,8 +41,8 @@ export default function PublicServicesPage() {
   return (
     <PublicPageShell
       slug="services"
-      fallbackTitle="Services"
-      fallbackBody="Browse active medical services by department."
+      fallbackTitle="Clinical Services"
+      fallbackBody="Browse active clinical services by department."
     >
       <PublicPageIntro
         eyebrow="Services"

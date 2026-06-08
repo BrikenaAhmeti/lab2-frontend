@@ -3,7 +3,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
-import { hasAnyPermission } from '@/features/auth/utils/permission';
+import ExportButton from '@/components/export/ExportButton';
+import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
 import InventoryAlertsPanel from '@/features/inventory/components/InventoryAlertsPanel';
 import InventoryCategoriesPanel from '@/features/inventory/components/InventoryCategoriesPanel';
 import InventoryFilters from '@/features/inventory/components/InventoryFilters';
@@ -29,31 +31,47 @@ import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
+import {
+  dateModeFilterToRange,
+  emptyDateModeFilterValue,
+  type DateModeFilterValue,
+} from '@/ui/molecules/DateModeFilter';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Pagination from '@/ui/molecules/Pagination';
 
 type InventoryTab = 'items' | 'categories' | 'alerts';
+type InventoryPortal = 'admin' | 'pharmacy';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
 
-const pageSize = 10;
+interface InventoryPageProps {
+  portal?: InventoryPortal;
+}
+
+const defaultPageSize = 10;
 const tabs: Array<{ id: InventoryTab; label: string }> = [
   { id: 'items', label: 'Items' },
   { id: 'categories', label: 'Categories' },
   { id: 'alerts', label: 'Alerts' },
 ];
 
-export default function InventoryPage() {
-  const permissions = useAppSelector((state) => state.auth.user?.permissions ?? []);
-  const canRead = hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
-  const canManage = hasAnyPermission(permissions, ['inventory:manage:all'], 'any');
+export default function InventoryPage({ portal = 'admin' }: InventoryPageProps) {
+  const user = useAppSelector((state) => state.auth.user);
+  const permissions = user?.permissions ?? [];
+  const roles = getUserRoleNames(user);
+  const isPharmacist = hasAnyRole(roles, ['Pharmacist']);
+  const canRead =
+    isPharmacist || hasAnyPermission(permissions, ['inventory:read', 'inventory:manage', 'inventory:manage:all'], 'any');
+  const canManage = isPharmacist || hasAnyPermission(permissions, ['inventory:manage', 'inventory:manage:all'], 'any');
 
   const [activeTab, setActiveTab] = useState<InventoryTab>('items');
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const [belowReorderLevel, setBelowReorderLevel] = useState(false);
-  const [expiringSoonDays, setExpiringSoonDays] = useState('');
+  const [expiryFilter, setExpiryFilter] = useState<DateModeFilterValue>(emptyDateModeFilterValue);
   const [activeFilter, setActiveFilter] = useState<ActiveStatus>('active');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [formError, setFormError] = useState('');
   const [transactionError, setTransactionError] = useState('');
@@ -61,21 +79,35 @@ export default function InventoryPage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [transactionItem, setTransactionItem] = useState<InventoryItem | null>(null);
   const [historyItem, setHistoryItem] = useState<InventoryItem | null>(null);
+  const expiryRange = useMemo(() => dateModeFilterToRange(expiryFilter), [expiryFilter]);
 
   const listParams = useMemo(
     () => ({
       page,
-      limit: pageSize,
+      limit,
       search: search.trim() || undefined,
       categoryId: categoryId || undefined,
       departmentId: departmentId || undefined,
       belowReorderLevel: belowReorderLevel || undefined,
-      expiringSoonDays: expiringSoonDays ? Number(expiringSoonDays) : undefined,
+      expiryFrom: expiryRange.from,
+      expiryTo: expiryRange.to,
       isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
       sortBy: 'name' as const,
       sortDirection: 'asc' as const,
     }),
-    [activeFilter, belowReorderLevel, categoryId, departmentId, expiringSoonDays, page, search]
+    [activeFilter, belowReorderLevel, categoryId, departmentId, expiryRange.from, expiryRange.to, limit, page, search]
+  );
+  const exportFilters = useMemo(
+    () => ({
+      search: search.trim() || undefined,
+      categoryId: categoryId || undefined,
+      departmentId: departmentId || undefined,
+      belowReorderLevel: belowReorderLevel || undefined,
+      expiryFrom: expiryRange.from,
+      expiryTo: expiryRange.to,
+      isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+    }),
+    [activeFilter, belowReorderLevel, categoryId, departmentId, expiryRange.from, expiryRange.to, search]
   );
 
   const itemsQuery = useInventoryItems(listParams);
@@ -89,14 +121,19 @@ export default function InventoryPage() {
   const items = itemsQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
   const departments = departmentsQuery.data ?? [];
-  const totalPages = Math.max(1, itemsQuery.data?.meta.totalPages ?? 1);
-  const currentPage = itemsQuery.data?.meta.page ?? page;
+  const paginationMeta = itemsQuery.data?.meta;
   const mutationPending =
     createMutation.isPending || updateMutation.isPending || deactivateMutation.isPending || transactionMutation.isPending;
 
   useEffect(() => {
     setPage(1);
-  }, [search, categoryId, departmentId, belowReorderLevel, expiringSoonDays, activeFilter]);
+  }, [search, categoryId, departmentId, belowReorderLevel, expiryRange.from, expiryRange.to, activeFilter]);
+
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
 
   if (!canRead) {
     return <Forbidden />;
@@ -131,6 +168,11 @@ export default function InventoryPage() {
   const closeTransactionModal = () => {
     setTransactionError('');
     setTransactionItem(null);
+  };
+
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
   };
 
   const submitItem = async (values: InventoryItemFormValues) => {
@@ -185,16 +227,26 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-4">
-      <Breadcrumbs items={[{ label: 'Admin', to: '/admin' }, { label: 'Inventory' }]} />
+      <Breadcrumbs
+        items={[
+          portal === 'pharmacy' ? { label: 'Pharmacy', to: '/pharmacy' } : { label: 'Admin', to: '/admin' },
+          { label: 'Inventory' },
+        ]}
+      />
 
       <Card
         title="Inventory"
         subtitle="Manage stock, categories, transactions, and alerts"
         actions={
-          activeTab === 'items' && canManage ? (
-            <Button type="button" size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={openCreateModal}>
-              Add Item
-            </Button>
+          activeTab === 'items' ? (
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <ExportButton entity="inventory-items" filters={exportFilters} />
+              {canManage ? (
+                <Button type="button" size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={openCreateModal}>
+                  Add Item
+                </Button>
+              ) : null}
+            </div>
           ) : null
         }
       >
@@ -224,7 +276,7 @@ export default function InventoryPage() {
                 categoryId={categoryId}
                 departmentId={departmentId}
                 belowReorderLevel={belowReorderLevel}
-                expiringSoonDays={expiringSoonDays}
+                expiryFilter={expiryFilter}
                 isActive={activeFilter}
                 categories={categories}
                 departments={departments}
@@ -232,7 +284,7 @@ export default function InventoryPage() {
                 onCategoryChange={setCategoryId}
                 onDepartmentChange={setDepartmentId}
                 onBelowReorderLevelChange={setBelowReorderLevel}
-                onExpiringSoonDaysChange={setExpiringSoonDays}
+                onExpiryFilterChange={setExpiryFilter}
                 onStatusChange={setActiveFilter}
               />
 
@@ -245,41 +297,28 @@ export default function InventoryPage() {
                 </p>
               ) : null}
 
-              {items.length > 0 ? (
-                <>
-                  <InventoryItemsTable
-                    rows={items}
-                    canManage={canManage}
-                    mutationPending={mutationPending}
-                    onEdit={openEditModal}
-                    onDeactivate={deactivateItem}
-                    onTransaction={openTransactionModal}
-                    onHistory={setHistoryItem}
-                  />
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={currentPage <= 1 || itemsQuery.isFetching}
-                        onClick={() => setPage((value) => Math.max(1, value - 1))}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="secondary"
-                        size="sm"
-                        disabled={currentPage >= totalPages || itemsQuery.isFetching}
-                        onClick={() => setPage((value) => value + 1)}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                </>
+              {!itemsQuery.isLoading && !itemsQuery.isError && items.length > 0 ? (
+                <InventoryItemsTable
+                  rows={items}
+                  canManage={canManage}
+                  mutationPending={mutationPending}
+                  onEdit={openEditModal}
+                  onDeactivate={deactivateItem}
+                  onTransaction={openTransactionModal}
+                  onHistory={setHistoryItem}
+                />
+              ) : null}
+
+              {!itemsQuery.isLoading && !itemsQuery.isError && paginationMeta ? (
+                <Pagination
+                  page={page}
+                  totalPages={paginationMeta.totalPages}
+                  total={paginationMeta.total}
+                  limit={limit}
+                  loading={itemsQuery.isFetching}
+                  onPageChange={setPage}
+                  onLimitChange={updateLimit}
+                />
               ) : null}
 
               <InventoryTransactionHistory item={historyItem} onClose={() => setHistoryItem(null)} />

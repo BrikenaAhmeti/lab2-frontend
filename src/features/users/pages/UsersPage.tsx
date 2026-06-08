@@ -110,7 +110,7 @@ export default function UsersPage() {
   const user = useAppSelector((state) => state.auth.user);
   const roles = user?.roles ?? [];
   const permissions = user?.permissions ?? [];
-  const canManageUsers =
+  const canReadUsers =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
   const canManageStaff = hasAnyPermission(permissions, ['staff:manage'], 'all');
@@ -121,7 +121,27 @@ export default function UsersPage() {
   const [form, setForm] = useState(initialForm);
   const isDoctorUser = form.roles.includes(doctorRole);
 
-  const validation = useMemo(() => createUserSchema.safeParse(form), [form]);
+  const selectedRoles = useMemo(
+    () => filterProtectedAdminRoles(form.roles, canCreateProtectedAdminUsers),
+    [canCreateProtectedAdminUsers, form.roles]
+  );
+  const validation = useMemo(() => createUserSchema.safeParse({ ...form, roles: selectedRoles }), [form, selectedRoles]);
+
+  const createUserPayload = (): CreateUserPayload => {
+    const payload: CreateUserPayload = {
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      email: form.email.trim(),
+      roles: selectedRoles,
+    };
+
+    if (form.phone.trim()) payload.phone = form.phone.trim();
+    if (form.dateOfBirth.trim()) payload.dateOfBirth = form.dateOfBirth.trim();
+    if (form.gender.trim()) payload.gender = form.gender.trim();
+    if (form.personalNumber.trim()) payload.personalNumber = form.personalNumber.trim();
+
+    return payload;
+  };
 
   const createUserPayload = (): CreateUserPayload => {
     const payload: CreateUserPayload = {
@@ -150,7 +170,7 @@ export default function UsersPage() {
     queryKey: ['users', search],
     queryFn: () => usersApi.list(search),
     retry: false,
-    enabled: canManageUsers,
+    enabled: canReadUsers,
   });
 
   const departmentsQuery = useQuery({
@@ -259,7 +279,7 @@ export default function UsersPage() {
     [doctorPositionTypeOptions],
   );
 
-  if (!canManageUsers) {
+  if (!canReadUsers) {
     return <Forbidden />;
   }
 
@@ -272,7 +292,7 @@ export default function UsersPage() {
     <Card
       title={t('auth.usersTitle')}
       subtitle={t('auth.usersSubtitle')}
-      actions={<Button onClick={() => setShowModal(true)}>{t('auth.addUser')}</Button>}
+      actions={canCreateUsers ? <Button onClick={() => setShowModal(true)}>{t('auth.addUser')}</Button> : null}
     >
       <div className="mb-4 space-y-3">
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('auth.searchUsers')} />

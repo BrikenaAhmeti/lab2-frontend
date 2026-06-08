@@ -1,7 +1,4 @@
-import Forbidden from '@/components/common/Forbidden';
 import { useAppSelector } from '@/app/hooks';
-import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
-import UsersPage from '@/features/users/pages/UsersPage';
 import { Link } from 'react-router-dom';
 import Card from '@/ui/atoms/Card';
 import Badge from '@/ui/atoms/Badge';
@@ -24,7 +21,7 @@ export function DashboardHome() {
     { label: 'Register Patient', description: 'Create a new patient profile', to: '/patient' },
     { label: 'Book Appointment', description: 'Schedule a consultation', to: '/receptionist' },
     { label: 'View Lab Queue', description: 'Review pending lab work', to: '/lab' },
-    { label: 'Manage Staff', description: 'Coordinate shifts and roles', to: '/admin/users', disabled: !canManageStaff },
+    { label: 'Manage Staff', description: 'Coordinate shifts and roles', to: '/admin/staff', disabled: !canManageStaff },
   ];
 
   const activity = [
@@ -212,20 +209,6 @@ export function RolePage({ title }: { title: string }) {
       <p className="text-sm text-muted">Access granted to this role-specific dashboard.</p>
     </Card>
   );
-}
-
-export function UsersAccessGuard() {
-  const user = useAppSelector((state) => state.auth.user);
-  const roles = user?.roles ?? [];
-  const permissions = user?.permissions ?? [];
-  const allowedByRole = hasAnyRole(roles, ['Admin', 'Super Admin']);
-  const allowedByPermission = hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
-
-  if (!allowedByRole && !allowedByPermission) {
-    return <Forbidden />;
-  }
-
-  return <UsersPage />;
 }
 
 export function ScopedDoctorPage() {

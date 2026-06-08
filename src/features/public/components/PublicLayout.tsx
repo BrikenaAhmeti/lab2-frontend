@@ -5,13 +5,13 @@ import { CalendarPlus, LogIn } from 'lucide-react';
 import { formatWorkingHoursLine } from '@/features/settings/workingHours';
 import type { PublicSiteSettings } from '@/features/public/hooks/usePublicSiteSettings';
 
-const links = [
-  { to: '/', label: 'Home' },
-  { to: '/about', label: 'About' },
-  { to: '/departments', label: 'Departments' },
-  { to: '/doctors', label: 'Doctors' },
-  { to: '/services', label: 'Services' },
-  { to: '/contact', label: 'Contact' },
+const links: Array<{ to: string; label: string; icon: LucideIcon }> = [
+  { to: '/', label: 'Home', icon: Home },
+  { to: '/about', label: 'About', icon: Info },
+  { to: '/departments', label: 'Departments', icon: Building2 },
+  { to: '/doctors', label: 'Doctors', icon: Stethoscope },
+  { to: '/services', label: 'Services', icon: ClipboardList },
+  { to: '/contact', label: 'Contact', icon: PhoneCall },
 ];
 
 function isActive(pathname: string, to: string) {

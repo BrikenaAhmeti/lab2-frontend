@@ -3,8 +3,9 @@ import { useAppSelector } from '@/app/hooks';
 import { selectAuthUser } from '@/features/auth/authSelectors';
 import { chatApi } from './chatApi';
 import { addChatMessageToCache, markRoomReadInChatCache } from './chatCache';
+import { loadChatContacts } from './chatContacts';
 import { chatKeys, chatRoomListParams, type ChatListParams } from './chatKeys';
-import type { ChatMessageType, CreateChatRoomPayload, SendChatMessagePayload } from './chatTypes';
+import type { ChatMessageType, ChatRoomsPage, CreateChatRoomPayload, SendChatMessagePayload } from './chatTypes';
 
 const messagePageSize = 20;
 
@@ -37,12 +38,37 @@ export function useChatMessages(roomId?: string) {
   });
 }
 
+export function useChatContacts(search = '') {
+  const currentUser = useAppSelector(selectAuthUser);
+
+  return useQuery({
+    queryKey: chatKeys.contacts(search),
+    queryFn: () => loadChatContacts({ search, currentUser }),
+    enabled: Boolean(currentUser?.id),
+    staleTime: 30_000,
+  });
+}
+
 export function useCreateChatRoom() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: CreateChatRoomPayload) => chatApi.createRoom(payload),
-    onSuccess: async () => {
+    onSuccess: async (room) => {
+      queryClient.setQueriesData<ChatRoomsPage>({ queryKey: chatKeys.rooms() }, (cached) => {
+        if (!cached) return cached;
+        const exists = cached.data.some((item) => item.id === room.id);
+        return {
+          ...cached,
+          data: exists
+            ? cached.data.map((item) => (item.id === room.id ? room : item))
+            : [room, ...cached.data],
+          meta: {
+            ...cached.meta,
+            totalItems: exists ? cached.meta.totalItems : cached.meta.totalItems + 1,
+          },
+        };
+      });
       await queryClient.invalidateQueries({ queryKey: chatKeys.rooms() });
     },
   });

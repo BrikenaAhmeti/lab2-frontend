@@ -26,8 +26,20 @@ export interface PatientRegisterRequest {
 export interface AuthUserDto {
   id: string;
   email: string;
+  username?: string | null;
+  firstName?: string;
+  lastName?: string;
   roles: string[];
   permissions: string[];
+  patientId?: string;
+  patientProfileId?: string;
+  profileId?: string;
+  patient_id?: string;
+  patient_profile_id?: string;
+  profile_id?: string;
+  patient?: { id?: string | null; patientId?: string | null; patient_id?: string | null } | null;
+  patientProfile?: { id?: string | null; patientId?: string | null; patient_id?: string | null } | null;
+  profile?: { id?: string | null; patientId?: string | null; patient_id?: string | null; type?: string | null } | null;
 }
 
 export interface AuthResponse {
@@ -114,11 +126,17 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
-export interface VerifyEmailRequest {
+export interface VerifyEmailTokenRequest {
+  token: string;
+}
+
+export interface VerifyEmailCodeRequest {
   email: string;
   code: string;
   personalNumber?: string;
 }
+
+export type VerifyEmailRequest = VerifyEmailTokenRequest | VerifyEmailCodeRequest;
 
 export interface ResendVerificationRequest {
   email: string;

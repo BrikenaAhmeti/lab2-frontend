@@ -12,6 +12,7 @@ import {
 import { formatInventoryNumber } from '@/features/inventory/hooks/useInventory';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 
 interface InventoryTransactionModalProps {
   open: boolean;
@@ -54,6 +55,7 @@ export default function InventoryTransactionModal({
     defaultValues: emptyInventoryTransactionFormValues,
   });
   const selectedType = watch('type');
+  const expiryDate = watch('expiryDate') ?? '';
 
   useEffect(() => {
     if (open) {
@@ -128,7 +130,14 @@ export default function InventoryTransactionModal({
                   {...register('unitCost', { setValueAs: (value) => (value === '' ? undefined : Number(value)) })}
                 />
                 <Input id="inventory-transaction-batch" label="Batch number" disabled={loading} error={errors.batchNumber?.message} {...register('batchNumber')} />
-                <Input id="inventory-transaction-expiry" label="Expiry date" type="date" disabled={loading} {...register('expiryDate')} />
+                <CalendarDatePicker
+                  id="inventory-transaction-expiry"
+                  label="Expiry date"
+                  value={expiryDate}
+                  disabled={loading}
+                  error={errors.expiryDate?.message}
+                  onChange={(value) => setValue('expiryDate', value, { shouldDirty: true, shouldTouch: true, shouldValidate: true })}
+                />
               </>
             ) : null}
             <label htmlFor="inventory-transaction-reason" className="block space-y-1.5 md:col-span-2">

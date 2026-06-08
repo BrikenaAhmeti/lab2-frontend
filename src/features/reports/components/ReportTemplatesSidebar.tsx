@@ -17,7 +17,7 @@ export default function ReportTemplatesSidebar({ templates, loading, onLoad }: R
   return (
     <aside className="panel p-5">
       <div className="mb-4">
-        <h3 className="text-base font-semibold text-foreground">Saved Templates</h3>
+        <h3 className="text-base font-semibold text-foreground">Saved Report Templates</h3>
       </div>
 
       {loading ? <p className="rounded-xl border border-border p-4 text-sm text-muted">Loading templates...</p> : null}
@@ -39,7 +39,7 @@ export default function ReportTemplatesSidebar({ templates, loading, onLoad }: R
               </div>
               {template.description ? <p className="mt-3 text-sm text-muted">{template.description}</p> : null}
               <Button type="button" size="sm" variant="secondary" className="mt-4 w-full" onClick={() => onLoad(template)}>
-                Load
+                Use template
               </Button>
             </article>
           ))}

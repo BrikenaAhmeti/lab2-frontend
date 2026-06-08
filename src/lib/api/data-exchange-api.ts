@@ -2,7 +2,16 @@ import { AxiosError, type AxiosInstance, type AxiosResponse } from 'axios';
 import { coreApiClient } from './axios';
 
 export const exchangeFormats = ['csv', 'xlsx', 'json'] as const;
-export const exportEntities = ['patients', 'appointments', 'lab-results', 'inventory-items', 'billings', 'audit-logs'] as const;
+export const exportEntities = [
+  'patients',
+  'appointments',
+  'lab-results',
+  'inventory-items',
+  'billings',
+  'audit-logs',
+  'service-catalog',
+  'staff',
+] as const;
 export const importEntities = ['patients', 'inventory-items', 'lab-tests', 'service-catalog', 'staff'] as const;
 export const importModes = ['strict', 'lenient'] as const;
 
@@ -14,6 +23,14 @@ export type ImportMode = (typeof importModes)[number];
 export interface FileDownload {
   blob: Blob;
   filename: string;
+}
+
+export type ExportFilterValue = string | number | boolean | null | undefined;
+export type ExportFilters = Record<string, ExportFilterValue>;
+
+export interface ExportFileOptions {
+  excludeFields?: string[];
+  filters?: ExportFilters;
 }
 
 export interface ImportRowError {
@@ -52,6 +69,10 @@ function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
 
+function isAxiosInstance(value: unknown): value is AxiosInstance {
+  return Boolean(value && typeof (value as AxiosInstance).get === 'function');
+}
+
 function filenameFromDisposition(disposition?: string) {
   if (!disposition) {
     return 'download';
@@ -75,6 +96,12 @@ function toFileDownload(response: AxiosResponse<Blob>): FileDownload {
   };
 }
 
+function cleanExportParams(params: Record<string, ExportFilterValue>) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== '')
+  );
+}
+
 export function downloadFile(file: FileDownload) {
   const url = window.URL.createObjectURL(file.blob);
   const link = document.createElement('a');
@@ -87,9 +114,24 @@ export function downloadFile(file: FileDownload) {
 }
 
 export const dataExchangeApi = {
-  exportFile(entity: ExportEntity, format: ExchangeFormat, instance?: AxiosInstance) {
-    return client(instance)
-      .get<Blob>(`/api/export/${entity}`, { params: { format }, responseType: 'blob' })
+  exportFile(
+    entity: ExportEntity,
+    format: ExchangeFormat,
+    optionsOrInstance?: ExportFileOptions | AxiosInstance,
+    instance?: AxiosInstance
+  ) {
+    const options = isAxiosInstance(optionsOrInstance) ? undefined : optionsOrInstance;
+    const resolvedInstance = isAxiosInstance(optionsOrInstance) ? optionsOrInstance : instance;
+
+    return client(resolvedInstance)
+      .get<Blob>(`/api/export/${entity}`, {
+        params: cleanExportParams({
+          ...options?.filters,
+          format,
+          excludeFields: options?.excludeFields?.length ? options.excludeFields.join(',') : undefined,
+        }),
+        responseType: 'blob',
+      })
       .then(toFileDownload);
   },
   downloadTemplate(entity: ImportEntity, format: ExchangeFormat, instance?: AxiosInstance) {

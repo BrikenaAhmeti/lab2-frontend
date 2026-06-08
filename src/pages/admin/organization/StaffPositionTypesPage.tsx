@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, SlidersHorizontal } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import {
@@ -14,22 +15,31 @@ import StaffPositionTypesTable from '@/features/staff-position-types/components/
 import StaffPositionTypeFormModal from '@/features/staff-position-types/components/StaffPositionTypeFormModal';
 import DeleteStaffPositionTypeDialog from '@/features/staff-position-types/components/DeleteStaffPositionTypeDialog';
 import type { StaffPositionTypeFormValues } from '@/features/staff-position-types/staffPositionTypes.schemas';
+import { canManageProtectedAdminTargets, isProtectedStaffPosition } from '@/features/auth/utils/adminAccess';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import type { StaffPositionTypeRecord } from '@/lib/api/staff-position-types-api';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
+import Input from '@/ui/atoms/Input';
+import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import FilterSummaryBar, { type FilterSummaryChip } from '@/ui/molecules/FilterSummaryBar';
+import Pagination from '@/ui/molecules/Pagination';
+import SelectField from '@/ui/molecules/SelectField';
 import { organizationBreadcrumbs } from './organizationBreadcrumbs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+
+const defaultPageSize = 10;
 
 export default function StaffPositionTypesPage() {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
   const isAdmin = hasAnyRole(roles, ['Admin', 'Super Admin']);
+  const canManageProtectedAdmins = canManageProtectedAdminTargets(roles);
   const canRead =
     isAdmin ||
     hasAnyPermission(
@@ -41,7 +51,11 @@ export default function StaffPositionTypesPage() {
     isAdmin ||
     hasAnyPermission(permissions, ['staff-position-types:manage', 'staff-position-types:manage:all', 'staff_types:manage'], 'any');
 
+  const [search, setSearch] = useState('');
+  const [departmentId, setDepartmentId] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [formError, setFormError] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -51,9 +65,13 @@ export default function StaffPositionTypesPage() {
 
   const listParams = useMemo(
     () => ({
+      page,
+      limit,
+      search: search.trim() || undefined,
+      departmentId: departmentId || undefined,
       isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
     }),
-    [statusFilter]
+    [departmentId, limit, page, search, statusFilter]
   );
 
   const staffPositionTypesQuery = useStaffPositionTypesList(listParams);
@@ -64,11 +82,60 @@ export default function StaffPositionTypesPage() {
 
   const rows = staffPositionTypesQuery.data?.items ?? [];
   const departments = departmentsQuery.data ?? [];
+  const paginationMeta = useMemo(() => {
+    if (staffPositionTypesQuery.data?.meta) {
+      return staffPositionTypesQuery.data.meta;
+    }
+
+    if (!staffPositionTypesQuery.data) {
+      return undefined;
+    }
+
+    return {
+      page,
+      limit,
+      total: rows.length,
+      totalPages: Math.max(1, Math.ceil(rows.length / limit)),
+    };
+  }, [limit, page, rows.length, staffPositionTypesQuery.data]);
   const mutationPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
+
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
 
   if (!canRead) {
     return <Forbidden />;
   }
+
+  const updateSearch = (value: string) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const updateDepartmentId = (value: string) => {
+    setDepartmentId(value);
+    setPage(1);
+  };
+
+  const updateStatusFilter = (value: StatusFilter) => {
+    setStatusFilter(value);
+    setPage(1);
+  };
+
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
+  };
+
+  const clearFilters = () => {
+    setSearch('');
+    setDepartmentId('');
+    setStatusFilter('all');
+    setPage(1);
+  };
 
   const openCreateModal = () => {
     setFeedback(null);
@@ -78,6 +145,10 @@ export default function StaffPositionTypesPage() {
   };
 
   const openEditModal = (record: StaffPositionTypeRecord) => {
+    if (!canManagePositionType(record)) {
+      return;
+    }
+
     setFeedback(null);
     setFormError('');
     setEditingRecord(record);
@@ -95,6 +166,11 @@ export default function StaffPositionTypesPage() {
     setFormError('');
 
     const payload = toStaffPositionTypePayload(values);
+
+    if (!canManageProtectedAdmins && isProtectedStaffPosition(payload)) {
+      setFormError('Only Super Admins can create or edit admin position types');
+      return;
+    }
 
     try {
       if (editingRecord) {
@@ -116,6 +192,11 @@ export default function StaffPositionTypesPage() {
       return;
     }
 
+    if (!canManagePositionType(recordToDelete)) {
+      setDeleteError('Only Super Admins can delete admin position types');
+      return;
+    }
+
     setFeedback(null);
     setDeleteError('');
 
@@ -128,6 +209,34 @@ export default function StaffPositionTypesPage() {
     }
   };
 
+  const filterChips: FilterSummaryChip[] = [];
+  const trimmedSearch = search.trim();
+  const selectedDepartment = departments.find((department) => department.id === departmentId);
+
+  if (trimmedSearch) {
+    filterChips.push({ id: 'search', label: `Name: ${trimmedSearch}`, onRemove: () => updateSearch('') });
+  }
+
+  if (selectedDepartment) {
+    filterChips.push({
+      id: 'department',
+      label: `Department: ${selectedDepartment.name}`,
+      onRemove: () => updateDepartmentId(''),
+    });
+  }
+
+  if (statusFilter !== 'all') {
+    filterChips.push({
+      id: 'status',
+      label: statusFilter === 'active' ? 'Active only' : 'Inactive only',
+      onRemove: () => updateStatusFilter('all'),
+    });
+  }
+
+  function canManagePositionType(record: StaffPositionTypeRecord) {
+    return canManage && (canManageProtectedAdmins || !isProtectedStaffPosition(record));
+  }
+
   return (
     <div className="space-y-4">
       <Breadcrumbs items={organizationBreadcrumbs('Staff Position Types')} />
@@ -137,40 +246,75 @@ export default function StaffPositionTypesPage() {
         subtitle="Manage configurable clinical and operational staff position types"
         actions={
           canManage ? (
-            <Button onClick={openCreateModal}>
+            <Button leftIcon={<Plus className="h-4 w-4" />} onClick={openCreateModal}>
               Add Staff Position Type
             </Button>
           ) : null
         }
       >
         <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-[180px] md:justify-start">
-            <label htmlFor="staff-position-type-status-filter" className="block space-y-1.5">
-              <span className="text-sm font-medium text-foreground">Status</span>
-              <select
+          <section className="space-y-4 rounded-xl border border-border bg-surface/45 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/10 text-primary">
+                  <SlidersHorizontal className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-semibold text-foreground">Filters</h3>
+                  <p className="mt-0.5 text-xs text-muted">Search staff position types by name or department</p>
+                </div>
+              </div>
+              {staffPositionTypesQuery.isFetching ? (
+                <span className="inline-flex items-center gap-2 text-xs font-medium text-muted">
+                  <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  Updating
+                </span>
+              ) : null}
+            </div>
+
+            <div className="grid items-end gap-3 lg:grid-cols-[minmax(18rem,1fr)_minmax(12rem,16rem)_minmax(10rem,12rem)]">
+              <Input
+                id="staff-position-type-search"
+                label="Name"
+                value={search}
+                onChange={(event) => updateSearch(event.target.value)}
+                placeholder="Search by name"
+                className="h-11"
+              />
+              <SelectField
+                id="staff-position-type-department-filter"
+                label="Department"
+                value={departmentId}
+                onChange={(event) => updateDepartmentId(event.target.value)}
+                className="h-11"
+              >
+                <option value="">All departments</option>
+                {departments.map((department) => (
+                  <option key={department.id} value={department.id}>
+                    {department.name}
+                  </option>
+                ))}
+              </SelectField>
+              <SelectField
                 id="staff-position-type-status-filter"
+                label="Status"
                 value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as StatusFilter)}
-                className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                onChange={(event) => updateStatusFilter(event.target.value as StatusFilter)}
+                className="h-11"
               >
                 <option value="all">All statuses</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </select>
-            </label>
-          </div>
+              </SelectField>
+            </div>
+
+            <FilterSummaryBar chips={filterChips} onClear={clearFilters} />
+          </section>
 
           {feedback ? <FeedbackMessage type={feedback.type} message={feedback.message} /> : null}
 
           {staffPositionTypesQuery.isLoading || departmentsQuery.isLoading ? (
-            <div className="rounded-xl border border-border p-4">
-              <div className="animate-pulse space-y-3">
-                <div className="h-10 rounded-lg bg-surface" />
-                <div className="h-12 rounded-lg bg-surface" />
-                <div className="h-12 rounded-lg bg-surface" />
-                <div className="h-12 rounded-lg bg-surface" />
-              </div>
-            </div>
+            <TableSkeleton rows={4} columns={5} />
           ) : null}
 
           {staffPositionTypesQuery.isError ? (
@@ -194,7 +338,7 @@ export default function StaffPositionTypesPage() {
           rows.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
               <p className="font-medium text-foreground">No staff position types found</p>
-              <p className="mt-1 text-sm text-muted">Create the first staff position type to align staffing workflows with the backend catalog.</p>
+              <p className="mt-1 text-sm text-muted">Try adjusting the filters or create a new staff position type.</p>
             </div>
           ) : null}
 
@@ -207,9 +351,26 @@ export default function StaffPositionTypesPage() {
               rows={rows}
               departments={departments}
               canManage={canManage}
+              canManageRecord={canManagePositionType}
               mutationPending={mutationPending}
               onEdit={openEditModal}
               onDelete={setRecordToDelete}
+            />
+          ) : null}
+
+          {!staffPositionTypesQuery.isLoading &&
+          !departmentsQuery.isLoading &&
+          !staffPositionTypesQuery.isError &&
+          !departmentsQuery.isError &&
+          paginationMeta ? (
+            <Pagination
+              page={page}
+              totalPages={paginationMeta.totalPages}
+              total={paginationMeta.total}
+              limit={limit}
+              loading={staffPositionTypesQuery.isFetching}
+              onPageChange={setPage}
+              onLimitChange={updateLimit}
             />
           ) : null}
         </div>
@@ -220,6 +381,7 @@ export default function StaffPositionTypesPage() {
           record={editingRecord}
           loading={createMutation.isPending || updateMutation.isPending}
           submitError={formError}
+          allowProtectedRoles={canManageProtectedAdmins}
           onClose={closeFormModal}
           onSubmit={submitForm}
         />

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ConsultationPage from '@/features/consultation/pages/ConsultationPage';
 import { aiApi, type AiConsultationConversation, type ConsultationSummary } from '@/lib/api/ai-api';
 import { appointmentsApi, type AppointmentView } from '@/lib/api/appointments-api';
+import { labApi, type LabOrderView, type LabTestView } from '@/lib/api/lab-api';
 import { medicalRecordsApi, type MedicalRecordView } from '@/lib/api/medical-records-api';
 import { patientsApi, type PatientRecord } from '@/lib/api/patients-api';
 import { prescriptionsApi } from '@/lib/api/prescriptions-api';
@@ -232,6 +233,59 @@ function makeRecord(overrides: Partial<MedicalRecordView> = {}): MedicalRecordVi
   };
 }
 
+function makeLabOrder(overrides: Partial<LabOrderView> = {}): LabOrderView {
+  return {
+    id: '99999999-9999-4999-8999-999999999999',
+    patientId: appointment.patientId,
+    appointmentId: appointment.id,
+    medicalRecordId: null,
+    orderedByStaffId: appointment.staffProfileId!,
+    departmentId: appointment.departmentId,
+    status: 'PENDING',
+    priority: 'urgent',
+    notes: 'Draw before medication',
+    orderedAt: '2030-01-02T09:20:00.000Z',
+    collectedAt: null,
+    completedAt: null,
+    reviewedAt: null,
+    createdAt: '2030-01-02T09:20:00.000Z',
+    updatedAt: '2030-01-02T09:20:00.000Z',
+    patient: {
+      id: patient.id,
+      userId: patient.userId,
+      firstName: patient.firstName,
+      lastName: patient.lastName,
+      email: patient.email,
+      phone: patient.phone,
+      name: 'Ada Lovelace',
+    },
+    appointment: {
+      id: appointment.id,
+      status: appointment.status,
+      scheduledAt: appointment.scheduledAt,
+      endAt: appointment.endAt,
+    },
+    medicalRecord: null,
+    orderedByStaff: appointment.staff!,
+    department: appointment.department,
+    items: [
+      {
+        id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        labTestId: labTest.id,
+        resultValue: null,
+        resultUnit: null,
+        resultNotes: null,
+        resultStatus: 'PENDING',
+        isCritical: false,
+        completedAt: null,
+        flag: 'pending',
+        labTest,
+      },
+    ],
+    ...overrides,
+  };
+}
+
 function renderPage() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -267,6 +321,11 @@ describe('ConsultationPage', () => {
       items: [],
       meta: { page: 1, limit: 25, total: 0, totalPages: 0 },
     });
+    vi.mocked(labApi.listTests).mockResolvedValue({
+      items: [labTest],
+      meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+    vi.mocked(labApi.createOrder).mockResolvedValue(makeLabOrder());
     vi.mocked(prescriptionsApi.create).mockResolvedValue({
       id: '77777777-7777-4777-8777-777777777777',
       patientId: appointment.patientId,
@@ -325,7 +384,7 @@ describe('ConsultationPage', () => {
     renderPage();
 
     expect(await screen.findAllByText('Ada Lovelace')).not.toHaveLength(0);
-    fireEvent.change(screen.getByLabelText('Chief Complaint'), { target: { value: 'Chest discomfort' } });
+    fireEvent.change(screen.getByLabelText('Patient concern'), { target: { value: 'Chest discomfort' } });
     fireEvent.change(screen.getByLabelText('Diagnosis'), { target: { value: 'Stable angina' } });
     fireEvent.change(screen.getByLabelText('Treatment Plan'), { target: { value: 'Monitor chest pain' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create record' }));
@@ -342,6 +401,26 @@ describe('ConsultationPage', () => {
         followUpInstructions: null,
       });
     });
+  });
+
+  it('shows structured patient notes below the recorder without raw JSON', async () => {
+    const medicalNotes = JSON.stringify({
+      chronicConditions: ['Seasonal asthma'],
+      preferredPharmacy: 'MedSphere Pharmacy',
+    });
+    vi.mocked(patientsApi.get).mockResolvedValue({ ...patient, medicalNotes });
+
+    renderPage();
+
+    const recorderHeading = await screen.findByText('Conversation Recorder');
+    const summaryHeading = await screen.findByText('Patient Summary');
+
+    expect(Boolean(recorderHeading.compareDocumentPosition(summaryHeading) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    expect(screen.getByText('Chronic Conditions')).toBeInTheDocument();
+    expect(screen.getByText('Seasonal asthma')).toBeInTheDocument();
+    expect(screen.getByText('Preferred Pharmacy')).toBeInTheDocument();
+    expect(screen.getByText('MedSphere Pharmacy')).toBeInTheDocument();
+    expect(screen.queryByText(medicalNotes)).not.toBeInTheDocument();
   });
 
   it('creates a prescription with the backend MS-20 item shape', async () => {

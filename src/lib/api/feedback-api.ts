@@ -58,9 +58,13 @@ export interface FeedbackView {
 export interface FeedbackListParams {
   page?: number;
   limit?: number;
+  patientSearch?: string;
+  appointmentSearch?: string;
   staffProfileId?: string;
   departmentId?: string;
   status?: FeedbackStatus;
+  submittedAtFrom?: string;
+  submittedAtTo?: string;
 }
 
 export interface FeedbackListResponse {

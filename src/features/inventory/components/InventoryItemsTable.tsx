@@ -34,7 +34,7 @@ function InventoryItemsTable({
             <th className="px-4 py-3 font-medium">Department</th>
             <th className="px-4 py-3 font-medium">Quantity</th>
             <th className="px-4 py-3 font-medium">Unit</th>
-            <th className="px-4 py-3 font-medium">Status</th>
+            <th className="min-w-28 px-4 py-3 font-medium">Status</th>
             <th className="px-4 py-3 font-medium">Expiry</th>
             <th className="px-4 py-3 font-medium">Actions</th>
           </tr>
@@ -59,7 +59,7 @@ function InventoryItemsTable({
                 <td className="px-4 py-3">{item.department?.name ?? '-'}</td>
                 <td className="px-4 py-3">{formatInventoryNumber(item.currentStock)}</td>
                 <td className="px-4 py-3">{item.unitOfMeasure}</td>
-                <td className="px-4 py-3">
+                <td className="min-w-28 px-4 py-3">
                   <Badge variant={stockStatus.variant}>{stockStatus.label}</Badge>
                 </td>
                 <td className="px-4 py-3">{formatInventoryDate(item.expiryDate)}</td>

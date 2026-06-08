@@ -85,24 +85,51 @@ describe('ContactInboxPage', () => {
     });
   });
 
-  it('requires reply notes before marking a contact message replied', async () => {
+  it('enables Reply only after reply text is entered', async () => {
     renderContactInbox();
 
     expect(await screen.findByText('Appointment question')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Mark Replied' }));
-
-    expect(await screen.findByText('Reply notes are required before marking replied.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
     expect(contactApi.updateStatus).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByLabelText('Reply notes'), { target: { value: ' Answered by email ' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Mark Replied' }));
+    fireEvent.change(screen.getByLabelText('Reply'), { target: { value: ' Answered by email ' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
 
     await waitFor(() => {
       expect(contactApi.updateStatus).toHaveBeenCalledWith('9d8ae239-d774-45d1-b8c0-c7f566e0e604', {
         status: 'replied',
         replyNotes: 'Answered by email',
       });
+    });
+  });
+
+  it('queries contact messages by sender and received date', async () => {
+    renderContactInbox();
+
+    expect(await screen.findByText('Appointment question')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Sender'), { target: { value: 'Ada' } });
+
+    await waitFor(() => {
+      expect(contactApi.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          search: 'Ada',
+        })
+      );
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Received date/i }));
+    fireEvent.change(screen.getByLabelText('Received on'), { target: { value: '2026-05-26' } });
+
+    await waitFor(() => {
+      expect(contactApi.list).toHaveBeenCalledWith(
+        expect.objectContaining({
+          search: 'Ada',
+          createdAtFrom: '2026-05-26',
+          createdAtTo: '2026-05-26',
+        })
+      );
     });
   });
 });

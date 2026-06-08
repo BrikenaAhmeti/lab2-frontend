@@ -15,7 +15,7 @@ const defaultSchedules: StaffSchedule[] = dayLabels.map((_, dayOfWeek) => ({
   breakEndTime: '13:00',
 }));
 
-export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
+export default function StaffSchedulePanel({ staffId, editable = true }: { staffId: string; editable?: boolean }) {
   const schedulesQuery = useStaffSchedules(staffId);
   const saveMutation = useSaveStaffSchedules(staffId);
   const [schedules, setSchedules] = useState(defaultSchedules);
@@ -39,6 +39,8 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
   };
 
   const saveSchedules = async () => {
+    if (!editable) return;
+
     setMessage(null);
 
     try {
@@ -50,7 +52,7 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
   };
 
   if (schedulesQuery.isLoading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading schedule...</div>;
+    return <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted shadow-panel">Loading schedule...</div>;
   }
 
   if (schedulesQuery.isError) {
@@ -58,10 +60,12 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-border p-4">
+    <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-panel">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground">Weekly schedule</h3>
-        <Button type="button" loading={saveMutation.isPending} onClick={saveSchedules}>Save schedule</Button>
+        {editable ? (
+          <Button type="button" loading={saveMutation.isPending} onClick={saveSchedules}>Save schedule</Button>
+        ) : null}
       </div>
       {message ? <FeedbackMessage type={message.type} message={message.text} /> : null}
 
@@ -84,6 +88,7 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
                   <input
                     type="checkbox"
                     checked={schedule.isWorking}
+                    disabled={!editable}
                     onChange={(event) => updateSchedule(schedule.dayOfWeek, { isWorking: event.target.checked })}
                     className="h-4 w-4 rounded border-border text-primary"
                   />
@@ -92,7 +97,7 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
                   <input
                     type="time"
                     value={schedule.startTime}
-                    disabled={!schedule.isWorking}
+                    disabled={!editable || !schedule.isWorking}
                     onChange={(event) => updateSchedule(schedule.dayOfWeek, { startTime: event.target.value })}
                     className="rounded-lg border border-border bg-background px-2 py-1 text-sm"
                   />
@@ -101,7 +106,7 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
                   <input
                     type="time"
                     value={schedule.endTime}
-                    disabled={!schedule.isWorking}
+                    disabled={!editable || !schedule.isWorking}
                     onChange={(event) => updateSchedule(schedule.dayOfWeek, { endTime: event.target.value })}
                     className="rounded-lg border border-border bg-background px-2 py-1 text-sm"
                   />
@@ -111,14 +116,14 @@ export default function StaffSchedulePanel({ staffId }: { staffId: string }) {
                     <input
                       type="time"
                       value={schedule.breakStartTime ?? ''}
-                      disabled={!schedule.isWorking}
+                      disabled={!editable || !schedule.isWorking}
                       onChange={(event) => updateSchedule(schedule.dayOfWeek, { breakStartTime: event.target.value || null })}
                       className="rounded-lg border border-border bg-background px-2 py-1 text-sm"
                     />
                     <input
                       type="time"
                       value={schedule.breakEndTime ?? ''}
-                      disabled={!schedule.isWorking}
+                      disabled={!editable || !schedule.isWorking}
                       onChange={(event) => updateSchedule(schedule.dayOfWeek, { breakEndTime: event.target.value || null })}
                       className="rounded-lg border border-border bg-background px-2 py-1 text-sm"
                     />

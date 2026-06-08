@@ -1,10 +1,24 @@
 import { z } from 'zod';
 import { CMS_SECTION_TYPES } from '@/lib/api/cms-api';
 
-const optionalUrl = z
+const optionalAssetUrl = z
   .string()
   .trim()
-  .refine((value) => value === '' || /^https?:\/\/\S+$/.test(value), 'Enter a valid URL')
+  .refine((value) => value === '' || /^https?:\/\/\S+$/.test(value) || /^\/(?!\/)\S*$/.test(value), 'Enter a valid URL')
+  .optional();
+
+const optionalLinkUrl = z
+  .string()
+  .trim()
+  .refine(
+    (value) =>
+      value === '' ||
+      /^https?:\/\/\S+$/.test(value) ||
+      /^\/(?!\/)\S*$/.test(value) ||
+      /^#\S*$/.test(value) ||
+      /^(mailto|tel):\S+$/i.test(value),
+    'Enter a valid URL',
+  )
   .optional();
 
 const contentJson = z.string().superRefine((value, ctx) => {
@@ -35,7 +49,7 @@ export const cmsSectionFormSchema = z.object({
   title: z.string().max(160, 'Title is too long').optional(),
   subtitle: z.string().max(255, 'Subtitle is too long').optional(),
   body: z.string().optional(),
-  imageUrl: optionalUrl,
+  imageUrl: optionalAssetUrl,
   contentJson,
   sortOrder: z
     .number({ error: 'Sort order must be zero or greater' })
@@ -48,8 +62,8 @@ export const cmsSectionFormSchema = z.object({
 export const cmsBannerFormSchema = z.object({
   title: z.string().trim().min(2, 'Title must be at least 2 characters').max(160, 'Title is too long'),
   message: z.string().trim().min(1, 'Message is required'),
-  imageUrl: optionalUrl,
-  linkUrl: optionalUrl,
+  imageUrl: optionalAssetUrl,
+  linkUrl: optionalLinkUrl,
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   isActive: z.boolean().optional(),

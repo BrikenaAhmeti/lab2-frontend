@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
 import Input from '@/ui/atoms/Input';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
   getApiErrorMessage,
@@ -10,7 +11,7 @@ import {
   useStaffExceptions,
 } from '@/features/staff/hooks/useStaff';
 
-export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
+export default function StaffExceptionsPanel({ staffId, editable = true }: { staffId: string; editable?: boolean }) {
   const exceptionsQuery = useStaffExceptions(staffId);
   const createMutation = useCreateStaffException(staffId);
   const deleteMutation = useDeleteStaffException(staffId);
@@ -20,6 +21,8 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
   const [error, setError] = useState('');
 
   const addException = async () => {
+    if (!editable) return;
+
     setError('');
 
     if (!date) {
@@ -44,6 +47,8 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
   };
 
   const removeException = async (id: string) => {
+    if (!editable) return;
+
     setError('');
 
     try {
@@ -54,7 +59,7 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
   };
 
   if (exceptionsQuery.isLoading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading exceptions...</div>;
+    return <div className="rounded-xl border border-border bg-card p-5 text-sm text-muted shadow-panel">Loading exceptions...</div>;
   }
 
   if (exceptionsQuery.isError) {
@@ -62,25 +67,27 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
   }
 
   return (
-    <section className="space-y-4 rounded-xl border border-border p-4">
+    <section className="space-y-4 rounded-xl border border-border bg-card p-5 shadow-panel">
       <h3 className="text-base font-semibold text-foreground">Schedule exceptions</h3>
       {error ? <FeedbackMessage type="error" message={error} /> : null}
 
-      <div className="grid gap-3 md:grid-cols-[180px_1fr_auto_auto]">
-        <Input id="staff-exception-date" label="Date" type="date" value={date} onChange={(event) => setDate(event.target.value)} />
-        <Input id="staff-exception-reason" label="Reason" value={reason} onChange={(event) => setReason(event.target.value)} />
-        <label htmlFor="staff-exception-working" className="flex items-end gap-2 pb-3 text-sm font-medium text-foreground">
-          <input
-            id="staff-exception-working"
-            type="checkbox"
-            checked={isWorking}
-            onChange={(event) => setIsWorking(event.target.checked)}
-            className="h-4 w-4 rounded border-border text-primary"
-          />
-          Working
-        </label>
-        <Button type="button" className="self-end" loading={createMutation.isPending} onClick={addException}>Add</Button>
-      </div>
+      {editable ? (
+        <div className="grid gap-3 md:grid-cols-[180px_1fr_auto_auto]">
+          <CalendarDatePicker id="staff-exception-date" label="Date" value={date} onChange={setDate} />
+          <Input id="staff-exception-reason" label="Reason" value={reason} onChange={(event) => setReason(event.target.value)} />
+          <label htmlFor="staff-exception-working" className="flex items-end gap-2 pb-3 text-sm font-medium text-foreground">
+            <input
+              id="staff-exception-working"
+              type="checkbox"
+              checked={isWorking}
+              onChange={(event) => setIsWorking(event.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary"
+            />
+            Working
+          </label>
+          <Button type="button" className="self-end" loading={createMutation.isPending} onClick={addException}>Add</Button>
+        </div>
+      ) : null}
 
       <div className="space-y-2">
         {exceptionsQuery.data?.length ? (
@@ -92,15 +99,17 @@ export default function StaffExceptionsPanel({ staffId }: { staffId: string }) {
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant={exception.isWorking ? 'info' : 'warning'}>{exception.isWorking ? 'Special hours' : 'Day off'}</Badge>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="danger"
-                  loading={deleteMutation.isPending}
-                  onClick={() => removeException(exception.id)}
-                >
-                  Remove
-                </Button>
+                {editable ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="danger"
+                    loading={deleteMutation.isPending}
+                    onClick={() => removeException(exception.id)}
+                  >
+                    Remove
+                  </Button>
+                ) : null}
               </div>
             </div>
           ))

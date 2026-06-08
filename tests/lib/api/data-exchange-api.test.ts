@@ -39,6 +39,62 @@ describe('dataExchangeApi', () => {
     expect(file.filename).toBe('patients-2026-05-29.csv');
   });
 
+  it('downloads service catalog exports from the backend data exchange route', async () => {
+    const instance = mockClient();
+
+    await dataExchangeApi.exportFile('service-catalog', 'xlsx', instance);
+
+    expect(instance.get).toHaveBeenCalledWith('/api/export/service-catalog', {
+      params: { format: 'xlsx' },
+      responseType: 'blob',
+    });
+  });
+
+  it('sends excluded export fields as a backend query parameter', async () => {
+    const instance = mockClient();
+
+    await dataExchangeApi.exportFile('patients', 'csv', { excludeFields: ['userId'] }, instance);
+
+    expect(instance.get).toHaveBeenCalledWith('/api/export/patients', {
+      params: { format: 'csv', excludeFields: 'userId' },
+      responseType: 'blob',
+    });
+  });
+
+  it('sends selected export filters as backend query parameters', async () => {
+    const instance = mockClient();
+
+    await dataExchangeApi.exportFile(
+      'inventory-items',
+      'xlsx',
+      {
+        filters: {
+          search: 'aspirin',
+          categoryId: 'category-1',
+          belowReorderLevel: true,
+          isActive: false,
+          expiryFrom: '2026-12-01',
+          expiryTo: '2026-12-31',
+          empty: '',
+        },
+      },
+      instance
+    );
+
+    expect(instance.get).toHaveBeenCalledWith('/api/export/inventory-items', {
+      params: {
+        search: 'aspirin',
+        categoryId: 'category-1',
+        belowReorderLevel: true,
+        isActive: false,
+        expiryFrom: '2026-12-01',
+        expiryTo: '2026-12-31',
+        format: 'xlsx',
+      },
+      responseType: 'blob',
+    });
+  });
+
   it('posts multipart imports with the backend file field and mode query', async () => {
     const instance = mockClient();
     const file = new File(['firstName,lastName\nAda,Lovelace'], 'patients.csv', { type: 'text/csv' });

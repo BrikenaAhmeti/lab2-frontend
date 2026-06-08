@@ -2,7 +2,9 @@ import { Suspense, lazy, type ReactNode } from 'react';
 import { Navigate, createBrowserRouter } from 'react-router-dom';
 import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
+import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
 import RoleGuard from '@/features/auth/guards/RoleGuard';
+import InventoryDashboardRedirect from './InventoryDashboardRedirect';
 import RoleRedirect from './RoleRedirect';
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
@@ -38,7 +40,6 @@ const DepartmentsPage = lazy(() => import('@/features/departments/pages/Departme
 const ServicesPage = lazy(() => import('@/features/services/pages/ServicesPage'));
 const StaffPositionTypesPage = lazy(() => import('@/pages/admin/organization/StaffPositionTypesPage'));
 const SettingsPage = lazy(() => import('@/pages/admin/organization/SettingsPage'));
-const UsersPage = lazy(() => import('@/features/users/pages/UsersPage'));
 const StaffDirectoryPage = lazy(() => import('@/features/staff/pages/StaffDirectoryPage'));
 const StaffProfilePage = lazy(() => import('@/features/staff/pages/StaffProfilePage'));
 const StaffScheduleOverviewPage = lazy(() => import('@/features/staff/pages/StaffScheduleOverviewPage'));
@@ -60,6 +61,7 @@ const AdvancedSearchPage = lazy(() => import('@/features/search/pages/AdvancedSe
 const PatientLabResultsPage = lazy(() => import('@/features/patient-portal/pages/PatientLabResultsPage'));
 const PatientPrescriptionsPage = lazy(() => import('@/features/patient-portal/pages/PatientPrescriptionsPage'));
 const PatientMedicalRecordsPage = lazy(() => import('@/features/patient-portal/pages/PatientMedicalRecordsPage'));
+const NurseMedicalRecordsPage = lazy(() => import('@/features/medical-records/pages/NurseMedicalRecordsPage'));
 const CmsPagesPage = lazy(() => import('@/features/cms/pages/CmsPagesPage'));
 const CmsPageEditorPage = lazy(() => import('@/features/cms/pages/CmsPageEditorPage'));
 const CmsBannersPage = lazy(() => import('@/features/cms/pages/CmsBannersPage'));
@@ -90,14 +92,19 @@ function portalRoutes(home: ReactNode) {
     { path: 'messages', element: lazyRoute(<ChatPage />) },
     { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
     { path: 'profile', element: lazyRoute(<ProfilePage />) },
-    { path: 'sessions', element: lazyRoute(<SessionsPage />) },
   ];
+}
+
+function DoctorAppointmentRedirect() {
+  const params = useParams<{ appointmentId?: string }>();
+  return <Navigate to={params.appointmentId ? `/doctor/consultations/${params.appointmentId}` : '/doctor'} replace />;
 }
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: lazyRoute(<PublicHomePage />),
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/public',
@@ -161,6 +168,7 @@ export const router = createBrowserRouter([
   },
   {
     element: <PrivateRoute />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: '/role-redirect',
@@ -183,20 +191,41 @@ export const router = createBrowserRouter([
         ),
         children: [
           ...portalRoutes(<AdminDashboardPage />),
+          {
+            path: 'sessions',
+            element: (
+              <RoleGuard allowedRoles={['Super Admin']}>
+                {lazyRoute(<SessionsPage />)}
+              </RoleGuard>
+            ),
+          },
           { path: 'departments', element: lazyRoute(<DepartmentsPage />) },
           { path: 'staff', element: lazyRoute(<StaffDirectoryPage />) },
           { path: 'staff/schedules', element: lazyRoute(<StaffScheduleOverviewPage />) },
           { path: 'staff/:id', element: lazyRoute(<StaffProfilePage />) },
           { path: 'patients', element: lazyRoute(<PatientsPage />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage />) },
+          { path: 'appointments/:id', element: <Navigate to="/admin/search/appointments" replace /> },
           { path: 'inventory', element: lazyRoute(<InventoryPage />) },
+          { path: 'inventory/items/:id', element: <Navigate to="/admin/inventory" replace /> },
           { path: 'billing', element: lazyRoute(<BillingPage portal="admin" />) },
+          { path: 'billing/:id', element: <Navigate to="/admin/billing" replace /> },
           { path: 'reports', element: lazyRoute(<ReportBuilderPage />) },
+          {
+            path: 'voice-ai',
+            element: (
+              <RoleGuard allowedRoles={['Super Admin']}>
+                <Navigate to="/admin/sessions?tab=voice-ai" replace />
+              </RoleGuard>
+            ),
+          },
           { path: 'search', element: <Navigate to="/admin/search/patients" replace /> },
           { path: 'search/:resource', element: lazyRoute(<AdvancedSearchPage />) },
           { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="admin" />) },
+          { path: 'feedback/:id', element: <Navigate to="/admin/feedback" replace /> },
           { path: 'contact', element: lazyRoute(<ContactInboxPage />) },
-          { path: 'users', element: lazyRoute(<UsersPage />) },
+          { path: 'contact/:id', element: <Navigate to="/admin/contact" replace /> },
+          { path: 'users', element: <Navigate to="/admin/staff" replace /> },
           { path: 'cms', element: <Navigate to="/admin/cms/pages" replace /> },
           { path: 'cms/pages', element: lazyRoute(<CmsPagesPage />) },
           { path: 'cms/pages/:id', element: lazyRoute(<CmsPageEditorPage />) },
@@ -218,15 +247,19 @@ export const router = createBrowserRouter([
           { index: true, element: lazyRoute(<PatientDashboardPage />) },
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="patient" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="patient" />) },
+          { path: 'appointments/:id', element: <Navigate to="/patient/appointments" replace /> },
           { path: 'messages', element: lazyRoute(<ChatPage />) },
           { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
           { path: 'medical-records', element: lazyRoute(<PatientMedicalRecordsPage />) },
+          { path: 'medical-records/:id', element: <Navigate to="/patient/medical-records" replace /> },
           { path: 'lab-results', element: lazyRoute(<PatientLabResultsPage />) },
+          { path: 'lab-results/:id', element: <Navigate to="/patient/lab-results" replace /> },
           { path: 'prescriptions', element: lazyRoute(<PatientPrescriptionsPage />) },
+          { path: 'prescriptions/:id', element: <Navigate to="/patient/prescriptions" replace /> },
           { path: 'billing', element: lazyRoute(<PatientBillingPage />) },
+          { path: 'billing/:id', element: <Navigate to="/patient/billing" replace /> },
           { path: 'feedback', element: lazyRoute(<PatientFeedbackPage />) },
           { path: 'profile', element: lazyRoute(<PatientSelfProfilePage />) },
-          { path: 'sessions', element: lazyRoute(<SessionsPage />) },
         ],
       },
       {
@@ -240,9 +273,11 @@ export const router = createBrowserRouter([
           ...portalRoutes(<DoctorDashboardPage />),
           { path: 'feedback', element: lazyRoute(<FeedbackInboxPage portal="doctor" />) },
           { path: 'feedback/:id', element: lazyRoute(<FeedbackInboxPage portal="doctor" />) },
+          { path: 'appointments/:appointmentId', element: <DoctorAppointmentRedirect /> },
           { path: 'consultations/:appointmentId', element: lazyRoute(<ConsultationPage />) },
           { path: 'lab-reviews', element: lazyRoute(<LabReviewPage />) },
           { path: 'lab-reviews/:id', element: lazyRoute(<LabReviewPage />) },
+          { path: 'prescriptions/:id', element: <Navigate to="/doctor" replace /> },
         ],
       },
       {
@@ -252,7 +287,15 @@ export const router = createBrowserRouter([
             {lazyRoute(<NurseLayout />)}
           </RoleGuard>
         ),
-        children: portalRoutes(<NurseDashboardPage />),
+        children: [
+          ...portalRoutes(<NurseDashboardPage />),
+          { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="nurse" />) },
+          { path: 'appointments/:id', element: <Navigate to="/nurse/appointments" replace /> },
+          { path: 'patients', element: lazyRoute(<PatientsPage basePath="/nurse/patients" />) },
+          { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/nurse" />) },
+          { path: 'medical-records', element: lazyRoute(<NurseMedicalRecordsPage />) },
+          { path: 'medical-records/:id', element: lazyRoute(<NurseMedicalRecordsPage />) },
+        ],
       },
       {
         path: '/lab',
@@ -261,7 +304,11 @@ export const router = createBrowserRouter([
             {lazyRoute(<LabLayout />)}
           </RoleGuard>
         ),
-        children: portalRoutes(<LabDashboardPage />),
+        children: [
+          ...portalRoutes(<LabDashboardPage />),
+          { path: 'orders', element: <Navigate to="/lab" replace /> },
+          { path: 'orders/:id', element: <Navigate to="/lab" replace /> },
+        ],
       },
       {
         path: '/pharmacy',
@@ -270,7 +317,11 @@ export const router = createBrowserRouter([
             {lazyRoute(<PharmacyLayout />)}
           </RoleGuard>
         ),
-        children: portalRoutes(<PharmacyDashboardPage />),
+        children: [
+          ...portalRoutes(<PharmacyDashboardPage />),
+          { path: 'inventory', element: lazyRoute(<InventoryPage portal="pharmacy" />) },
+          { path: 'inventory/items/:id', element: <Navigate to="/pharmacy/inventory" replace /> },
+        ],
       },
       {
         path: '/receptionist',
@@ -283,9 +334,11 @@ export const router = createBrowserRouter([
           ...portalRoutes(<ReceptionistDashboardPage />),
           { path: 'book-appointment', element: lazyRoute(<BookAppointmentPage mode="receptionist" />) },
           { path: 'appointments', element: lazyRoute(<AppointmentsPage mode="receptionist" />) },
+          { path: 'appointments/:id', element: <Navigate to="/receptionist/appointments" replace /> },
           { path: 'messages', element: lazyRoute(<ChatPage />) },
           { path: 'messages/:roomId', element: lazyRoute(<ChatPage />) },
           { path: 'billing', element: lazyRoute(<BillingPage portal="receptionist" />) },
+          { path: 'billing/:id', element: <Navigate to="/receptionist/billing" replace /> },
           { path: 'patients', element: lazyRoute(<PatientsPage basePath="/receptionist/patients" />) },
           { path: 'patients/:id', element: lazyRoute(<PatientProfilePage basePath="/receptionist" />) },
         ],
@@ -297,12 +350,12 @@ export const router = createBrowserRouter([
       { path: '/dashboard/staff', element: <Navigate to="/admin/staff" replace /> },
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
-      { path: '/dashboard/inventory', element: <Navigate to="/admin/inventory" replace /> },
+      { path: '/dashboard/inventory', element: <InventoryDashboardRedirect /> },
       { path: '/dashboard/billing', element: <Navigate to="/admin/billing" replace /> },
       { path: '/dashboard/reports', element: <Navigate to="/admin/reports" replace /> },
       { path: '/dashboard/feedback', element: <Navigate to="/admin/feedback" replace /> },
       { path: '/dashboard/contact', element: <Navigate to="/admin/contact" replace /> },
-      { path: '/dashboard/users', element: <Navigate to="/admin/users" replace /> },
+      { path: '/dashboard/users', element: <Navigate to="/admin/staff" replace /> },
       { path: '/dashboard/cms', element: <Navigate to="/admin/cms/pages" replace /> },
       { path: '/dashboard/cms/pages', element: <Navigate to="/admin/cms/pages" replace /> },
       { path: '/dashboard/cms/banners', element: <Navigate to="/admin/cms/banners" replace /> },
@@ -329,5 +382,6 @@ export const router = createBrowserRouter([
   {
     path: '*',
     element: <Navigate to="/" replace />,
+    errorElement: <RouteErrorBoundary />,
   },
 ]);

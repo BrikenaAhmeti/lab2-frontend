@@ -24,13 +24,19 @@ export interface DepartmentPayload {
   sortOrder?: number;
 }
 
+export type DepartmentSortBy = 'name' | 'sortOrder' | 'createdAt' | 'updatedAt';
+export type DepartmentSortDirection = 'asc' | 'desc';
+
 export interface DepartmentListParams {
   page?: number;
   limit?: number;
   search?: string;
   isActive?: boolean;
-  sortBy?: 'name' | 'sortOrder' | 'createdAt' | 'updatedAt';
-  sortDirection?: 'asc' | 'desc';
+  sortBy?: DepartmentSortBy;
+  sortDirection?: DepartmentSortDirection;
+  openAt?: string;
+  openFrom?: string;
+  openTo?: string;
 }
 
 export interface DepartmentListResponse {
@@ -42,6 +48,21 @@ export interface DepartmentListResponse {
     totalPages: number;
   };
 }
+
+type DepartmentListEnvelope = {
+  items?: unknown;
+  data?: unknown;
+  meta?: unknown;
+  page?: unknown;
+  limit?: unknown;
+  total?: unknown;
+  totalItems?: unknown;
+  totalCount?: unknown;
+  count?: unknown;
+  totalPages?: unknown;
+  pageCount?: unknown;
+  pages?: unknown;
+};
 
 function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;

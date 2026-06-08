@@ -114,7 +114,7 @@ export default function MedicalRecordForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <label htmlFor="medical-record-chief-complaint" className="block space-y-1.5 md:col-span-2">
-            <span className="text-sm font-medium text-foreground">Chief Complaint</span>
+            <span className="text-sm font-medium text-foreground">Patient concern</span>
             <textarea
               id="medical-record-chief-complaint"
               disabled={isLocked || saving}

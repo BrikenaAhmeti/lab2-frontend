@@ -29,12 +29,37 @@ export interface StaffPositionTypePayload {
 }
 
 export interface StaffPositionTypeListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  departmentId?: string;
   isActive?: boolean;
 }
 
 export interface StaffPositionTypeListResponse {
   items: StaffPositionTypeRecord[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }
+
+type StaffPositionTypeListEnvelope = {
+  items?: unknown;
+  data?: unknown;
+  meta?: unknown;
+  page?: unknown;
+  limit?: unknown;
+  total?: unknown;
+  totalItems?: unknown;
+  totalCount?: unknown;
+  count?: unknown;
+  totalPages?: unknown;
+  pageCount?: unknown;
+  pages?: unknown;
+};
 
 function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;

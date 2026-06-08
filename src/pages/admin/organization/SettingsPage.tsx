@@ -22,6 +22,7 @@ import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import WorkingHoursEditor from '@/ui/molecules/WorkingHoursEditor';
 import { organizationBreadcrumbs } from './organizationBreadcrumbs';
 
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;

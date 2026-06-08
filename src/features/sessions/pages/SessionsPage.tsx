@@ -7,6 +7,9 @@ import Button from '@/ui/atoms/Button';
 import Badge from '@/ui/atoms/Badge';
 import { sessionsApi, type SessionDto, type SessionLogDto, type SessionUserDto } from '@/lib/api/auth-api';
 import { useAppSelector } from '@/app/hooks';
+import { hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
+import { VapiCallLogsPanel } from '@/features/vapi/pages/VapiCallLogsPage';
 
 type SessionTab = 'sessions' | 'logs';
 
@@ -307,6 +310,13 @@ export default function SessionsPage() {
   const sessionsQuery = useQuery({
     queryKey: ['auth', 'sessions'],
     queryFn: () => sessionsApi.list(),
+    enabled: isSuperAdmin,
+  });
+
+  const logsQuery = useQuery({
+    queryKey: ['auth', 'session-logs', logParams],
+    queryFn: () => sessionsApi.logs(logParams),
+    enabled: isSuperAdmin && activeTab === 'logs',
   });
 
   const logsQuery = useQuery({
@@ -457,6 +467,128 @@ export default function SessionsPage() {
           </div>
         ) : null}
       </div>
-    </Card>
+
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-2 border-b border-border pb-3" role="tablist" aria-label="Session views">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={activeTab === tab.key}
+              onClick={() => selectTab(tab.key)}
+              className={clsx(
+                'rounded-lg border px-3 py-2 text-sm font-medium transition',
+                activeTab === tab.key
+                  ? 'border-primary bg-primary text-primary-foreground'
+                  : 'border-border bg-card text-muted hover:text-foreground'
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {activeTab === 'sessions' ? (
+          <Card title="Active sessions" subtitle="Authenticated devices currently using MedSphere">
+            {sessionsQuery.isLoading ? <p className="text-sm text-muted">{t('loading')}</p> : null}
+            {sessionsQuery.isError ? <p className="text-sm text-danger">{t('auth.operationFailed')}</p> : null}
+            {!sessionsQuery.isLoading && !sessionsQuery.isError && sessionsQuery.data?.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
+                No active sessions found.
+              </p>
+            ) : null}
+            {sessionsQuery.data?.map((session) => (
+              <SessionCard
+                key={session.id}
+                session={session}
+                isAdmin={isSuperAdmin}
+                currentUserId={user?.id}
+                loading={revokeMutation.isPending}
+                onRevoke={(sessionId, admin) => revokeMutation.mutate({ sessionId, admin })}
+              />
+            ))}
+          </Card>
+        ) : null}
+
+        {activeTab === 'logs' ? (
+          <Card title="Logs" subtitle="Search session and identity activity">
+            <div className="grid items-start gap-3 rounded-xl border border-border bg-surface/60 p-3 md:grid-cols-2 2xl:grid-cols-6">
+              <label className="space-y-1 text-xs font-medium text-muted 2xl:col-span-1">
+                User
+                <input
+                  value={filters.userSearch}
+                  onChange={(event) => updateFilter('userSearch', event.target.value)}
+                  placeholder="Name, username, email"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </label>
+              <label className="space-y-1 text-xs font-medium text-muted 2xl:col-span-1">
+                Action
+                <select
+                  value={filters.action}
+                  onChange={(event) => updateFilter('action', event.target.value)}
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">All actions</option>
+                  {logActions.map((action) => (
+                    <option key={action} value={action}>{humanAction(action)}</option>
+                  ))}
+                </select>
+              </label>
+              <CalendarDateTimePicker
+                label="From"
+                id="session-log-from"
+                value={filters.from}
+                timeLabel="From time"
+                className="min-w-0 2xl:col-span-2"
+                onChange={(value) => updateFilter('from', value)}
+              />
+              <CalendarDateTimePicker
+                label="To"
+                id="session-log-to"
+                value={filters.to}
+                defaultTime="23:59"
+                timeLabel="To time"
+                className="min-w-0 2xl:col-span-2"
+                onChange={(value) => updateFilter('to', value)}
+              />
+              <label className="space-y-1 text-xs font-medium text-muted 2xl:col-span-2">
+                Change or detail
+                <div className="flex gap-2">
+                  <input
+                    value={filters.changed}
+                    onChange={(event) => updateFilter('changed', event.target.value)}
+                    placeholder="IP, device, field"
+                    className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                  <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={clearFilters}>Clear</Button>
+                </div>
+              </label>
+            </div>
+
+            {logsQuery.isLoading ? <p className="text-sm text-muted">{t('loading')}</p> : null}
+            {logsQuery.isError ? <p className="text-sm text-danger">{t('auth.operationFailed')}</p> : null}
+            {!logsQuery.isLoading && !logsQuery.isError && logsQuery.data?.items.length === 0 ? (
+              <p className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-center text-sm text-muted">
+                No logs match these filters.
+              </p>
+            ) : null}
+            <div className="space-y-3">
+              {logsQuery.data?.items.map((log) => <LogCard key={log.id} log={log} />)}
+            </div>
+            {logsQuery.data?.meta ? (
+              <p className="text-xs text-muted">
+                Showing {logsQuery.data.items.length} of {logsQuery.data.meta.total} log entries.
+              </p>
+            ) : null}
+          </Card>
+        ) : null}
+
+        {activeTab === 'voice-ai' && isSuperAdmin ? (
+          <VapiCallLogsPanel showHeader={false} />
+        ) : null}
+      </div>
+    </div>
   );
 }

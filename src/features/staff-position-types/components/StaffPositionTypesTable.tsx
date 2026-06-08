@@ -9,6 +9,7 @@ interface StaffPositionTypesTableProps {
   rows: StaffPositionTypeRecord[];
   departments: DepartmentRecord[];
   canManage: boolean;
+  canManageRecord?: (record: StaffPositionTypeRecord) => boolean;
   mutationPending: boolean;
   onEdit: (record: StaffPositionTypeRecord) => void;
   onDelete: (record: StaffPositionTypeRecord) => void;
@@ -18,6 +19,7 @@ function StaffPositionTypesTable({
   rows,
   departments,
   canManage,
+  canManageRecord,
   mutationPending,
   onEdit,
   onDelete,
@@ -37,6 +39,7 @@ function StaffPositionTypesTable({
         <tbody>
           {rows.map((record) => {
             const departmentNames = getStaffPositionTypeDepartments(record, departments);
+            const canManageRow = canManage && (canManageRecord ? canManageRecord(record) : true);
 
             return (
               <tr key={record.id} className="border-t border-border align-top">
@@ -57,7 +60,7 @@ function StaffPositionTypesTable({
                   </Badge>
                 </td>
                 <td className="px-4 py-3">
-                  {canManage ? (
+                  {canManageRow ? (
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="secondary" disabled={mutationPending} onClick={() => onEdit(record)}>
                         Edit

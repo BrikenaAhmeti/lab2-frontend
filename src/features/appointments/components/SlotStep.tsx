@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { AvailableSlot } from '@/lib/api/appointments-api';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import SlotPicker from './SlotPicker';
 import { getTodayInputValue } from './appointmentFormat';
 

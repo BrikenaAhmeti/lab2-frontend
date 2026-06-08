@@ -16,7 +16,7 @@ export default function Badge({
   return (
     <span
       className={clsx(
-        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium",
         variant === "info" && "border-primary/20 bg-primary/10 text-primary",
         variant === "success" && "border-success/20 bg-success/10 text-success",
         variant === "warning" && "border-warning/20 bg-warning/10 text-warning",

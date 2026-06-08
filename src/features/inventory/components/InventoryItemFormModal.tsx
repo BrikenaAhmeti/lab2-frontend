@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import clsx from 'clsx';
+import { CheckCircle2 } from 'lucide-react';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { InventoryCategory, InventoryItem } from '@/lib/api/inventory-api';
 import {
@@ -11,6 +13,7 @@ import {
 import { toInventoryItemFormValues } from '@/features/inventory/hooks/useInventory';
 import Button from '@/ui/atoms/Button';
 import Input from '@/ui/atoms/Input';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 
 interface InventoryItemFormModalProps {
   open: boolean;
@@ -42,6 +45,8 @@ export default function InventoryItemFormModal({
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<InventoryItemFormValues>({
     resolver: zodResolver(inventoryItemFormSchema),
@@ -64,6 +69,8 @@ export default function InventoryItemFormModal({
   if (!open) return null;
 
   const noCategories = categories.length === 0;
+  const expiryDate = watch('expiryDate') ?? '';
+  const isActive = watch('isActive') ?? true;
 
   return (
     <div className="fixed inset-0 z-20 grid place-items-center bg-black/40 p-4">
@@ -124,10 +131,42 @@ export default function InventoryItemFormModal({
               error={errors.unitCost?.message}
               {...register('unitCost', { setValueAs: (value) => (value === '' ? undefined : Number(value)) })}
             />
-            <Input id="inventory-item-expiry" label="Expiry date" type="date" disabled={loading} {...register('expiryDate')} />
-            <label className="flex items-center gap-2 self-end text-sm font-medium text-foreground">
-              <input type="checkbox" className="h-4 w-4 rounded border-border" disabled={loading} {...register('isActive')} />
-              Active
+            <CalendarDatePicker
+              id="inventory-item-expiry"
+              label="Expiry date"
+              value={expiryDate}
+              disabled={loading}
+              onChange={(value) => setValue('expiryDate', value, { shouldDirty: true, shouldValidate: true })}
+            />
+            <label
+              className={clsx(
+                'flex min-h-[42px] items-center gap-3 self-end rounded-xl border px-3 py-2.5 text-sm font-medium transition',
+                isActive
+                  ? 'border-success/40 bg-success/10 text-success'
+                  : 'border-border bg-background text-muted'
+              )}
+            >
+              <span
+                className={clsx(
+                  'grid h-8 w-8 shrink-0 place-items-center rounded-lg',
+                  isActive ? 'bg-success/15 text-success' : 'bg-surface text-muted'
+                )}
+                aria-hidden="true"
+              >
+                <CheckCircle2 className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold">{isActive ? 'Active' : 'Inactive'}</span>
+                <span className={clsx('block text-xs', isActive ? 'text-success/80' : 'text-muted')}>
+                  {isActive ? 'Available in inventory' : 'Hidden from active lists'}
+                </span>
+              </span>
+              <input
+                type="checkbox"
+                className="h-5 w-5 rounded border-border accent-primary"
+                disabled={loading}
+                {...register('isActive')}
+              />
             </label>
             <label htmlFor="inventory-item-description" className="block space-y-1.5 md:col-span-2">
               <span className="text-sm font-medium text-foreground">Description</span>

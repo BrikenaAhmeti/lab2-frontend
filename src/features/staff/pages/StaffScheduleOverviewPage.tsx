@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
-import { getApiErrorMessage, getStaffName, useStaffList } from '@/features/staff/hooks/useStaff';
+import { getApiErrorMessage, getStaffDepartmentName, getStaffName, useStaffList } from '@/features/staff/hooks/useStaff';
 import Badge from '@/ui/atoms/Badge';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
@@ -48,7 +48,9 @@ export default function StaffScheduleOverviewPage() {
                 <div>
                   <p className="font-medium text-foreground">{getStaffName(staff)}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    {staff.departments?.map((department) => <Badge key={department.id}>{department.name}</Badge>)}
+                    {staff.departments?.map((department) => (
+                      <Badge key={department.id}>{getStaffDepartmentName(department)}</Badge>
+                    ))}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">

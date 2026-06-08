@@ -7,13 +7,19 @@ import PatientProfileLayout from '@/features/patients/components/PatientProfileL
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 
-type BasePath = '/admin' | '/receptionist';
+type BasePath = '/admin' | '/receptionist' | '/nurse';
 
 function canReadPatients(permissions: string[], roles: string[]) {
   return (
-    hasAnyRole(roles, ['Admin', 'Super Admin', 'Receptionist']) ||
+    hasAnyRole(roles, ['Admin', 'Super Admin', 'Receptionist', 'Nurse']) ||
     hasAnyPermission(permissions, ['patients:read', 'patients:read:all'], 'any')
   );
+}
+
+function portalLabel(basePath: BasePath) {
+  if (basePath === '/admin') return 'Admin';
+  if (basePath === '/nurse') return 'Nurse';
+  return 'Receptionist';
 }
 
 export default function PatientProfilePage({ basePath = '/admin' }: { basePath?: BasePath }) {
@@ -31,7 +37,7 @@ export default function PatientProfilePage({ basePath = '/admin' }: { basePath?:
     <div className="space-y-4">
       <Breadcrumbs
         items={[
-          { label: basePath === '/admin' ? 'Admin' : 'Receptionist', to: basePath },
+          { label: portalLabel(basePath), to: basePath },
           { label: 'Patients', to: `${basePath}/patients` },
           { label: 'Profile' },
         ]}

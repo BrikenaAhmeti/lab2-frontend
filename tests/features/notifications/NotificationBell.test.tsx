@@ -1,5 +1,5 @@
 import { Provider } from 'react-redux';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -73,27 +73,33 @@ function queryClient() {
   });
 }
 
-function setAuthenticatedSession() {
+function setAuthenticatedSession(roles = ['Admin']) {
   store.dispatch(
     setSession({
       accessToken: 'access-token',
       user: {
         id: 'user-1',
         email: 'admin@medsphere.test',
-        roles: ['Admin'],
+        roles,
         permissions: [],
       },
     })
   );
 }
 
-function renderNotificationBell(withSocket = false) {
+function LocationProbe() {
+  const location = useLocation();
+  return <span data-testid="location">{location.pathname}</span>;
+}
+
+function renderNotificationBell(withSocket = false, initialPath = '/admin') {
   return render(
     <Provider store={store}>
       <QueryClientProvider client={queryClient()}>
-        <MemoryRouter>
+        <MemoryRouter initialEntries={[initialPath]}>
           {withSocket && <NotificationSocketBridge />}
           <NotificationBell />
+          <LocationProbe />
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
@@ -135,6 +141,29 @@ describe('NotificationBell', () => {
     fireEvent.click(await screen.findByText('Lab result ready'));
 
     await waitFor(() => expect(notificationsApi.markAsRead).toHaveBeenCalledWith('notification-1'));
+  });
+
+  it('keeps public website notification links inside the dashboard', async () => {
+    setAuthenticatedSession(['Lab Technician']);
+    vi.mocked(notificationsApi.list).mockResolvedValue([
+      {
+        ...unreadNotification,
+        link: 'https://medsphere.vercel.app/lab/orders/lab-order-1',
+      },
+    ]);
+    vi.mocked(notificationsApi.unreadCount).mockResolvedValue(1);
+    vi.mocked(notificationsApi.markAsRead).mockResolvedValue({
+      ...unreadNotification,
+      isRead: true,
+      readAt: '2026-05-18T08:05:00.000Z',
+    });
+
+    renderNotificationBell(false, '/admin');
+
+    fireEvent.click(await screen.findByRole('button', { name: /1 unread/i }));
+    fireEvent.click(await screen.findByText('Lab result ready'));
+
+    await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('/lab'));
   });
 
   it('updates the bell and list when a socket notification arrives', async () => {

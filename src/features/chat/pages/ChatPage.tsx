@@ -3,17 +3,22 @@ import { useLocation, useParams } from 'react-router-dom';
 import { MessageSquare, MessagesSquare } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import { selectAuthUser } from '@/features/auth/authSelectors';
+import ChatContactPicker from '../components/ChatContactPicker';
 import ChatRoomList from '../components/ChatRoomList';
 import MessageComposer from '../components/MessageComposer';
 import MessageThread from '../components/MessageThread';
-import { roomTitle } from '../chatFormat';
+import { participantId, roomTitle } from '../chatFormat';
+import type { ChatContact } from '../chatTypes';
 import {
+  useChatContacts,
   useChatMessages,
   useChatRooms,
+  useCreateChatRoom,
   useMarkChatRoomRead,
   useSendChatAttachment,
   useSendChatMessage,
 } from '../useChat';
+import { useChatSocket } from '../useChatSocket';
 
 function messagesBasePath(pathname: string) {
   const index = pathname.indexOf('/messages');
@@ -23,16 +28,52 @@ function messagesBasePath(pathname: string) {
 export default function ChatPage() {
   const { roomId } = useParams();
   const location = useLocation();
+  const navigate = useNavigate();
   const user = useAppSelector(selectAuthUser);
+  const [contactSearch, setContactSearch] = useState('');
+  const deferredContactSearch = useDeferredValue(contactSearch);
+  const [startingContactId, setStartingContactId] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [knownContacts, setKnownContacts] = useState<Record<string, ChatContact>>({});
   const roomsQuery = useChatRooms();
   const rooms = roomsQuery.data?.data ?? [];
   const activeRoomId = roomId ?? rooms[0]?.id;
   const activeRoom = rooms.find((room) => room.id === activeRoomId);
+  const contactsQuery = useChatContacts(deferredContactSearch);
   const messagesQuery = useChatMessages(activeRoomId);
+  const createRoom = useCreateChatRoom();
   const sendMessage = useSendChatMessage();
   const sendAttachment = useSendChatAttachment();
   const markRead = useMarkChatRoomRead();
+  const { isConnected, typingUsers, sendTyping } = useChatSocket(activeRoomId);
   const basePath = messagesBasePath(location.pathname);
+
+  const rememberContacts = useCallback((contacts: ChatContact[]) => {
+    if (contacts.length === 0) return;
+
+    setKnownContacts((current) => {
+      let changed = false;
+      const next = { ...current };
+
+      for (const contact of contacts) {
+        if (next[contact.id]?.name !== contact.name || next[contact.id]?.roleLabel !== contact.roleLabel) {
+          next[contact.id] = contact;
+          changed = true;
+        }
+      }
+
+      return changed ? next : current;
+    });
+  }, []);
+
+  useEffect(() => {
+    rememberContacts(contactsQuery.data ?? []);
+  }, [contactsQuery.data, rememberContacts]);
+
+  const participantLookup = useMemo(
+    () => new Map(Object.values(knownContacts).map((contact) => [contact.id, contact])),
+    [knownContacts]
+  );
 
   const messages = useMemo(
     () => [...(messagesQuery.data?.pages ?? [])].reverse().flatMap((page) => page.data),
@@ -51,6 +92,37 @@ export default function ChatPage() {
   }, [activeRoom?.unreadCount, activeRoomId, hasUnreadVisibleMessages, markRead, user?.id]);
 
   const loading = sendMessage.isPending || sendAttachment.isPending;
+  const typingNames = Object.values(typingUsers);
+  const typingLabel =
+    typingNames.length === 1
+      ? `${typingNames[0]} is typing...`
+      : typingNames.length > 1
+        ? `${typingNames.length} people are typing...`
+        : '';
+
+  const startConversation = async (contact: ChatContact) => {
+    setStartError(null);
+    setStartingContactId(contact.id);
+    rememberContacts([contact]);
+
+    try {
+      const existingRoom = rooms.find((room) =>
+        room.participants.some((participant) => participantId(participant) === contact.id)
+      );
+      const room =
+        existingRoom ??
+        (await createRoom.mutateAsync({
+          participantId: contact.id,
+          participantRole: contact.role,
+        }));
+
+      navigate(`${basePath}/${room.id}`);
+    } catch {
+      setStartError('Conversation could not be started.');
+    } finally {
+      setStartingContactId(null);
+    }
+  };
 
   return (
     <section className="flex min-h-[calc(100dvh-7rem)] flex-col overflow-hidden rounded-lg border border-border bg-card shadow-panel">
@@ -103,6 +175,10 @@ export default function ChatPage() {
                   </h2>
                   <p className="text-xs text-muted">Direct message</p>
                 </div>
+                <span className="hidden items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-muted sm:inline-flex">
+                  <span className={isConnected ? 'h-2 w-2 rounded-full bg-success' : 'h-2 w-2 rounded-full bg-warning'} />
+                  {isConnected ? 'Realtime' : 'Connecting'}
+                </span>
               </header>
               <MessageThread
                 messages={messages}
@@ -111,6 +187,7 @@ export default function ChatPage() {
                 isError={messagesQuery.isError}
                 hasMore={messagesQuery.hasNextPage}
                 loadingMore={messagesQuery.isFetchingNextPage}
+                typingLabel={typingLabel}
                 onLoadMore={() => {
                   void messagesQuery.fetchNextPage();
                 }}
@@ -132,6 +209,7 @@ export default function ChatPage() {
                     caption,
                   })
                 }
+                onTypingChange={sendTyping}
               />
             </>
           ) : (

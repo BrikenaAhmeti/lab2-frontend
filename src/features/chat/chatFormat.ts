@@ -1,20 +1,27 @@
 import { env } from '@/config/env';
-import type { ChatMessagePreview, ChatParticipant, ChatRoom } from './chatTypes';
+import type { ChatContact, ChatMessagePreview, ChatParticipant, ChatRoom } from './chatTypes';
+
+type ParticipantProfile = Pick<ChatContact, 'id' | 'name' | 'email' | 'roleLabel'>;
+export type ChatParticipantLookup = ReadonlyMap<string, ParticipantProfile>;
 
 export function participantId(participant: ChatParticipant) {
   return typeof participant === 'string' ? participant : participant.userId ?? participant.id ?? '';
 }
 
-export function participantName(participant: ChatParticipant) {
+export function participantName(participant: ChatParticipant, lookup?: ChatParticipantLookup) {
+  const id = participantId(participant);
+  const profile = id ? lookup?.get(id) : undefined;
+
+  if (profile?.name) return profile.name;
   if (typeof participant === 'string') return `User ${participant.slice(0, 8)}`;
 
   const fullName = [participant.firstName, participant.lastName].filter(Boolean).join(' ');
   return participant.name || fullName || participant.email || `User ${(participant.userId ?? participant.id ?? '').slice(0, 8)}`;
 }
 
-export function roomTitle(room: ChatRoom, currentUserId?: string) {
+export function roomTitle(room: ChatRoom, currentUserId?: string, lookup?: ChatParticipantLookup) {
   const other = room.participants.find((participant) => participantId(participant) !== currentUserId);
-  return other ? participantName(other) : 'Chat room';
+  return other ? participantName(other, lookup) : 'Chat room';
 }
 
 export function previewText(message: ChatMessagePreview | null, currentUserId?: string) {

@@ -125,7 +125,10 @@ const alertsResponse: InventoryAlertsResponse = {
   expiringSoon: [],
 };
 
-function renderInventoryPage(permissions: string[]) {
+function renderInventoryPage(
+  permissions: string[],
+  options: { roles?: string[]; role?: string; route?: string; portal?: 'admin' | 'pharmacy' } = {}
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -142,7 +145,8 @@ function renderInventoryPage(permissions: string[]) {
         user: {
           id: 'admin-user',
           email: 'admin@medsphere.local',
-          roles: ['Admin'],
+          roles: options.roles ?? ['Admin'],
+          role: options.role,
           permissions,
         },
       },
@@ -152,8 +156,8 @@ function renderInventoryPage(permissions: string[]) {
   return render(
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/admin/inventory']}>
-          <InventoryPage />
+        <MemoryRouter initialEntries={[options.route ?? '/admin/inventory']}>
+          <InventoryPage portal={options.portal} />
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
@@ -195,6 +199,21 @@ describe('InventoryPage', () => {
     expect(screen.getByText('auth.forbiddenTitle')).toBeInTheDocument();
   });
 
+  it('lets pharmacists manage inventory from the pharmacy portal', async () => {
+    renderInventoryPage(['pharmacy:read', 'pharmacy:dispense'], {
+      roles: ['Pharmacist'],
+      route: '/pharmacy/inventory',
+      portal: 'pharmacy',
+    });
+
+    expect(await screen.findByText('Aspirin 81 mg')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Pharmacy' })).toHaveAttribute('href', '/pharmacy');
+    expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stock' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
+  });
+
   it('shows inventory items with stock status and backend query params', async () => {
     renderInventoryPage(['inventory:read']);
 
@@ -211,11 +230,41 @@ describe('InventoryPage', () => {
       categoryId: undefined,
       departmentId: undefined,
       belowReorderLevel: undefined,
-      expiringSoonDays: undefined,
+      expiryFrom: undefined,
+      expiryTo: undefined,
       isActive: true,
       sortBy: 'name',
       sortDirection: 'asc',
     });
+  });
+
+  it('filters inventory by a single expiry date with backend range params', async () => {
+    renderInventoryPage(['inventory:read']);
+
+    expect(await screen.findByText('Aspirin 81 mg')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Any expiry date'));
+    fireEvent.change(inputById('inventory-expiry-filter-single-date'), { target: { value: '2026-12-31' } });
+
+    await waitFor(() => {
+      expect(inventoryApi.items.list).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          expiryFrom: '2026-12-31',
+          expiryTo: '2026-12-31',
+        })
+      );
+    });
+  });
+
+  it('shows an empty history dialog when an item has no transaction history', async () => {
+    renderInventoryPage(['inventory:read']);
+
+    expect(await screen.findByText('Aspirin 81 mg')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'History' }));
+
+    expect(screen.getByRole('dialog', { name: 'Transaction history' })).toBeInTheDocument();
+    expect(await screen.findByText('No transaction history found for this item.')).toBeInTheDocument();
   });
 
   it('creates an item using the MS-27 item payload', async () => {

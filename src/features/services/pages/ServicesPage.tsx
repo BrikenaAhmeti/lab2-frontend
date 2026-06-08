@@ -3,6 +3,7 @@ import { Upload } from 'lucide-react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import ExportButton from '@/components/export/ExportButton';
 import LazyImportWizard from '@/components/import/LazyImportWizard';
 import {
   getApiErrorMessage,
@@ -24,13 +25,14 @@ import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Pagination from '@/ui/molecules/Pagination';
 import { TableSkeleton } from '@/ui/atoms/Skeleton';
 import { organizationBreadcrumbs } from '@/pages/admin/organization/organizationBreadcrumbs';
 
 type StatusFilter = 'all' | 'active' | 'inactive';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
 
-const pageSize = 10;
+const defaultPageSize = 10;
 
 export default function ServicesPage() {
   const { departmentId: routeDepartmentId } = useParams();
@@ -44,6 +46,7 @@ export default function ServicesPage() {
   const [departmentId, setDepartmentId] = useState(initialDepartmentId);
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [formError, setFormError] = useState('');
   const [deleteError, setDeleteError] = useState('');
@@ -55,12 +58,20 @@ export default function ServicesPage() {
   const listParams = useMemo(
     () => ({
       page,
-      limit: pageSize,
+      limit,
       search: search.trim() || undefined,
       departmentId: departmentId || undefined,
       isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
     }),
-    [activeFilter, departmentId, page, search]
+    [activeFilter, departmentId, limit, page, search]
+  );
+  const exportFilters = useMemo(
+    () => ({
+      search: search.trim() || undefined,
+      departmentId: departmentId || undefined,
+      isActive: activeFilter === 'all' ? undefined : activeFilter === 'active',
+    }),
+    [activeFilter, departmentId, search]
   );
 
   const servicesQuery = useServiceCatalogList(listParams);
@@ -71,28 +82,35 @@ export default function ServicesPage() {
 
   const rows = servicesQuery.data?.items ?? [];
   const departments = departmentsQuery.data ?? [];
-  const totalPages = servicesQuery.data?.meta.totalPages ?? 1;
-  const currentPage = servicesQuery.data?.meta.page ?? page;
+  const paginationMeta = servicesQuery.data?.meta;
   const mutationPending = createMutation.isPending || updateMutation.isPending || deleteMutation.isPending;
 
   useEffect(() => {
     setPage(1);
   }, [search, departmentId, activeFilter]);
 
+  useEffect(() => {
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
+    }
+  }, [page, paginationMeta]);
+
   if (!canRead) {
     return <Forbidden />;
   }
 
   const servicesErrorMessage = servicesQuery.isError
-    ? getApiErrorMessage(servicesQuery.error, 'Services could not be loaded')
+    ? getApiErrorMessage(servicesQuery.error, 'Clinical services could not be loaded')
     : '';
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
+  };
 
   const openImportWizard = useCallback(() => setShowImportWizard(true), []);
   const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
-  const goPreviousPage = useCallback(() => setPage((currentValue) => Math.max(1, currentValue - 1)), []);
-  const goNextPage = useCallback(() => setPage((currentValue) => currentValue + 1), []);
   const handleImportCompleted = useCallback(() => {
-    setFeedback({ type: 'success', message: 'Services imported successfully' });
+    setFeedback({ type: 'success', message: 'Clinical services imported successfully' });
     void servicesQuery.refetch();
   }, [servicesQuery.refetch]);
 
@@ -128,15 +146,15 @@ export default function ServicesPage() {
     try {
       if (editingService) {
         await updateMutation.mutateAsync({ id: editingService.id, payload });
-        setFeedback({ type: 'success', message: 'Service updated successfully' });
+        setFeedback({ type: 'success', message: 'Clinical service updated successfully' });
       } else {
         await createMutation.mutateAsync(payload);
-        setFeedback({ type: 'success', message: 'Service created successfully' });
+        setFeedback({ type: 'success', message: 'Clinical service created successfully' });
       }
 
       closeFormModal();
     } catch (error) {
-      setFormError(getApiErrorMessage(error, 'Service could not be saved'));
+      setFormError(getApiErrorMessage(error, 'Clinical service could not be saved'));
     }
   }, [createMutation, editingService, updateMutation, closeFormModal]);
 
@@ -150,10 +168,10 @@ export default function ServicesPage() {
 
     try {
       await deleteMutation.mutateAsync(serviceToDelete.id);
-      setFeedback({ type: 'success', message: 'Service deleted successfully' });
+      setFeedback({ type: 'success', message: 'Clinical service deleted successfully' });
       setServiceToDelete(null);
     } catch (error) {
-      setDeleteError(getApiErrorMessage(error, 'Service could not be deleted'));
+      setDeleteError(getApiErrorMessage(error, 'Clinical service could not be deleted'));
     }
   }, [deleteMutation, serviceToDelete]);
 
@@ -162,25 +180,28 @@ export default function ServicesPage() {
       <Breadcrumbs items={organizationBreadcrumbs('Service Catalog')} />
 
       <Card
-        title="Service Catalog"
-        subtitle="Manage department services and procedures"
+        title="Clinical Service Catalog"
+        subtitle="Manage department clinical services and procedures"
         actions={
-          canManage ? (
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                leftIcon={<Upload className="h-4 w-4" />}
-                onClick={openImportWizard}
-              >
-                Import
-              </Button>
-              <Button size="sm" onClick={openCreateModal}>
-                Add Service
-              </Button>
-            </div>
-          ) : null
+          <div className="flex flex-wrap justify-end gap-2">
+            <ExportButton entity="service-catalog" filters={exportFilters} />
+            {canManage ? (
+              <>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  leftIcon={<Upload className="h-4 w-4" />}
+                  onClick={openImportWizard}
+                >
+                  Import
+                </Button>
+                <Button size="sm" onClick={openCreateModal}>
+                  Add Clinical Service
+                </Button>
+              </>
+            ) : null}
+          </div>
         }
       >
         <div className="space-y-4">
@@ -202,43 +223,32 @@ export default function ServicesPage() {
 
           {!servicesQuery.isLoading && !servicesQuery.isError && rows.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center">
-              <p className="font-medium text-foreground">No services found</p>
-              <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new service.</p>
+              <p className="font-medium text-foreground">No clinical services found</p>
+              <p className="mt-1 text-sm text-muted">Try adjusting the filters or add a new clinical service.</p>
             </div>
           ) : null}
 
           {!servicesQuery.isLoading && !servicesQuery.isError && rows.length > 0 ? (
-            <>
-              <ServiceCatalogTable
-                rows={rows}
-                departments={departments}
-                canManage={canManage}
-                mutationPending={mutationPending}
-                onEdit={openEditModal}
-                onDelete={setServiceToDelete}
-              />
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={currentPage <= 1 || servicesQuery.isFetching}
-                    onClick={goPreviousPage}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={currentPage >= totalPages || servicesQuery.isFetching}
-                    onClick={goNextPage}
-                  >
-                    Next
-                  </Button>
-                </div>
-              </div>
-            </>
+            <ServiceCatalogTable
+              rows={rows}
+              departments={departments}
+              canManage={canManage}
+              mutationPending={mutationPending}
+              onEdit={openEditModal}
+              onDelete={setServiceToDelete}
+            />
+          ) : null}
+
+          {!servicesQuery.isLoading && !servicesQuery.isError && paginationMeta ? (
+            <Pagination
+              page={page}
+              totalPages={paginationMeta.totalPages}
+              total={paginationMeta.total}
+              limit={limit}
+              loading={servicesQuery.isFetching}
+              onPageChange={setPage}
+              onLimitChange={updateLimit}
+            />
           ) : null}
         </div>
 

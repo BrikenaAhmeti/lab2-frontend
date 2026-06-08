@@ -26,9 +26,19 @@ export default function PublicBannerStrip() {
                   <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </a>
               ) : null}
-            </div>
-          </article>
-        ))}
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-white">{banner.title}</h2>
+                <p className="mt-2 line-clamp-3 text-sm leading-6 text-white/72">{banner.message}</p>
+                {linkUrl ? (
+                  <a href={linkUrl} className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-med-200 hover:text-white">
+                    <span>Learn more</span>
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </a>
+                ) : null}
+              </div>
+            </article>
+          );
+        })}
       </div>
     </section>
   );

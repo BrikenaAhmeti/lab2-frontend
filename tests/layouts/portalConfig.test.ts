@@ -12,7 +12,7 @@ describe('portalConfigs', () => {
     ]);
   });
 
-  it('wires the admin staff management links required by MS-10', () => {
+  it('wires the admin staff management links required', () => {
     const staffManagement = portalConfigs.admin.navGroups.find((group) => group.label === 'Staff Management');
 
     expect(staffManagement?.items).toEqual([
@@ -21,7 +21,7 @@ describe('portalConfigs', () => {
     ]);
   });
 
-  it('wires the admin inventory link required by MS-28', () => {
+  it('wires the admin inventory link required', () => {
     const workspace = portalConfigs.admin.navGroups.find((group) => group.label === 'Workspace');
 
     expect(workspace?.items).toEqual(expect.arrayContaining([
@@ -29,7 +29,29 @@ describe('portalConfigs', () => {
     ]));
   });
 
-  it('wires the patient portal links required by MS-55', () => {
+  it('keeps voice AI logs out of the standalone admin navigation', () => {
+    const adminItems = portalConfigs.admin.navGroups.flatMap((group) => group.items);
+
+    expect(adminItems).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Voice AI Logs' }),
+    ]));
+  });
+
+  it('keeps sessions visible only to super admins', () => {
+    const allItems = Object.values(portalConfigs).flatMap((config) =>
+      config.navGroups.flatMap((group) => group.items.map((item) => ({ ...item, portal: config.key })))
+    );
+
+    expect(allItems.filter((item) => item.label === 'Sessions')).toEqual([
+      expect.objectContaining({
+        portal: 'admin',
+        to: '/admin/sessions',
+        requiredRoles: ['Super Admin'],
+      }),
+    ]);
+  });
+
+  it('wires the patient portal links required', () => {
     const care = portalConfigs.patient.navGroups.find((group) => group.label === 'Care');
 
     expect(care?.items).toEqual([
@@ -42,6 +64,34 @@ describe('portalConfigs', () => {
       expect.objectContaining({ label: 'Billing', to: '/patient/billing' }),
       expect.objectContaining({ label: 'Messages', to: '/patient/messages' }),
       expect.objectContaining({ label: 'Profile', to: '/patient/profile' }),
+    ]);
+  });
+
+  it('wires nurse clinical detail links', () => {
+    const care = portalConfigs.nurse.navGroups.find((group) => group.label === 'Care');
+
+    expect(care?.items).toEqual([
+      expect.objectContaining({ label: 'Dashboard', to: '/nurse' }),
+      expect.objectContaining({ label: 'Appointments', to: '/nurse/appointments' }),
+      expect.objectContaining({ label: 'Patients', to: '/nurse/patients' }),
+      expect.objectContaining({ label: 'Medical Records', to: '/nurse/medical-records' }),
+      expect.objectContaining({ label: 'Messages', to: '/nurse/messages' }),
+      expect.objectContaining({ label: 'Profile', to: '/nurse/profile' }),
+    ]);
+  });
+
+  it('wires pharmacist inventory management into the pharmacy portal', () => {
+    const pharmacy = portalConfigs.pharmacy.navGroups.find((group) => group.label === 'Pharmacy');
+
+    expect(pharmacy?.items).toEqual([
+      expect.objectContaining({ label: 'Queue', to: '/pharmacy' }),
+      expect.objectContaining({
+        label: 'Inventory',
+        to: '/pharmacy/inventory',
+        requiredRoles: ['Pharmacist'],
+      }),
+      expect.objectContaining({ label: 'Messages', to: '/pharmacy/messages' }),
+      expect.objectContaining({ label: 'Profile', to: '/pharmacy/profile' }),
     ]);
   });
 });

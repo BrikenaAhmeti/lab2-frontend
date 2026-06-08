@@ -1,19 +1,27 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
+import {
+  canManageProtectedAdminTargets,
+  isProtectedStaffPosition,
+  isProtectedStaffRecord,
+} from '@/features/auth/utils/adminAccess';
+import ExportButton from '@/components/export/ExportButton';
 import LazyImportWizard from '@/components/import/LazyImportWizard';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
+  useCreateStaff,
   useDeactivateStaff,
   useStaffDepartments,
   useStaffList,
   useStaffPositionTypeOptions,
 } from '@/features/staff/hooks/useStaff';
 import DeactivateStaffDialog from '@/features/staff/components/DeactivateStaffDialog';
+import StaffCreateModal, { type StaffCreateFormValues } from '@/features/staff/components/StaffCreateModal';
 import StaffDirectoryTable from '@/features/staff/components/StaffDirectoryTable';
-import type { StaffRecord } from '@/lib/api/staff-api';
+import type { StaffPayload, StaffRecord } from '@/lib/api/staff-api';
 import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
@@ -39,12 +47,16 @@ export default function StaffDirectoryPage() {
   const [positionTypeId, setPositionTypeId] = useState('');
   const [status, setStatus] = useState<StaffStatus>('all');
   const [staffToDeactivate, setStaffToDeactivate] = useState<StaffRecord | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showImportWizard, setShowImportWizard] = useState(false);
+  const [createError, setCreateError] = useState('');
   const [deactivateError, setDeactivateError] = useState('');
   const [feedback, setFeedback] = useState('');
+  const createMutation = useCreateStaff();
   const deactivateMutation = useDeactivateStaff();
   const canManage =
     hasAnyRole(roles, ['Admin', 'Super Admin']) || hasAnyPermission(permissions, ['staff:manage'], 'any');
+  const canManageProtectedAdmins = canManageProtectedAdminTargets(roles);
 
   const params = useMemo(
     () => ({
@@ -57,11 +69,31 @@ export default function StaffDirectoryPage() {
     }),
     [departmentId, positionTypeId, search, status]
   );
+  const exportFilters = useMemo(
+    () => ({
+      search: search || undefined,
+      departmentId: departmentId || undefined,
+      positionTypeId: positionTypeId || undefined,
+      status: status === 'all' ? undefined : status,
+    }),
+    [departmentId, positionTypeId, search, status]
+  );
 
   const staffQuery = useStaffList(params);
   const departmentsQuery = useStaffDepartments();
   const positionTypesQuery = useStaffPositionTypeOptions();
   const rows = staffQuery.data?.items ?? [];
+  const positionTypes = useMemo(
+    () =>
+      canManageProtectedAdmins
+        ? (positionTypesQuery.data ?? [])
+        : (positionTypesQuery.data ?? []).filter((positionType) => !isProtectedStaffPosition(positionType)),
+    [canManageProtectedAdmins, positionTypesQuery.data]
+  );
+  const canManageStaffRecord = useCallback(
+    (staff: StaffRecord) => canManage && (canManageProtectedAdmins || !isProtectedStaffRecord(staff)),
+    [canManage, canManageProtectedAdmins]
+  );
 
   if (!canReadStaff(permissions, roles)) {
     return <Forbidden />;
@@ -69,6 +101,17 @@ export default function StaffDirectoryPage() {
 
   const openImportWizard = useCallback(() => setShowImportWizard(true), []);
   const closeImportWizard = useCallback(() => setShowImportWizard(false), []);
+  const openCreateModal = useCallback(() => {
+    if (!canManage) return;
+
+    setCreateError('');
+    setFeedback('');
+    setShowCreateModal(true);
+  }, [canManage]);
+  const closeCreateModal = useCallback(() => {
+    setCreateError('');
+    setShowCreateModal(false);
+  }, []);
   const closeDeactivateDialog = useCallback(() => {
     setDeactivateError('');
     setStaffToDeactivate(null);
@@ -78,8 +121,56 @@ export default function StaffDirectoryPage() {
     void staffQuery.refetch();
   }, [staffQuery.refetch]);
 
+  const toStaffPayload = useCallback((values: StaffCreateFormValues): StaffPayload => {
+    const text = (value: string) => value.trim() || null;
+
+    return {
+      firstName: values.firstName.trim(),
+      lastName: values.lastName.trim(),
+      email: values.email.trim(),
+      phone: text(values.phone),
+      dateOfBirth: text(values.dateOfBirth),
+      gender: text(values.gender),
+      personalNumber: text(values.personalNumber),
+      staffPositionTypeId: values.staffPositionTypeId,
+      employeeCode: values.employeeCode.trim(),
+      specialization: text(values.specialization),
+      licenseNumber: text(values.licenseNumber),
+      hireDate: text(values.hireDate),
+      bio: text(values.bio),
+      isPublicProfile: values.isPublicProfile,
+      departmentIds: values.departmentIds,
+    };
+  }, []);
+
+  const handleCreateStaff = useCallback(async (values: StaffCreateFormValues) => {
+    setCreateError('');
+    setFeedback('');
+
+    const selectedPositionType = positionTypesQuery.data?.find(
+      (positionType) => positionType.id === values.staffPositionTypeId
+    );
+
+    if (!canManageProtectedAdmins && isProtectedStaffPosition(selectedPositionType)) {
+      setCreateError('Only Super Admins can create admin staff accounts');
+      return;
+    }
+
+    try {
+      await createMutation.mutateAsync(toStaffPayload(values));
+      setFeedback('Staff member added. MedSphere sent the password and email confirmation link.');
+      setShowCreateModal(false);
+    } catch (error) {
+      setCreateError(getApiErrorMessage(error, 'Staff member could not be added'));
+    }
+  }, [canManageProtectedAdmins, createMutation, positionTypesQuery.data, toStaffPayload]);
+
   const confirmDeactivate = useCallback(async () => {
     if (!staffToDeactivate) return;
+    if (!canManageStaffRecord(staffToDeactivate)) {
+      setDeactivateError('Only Super Admins can deactivate admin staff accounts');
+      return;
+    }
 
     setDeactivateError('');
     setFeedback('');
@@ -91,7 +182,7 @@ export default function StaffDirectoryPage() {
     } catch (error) {
       setDeactivateError(getApiErrorMessage(error, 'Staff member could not be deactivated'));
     }
-  }, [deactivateMutation, staffToDeactivate]);
+  }, [canManageStaffRecord, deactivateMutation, staffToDeactivate]);
 
   return (
     <div className="space-y-4">
@@ -101,17 +192,32 @@ export default function StaffDirectoryPage() {
         title="Staff Directory"
         subtitle="Search staff profiles and open schedule management"
         actions={
-          canManage ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              leftIcon={<Upload className="h-4 w-4" />}
-              onClick={openImportWizard}
-            >
-              Import
-            </Button>
-          ) : null
+          <div className="flex flex-wrap justify-end gap-2">
+            <ExportButton entity="staff" filters={exportFilters} />
+            {canManage ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  leftIcon={<Plus className="h-4 w-4" />}
+                  onClick={openCreateModal}
+                >
+                  Add staff
+                </Button>
+                {canManageProtectedAdmins ? (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    leftIcon={<Upload className="h-4 w-4" />}
+                    onClick={openImportWizard}
+                  >
+                    Import
+                  </Button>
+                ) : null}
+              </>
+            ) : null}
+          </div>
         }
       >
         <div className="space-y-4">
@@ -160,11 +266,25 @@ export default function StaffDirectoryPage() {
           ) : null}
 
           {!staffQuery.isLoading && !staffQuery.isError && rows.length > 0 ? (
-            <StaffDirectoryTable rows={rows} loading={deactivateMutation.isPending} onDeactivate={setStaffToDeactivate} />
+            <StaffDirectoryTable
+              rows={rows}
+              loading={deactivateMutation.isPending}
+              canDeactivate={canManageStaffRecord}
+              onDeactivate={setStaffToDeactivate}
+            />
           ) : null}
         </div>
       </Card>
 
+      <StaffCreateModal
+        open={showCreateModal}
+        error={createError}
+        loading={createMutation.isPending}
+        departments={departmentsQuery.data ?? []}
+        positionTypes={positionTypes}
+        onClose={closeCreateModal}
+        onSubmit={handleCreateStaff}
+      />
       <DeactivateStaffDialog
         staff={staffToDeactivate}
         error={deactivateError}

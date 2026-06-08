@@ -237,7 +237,7 @@ describe('ReportBuilderPage', () => {
     setUserSession(['reports:generate']);
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Save Template' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save report template' }));
     fireEvent.change(screen.getByLabelText('Template name'), { target: { value: 'Monthly appointments' } });
     fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'For operations review' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save template' }));
@@ -264,11 +264,11 @@ describe('ReportBuilderPage', () => {
     setUserSession(['reports:generate']);
     renderPage();
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Load' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Use template' }));
     await waitFor(() => expect(selectByLabel('Group by').value).toBe('department'));
     expect(selectByLabel('Status').value).toBe('COMPLETED');
 
-    fireEvent.click(screen.getByRole('button', { name: 'CSV' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Export CSV' }));
 
     await waitFor(() =>
       expect(reportsApi.exportReport).toHaveBeenCalledWith(

@@ -74,7 +74,7 @@ describe('UsersPage', () => {
     expect(screen.getByText('auth.forbiddenTitle')).toBeInTheDocument();
   });
 
-  it('submits the admin create user form with multiple roles', async () => {
+  it('prevents clinical admins from creating admin-role users', async () => {
     store.dispatch(clearSession());
     store.dispatch(
       setSession({

@@ -11,6 +11,7 @@ import { isDoctorProfile } from '@/features/public/utils/publicStaffPresentation
 export default function PublicDoctorsPage() {
   const [searchParams] = useSearchParams();
   const staffId = searchParams.get('staffId') ?? undefined;
+  const isStaffPreview = searchParams.get('preview') === 'staff' && Boolean(staffId);
   const [search, setSearch] = useState('');
   const [departmentId, setDepartmentId] = useState('');
   const params = useMemo(
@@ -24,6 +25,7 @@ export default function PublicDoctorsPage() {
     [departmentId, search, staffId]
   );
   const staffQuery = usePublicStaffList(params);
+  const previewQuery = useStaffPreviewDetail(isStaffPreview ? staffId ?? '' : '');
   const departmentsQuery = usePublicDepartments();
   const rows = (staffQuery.data?.items ?? []).filter((staff) => (!staffId || staff.id === staffId) && isDoctorProfile(staff));
 

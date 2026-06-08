@@ -21,6 +21,9 @@ export interface ContactListParams {
   page?: number;
   limit?: number;
   status?: ContactMessageStatus;
+  search?: string;
+  createdAtFrom?: string;
+  createdAtTo?: string;
 }
 
 export interface ContactListResponse {

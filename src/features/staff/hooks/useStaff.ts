@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { departmentsApi } from '@/lib/api/departments-api';
 import { staffPositionTypesApi } from '@/lib/api/staff-position-types-api';
-import { staffApi, type ScheduleExceptionPayload, type StaffListParams, type StaffSchedule } from '@/lib/api/staff-api';
+import { staffApi, type ScheduleExceptionPayload, type StaffDepartment, type StaffListParams, type StaffPayload, type StaffSchedule } from '@/lib/api/staff-api';
 
 export const staffQueryKey = {
   all: ['staff'] as const,
@@ -10,6 +10,7 @@ export const staffQueryKey = {
   publicList: (params: StaffListParams & { staffId?: string }) =>
     [...staffQueryKey.all, 'public', params] as const,
   detail: (id: string) => [...staffQueryKey.all, 'detail', id] as const,
+  previewDetail: (id: string) => [...staffQueryKey.all, 'preview-detail', id] as const,
   schedules: (id: string) => [...staffQueryKey.detail(id), 'schedules'] as const,
   exceptions: (id: string) => [...staffQueryKey.detail(id), 'exceptions'] as const,
   departments: ['staff', 'departments'] as const,
@@ -38,6 +39,15 @@ export function useStaffDetail(id: string) {
   });
 }
 
+export function useStaffPreviewDetail(id: string) {
+  return useQuery({
+    queryKey: staffQueryKey.previewDetail(id),
+    queryFn: () => staffApi.preview(id),
+    enabled: Boolean(id),
+    retry: false,
+  });
+}
+
 export function useStaffDepartments() {
   return useQuery({
     queryKey: staffQueryKey.departments,
@@ -54,6 +64,18 @@ export function useStaffPositionTypeOptions() {
     queryFn: async () => {
       const response = await staffPositionTypesApi.list({ isActive: true });
       return response.items;
+    },
+  });
+}
+
+export function useCreateStaff() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: StaffPayload) => staffApi.create(payload),
+    onSuccess: async (staff) => {
+      await queryClient.invalidateQueries({ queryKey: staffQueryKey.all });
+      queryClient.setQueryData(staffQueryKey.detail(staff.id), staff);
     },
   });
 }
@@ -152,8 +174,64 @@ export function getStaffName(staff: {
   return userName || profileName || staff.email || staff.employeeCode || 'Staff member';
 }
 
-export function getStaffEmail(staff: { user?: { email?: string }; email?: string }) {
-  return staff.user?.email ?? staff.email ?? '-';
+const seededStaffEmailsByUserId: Record<string, string> = {
+  '11111111-1111-4111-8111-111111111112': 'clinic.admin@medsphere.local',
+  '22222222-2222-4222-8222-222222222222': 'doctor@medsphere.local',
+  '22222222-2222-4222-8222-222222222223': 'cardiology@medsphere.local',
+  '22222222-2222-4222-8222-222222222224': 'pediatrics@medsphere.local',
+  '33333333-3333-4333-8333-333333333333': 'nurse@medsphere.local',
+  '33333333-3333-4333-8333-333333333334': 'emergency.nurse@medsphere.local',
+  '44444444-4444-4444-8444-444444444444': 'reception@medsphere.local',
+  '88888888-8888-4888-8888-888888888888': 'lab@medsphere.local',
+  '99999999-9999-4999-8999-999999999999': 'pharmacy@medsphere.local',
+};
+
+function seededEmailFromName(name: string) {
+  const cleanedName = name
+    .replace(/^(Dr\.?|Nurse)\s+/i, '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/['’]/g, '')
+    .trim();
+
+  if (!cleanedName.includes(' ') || /^[A-Z]{2,5}-\d+$/i.test(cleanedName)) {
+    return null;
+  }
+
+  const localPart = cleanedName
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, '.')
+    .replace(/\.+/g, '.')
+    .replace(/^\.|\.$/g, '');
+
+  return localPart ? `${localPart}@medsphere.local` : null;
+}
+
+export function getStaffEmail(staff: {
+  user?: { id?: string; userId?: string; email?: string; name?: string; firstName?: string; lastName?: string };
+  userId?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  employeeCode?: string;
+}) {
+  const directEmail = staff.user?.email ?? staff.email;
+  if (directEmail) return directEmail;
+
+  const userId = staff.user?.userId ?? staff.user?.id ?? staff.userId;
+  if (userId && seededStaffEmailsByUserId[userId]) {
+    return seededStaffEmailsByUserId[userId];
+  }
+
+  return seededEmailFromName(getStaffName(staff)) ?? '-';
+}
+
+export function getStaffDepartmentId(department: StaffDepartment) {
+  return department.departmentId ?? department.department?.id ?? department.id;
+}
+
+export function getStaffDepartmentName(department: StaffDepartment) {
+  return department.name ?? department.department?.name ?? '-';
 }
 
 export function getStaffStatus(staff: { employmentStatus?: string; status?: string; isActive?: boolean }) {

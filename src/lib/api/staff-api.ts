@@ -1,4 +1,4 @@
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { coreApiClient } from './axios';
 
 function client(instance?: AxiosInstance) {
@@ -27,6 +27,7 @@ export interface StaffDepartment {
   name?: string;
   departmentId?: string;
   isPrimary?: boolean;
+  unassignedAt?: string | null;
   department?: {
     id: string;
     name: string;
@@ -48,10 +49,14 @@ export interface StaffUser {
   name?: string;
   email: string;
   phone?: string | null;
+  roles?: string[];
+  role?: string | null;
 }
 
 export interface StaffRecord {
   id: string;
+  roles?: string[];
+  role?: string | null;
   userId?: string;
   user?: StaffUser;
   employeeCode?: string;
@@ -145,6 +150,16 @@ export const staffApi = {
   },
   get(id: string, instance?: AxiosInstance) {
     return client(instance).get<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);
+  },
+  preview(id: string, instance?: AxiosInstance) {
+    const config: PreviewRequestConfig = { skipLoginRedirect: true };
+
+    return client(instance)
+      .get<StaffRecord>(`/api/staff/${id}`, config)
+      .then((response) => response.data);
+  },
+  create(payload: StaffPayload, instance?: AxiosInstance) {
+    return client(instance).post<StaffRecord>('/api/staff', payload).then((response) => response.data);
   },
   deactivate(id: string, instance?: AxiosInstance) {
     return client(instance).delete<StaffRecord>(`/api/staff/${id}`).then((response) => response.data);

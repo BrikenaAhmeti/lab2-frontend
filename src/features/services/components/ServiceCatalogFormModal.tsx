@@ -1,8 +1,12 @@
 import { useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Plus, Save } from 'lucide-react';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
+import Modal from '@/ui/molecules/Modal';
+import SwitchField from '@/ui/molecules/SwitchField';
+import TextareaField from '@/ui/molecules/TextareaField';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { ServiceRecord } from '@/lib/api/services-api';
 import { emptyServiceFormValues, serviceFormSchema, type ServiceFormValues } from '@/features/services/services.schemas';
@@ -31,6 +35,7 @@ export default function ServiceCatalogFormModal({
 }: ServiceCatalogFormModalProps) {
   const {
     register,
+    control,
     handleSubmit,
     reset,
     formState: { errors },
@@ -55,17 +60,34 @@ export default function ServiceCatalogFormModal({
     });
   }, [defaultDepartmentId, open, reset, service]);
 
-  if (!open) {
-    return null;
-  }
-
   const noDepartments = departments.length === 0;
 
   return (
-    <div className="fixed inset-0 z-20 grid place-items-center bg-black/40 p-4">
-      <div className="panel w-full max-w-2xl p-5">
-        <h3 className="text-lg font-semibold text-foreground">{service ? 'Edit service' : 'Add service'}</h3>
-        <form className="mt-4 space-y-4" onSubmit={handleSubmit(onSubmit)}>
+    <Modal
+      open={open}
+      title={service ? 'Edit clinical service' : 'Add clinical service'}
+      description="Keep service details, fees, scheduling defaults, and availability together."
+      maxWidth="lg"
+      onClose={onClose}
+      footer={
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form="service-catalog-form"
+            loading={loading}
+            disabled={noDepartments}
+            leftIcon={service ? <Save className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          >
+            {service ? 'Save changes' : 'Create clinical service'}
+          </Button>
+        </div>
+      }
+    >
+      <form id="service-catalog-form" className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+        <section className="rounded-lg border border-border bg-surface/35 p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <label htmlFor="service-department-id" className="block space-y-1.5">
               <span className="text-sm font-medium text-foreground">Department</span>
@@ -86,7 +108,7 @@ export default function ServiceCatalogFormModal({
             </label>
             <Input
               id="service-name"
-              label="Name"
+              label="Clinical service name"
               disabled={loading}
               error={errors.name?.message}
               {...register('name')}
@@ -101,7 +123,7 @@ export default function ServiceCatalogFormModal({
             />
             <Input
               id="service-price"
-              label="Price"
+              label="Estimated fee"
               type="number"
               step="0.01"
               disabled={loading}
@@ -110,7 +132,7 @@ export default function ServiceCatalogFormModal({
             />
             <Input
               id="service-sort-order"
-              label="Sort Order"
+              label="Sort order"
               type="number"
               disabled={loading}
               error={errors.sortOrder?.message}
@@ -118,38 +140,49 @@ export default function ServiceCatalogFormModal({
                 setValueAs: (value) => (value === '' ? undefined : Number(value)),
               })}
             />
-            <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-border"
-                disabled={loading}
-                {...register('isActive')}
-              />
-              Active
-            </label>
-            <label htmlFor="service-description" className="block space-y-1.5 md:col-span-2">
-              <span className="text-sm font-medium text-foreground">Description</span>
-              <textarea
+            <Controller
+              control={control}
+              name="isActive"
+              render={({ field }) => {
+                const checked = field.value ?? true;
+
+                return (
+                  <SwitchField
+                    id="service-active"
+                    label={checked ? 'Service is active' : 'Service is inactive'}
+                    checked={checked}
+                    disabled={loading}
+                    description={
+                      checked
+                        ? 'Visible in catalogs and available for scheduling.'
+                        : 'Hidden from active selections until reactivated.'
+                    }
+                    onChange={field.onChange}
+                    className="self-start md:mt-6"
+                  />
+                );
+              }}
+            />
+            <div className="md:col-span-2">
+              <TextareaField
                 id="service-description"
+                label="Description"
                 disabled={loading}
-                className="min-h-24 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60"
+                className="min-h-28"
+                error={errors.description?.message}
                 {...register('description')}
               />
-              {errors.description ? <p className="text-xs text-danger">{errors.description.message}</p> : null}
-            </label>
+            </div>
           </div>
-          {noDepartments ? <p className="text-sm text-muted">No departments available. Add a department first.</p> : null}
-          {submitError ? <p className="text-sm text-danger">{submitError}</p> : null}
-          <div className="flex justify-end gap-2">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" loading={loading} disabled={noDepartments}>
-              {service ? 'Save changes' : 'Create service'}
-            </Button>
+        </section>
+
+        {noDepartments ? <p className="text-sm text-muted">No departments available. Add a department first.</p> : null}
+        {submitError ? (
+          <div className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm text-danger">
+            {submitError}
           </div>
-        </form>
-      </div>
-    </div>
+        ) : null}
+      </form>
+    </Modal>
   );
 }

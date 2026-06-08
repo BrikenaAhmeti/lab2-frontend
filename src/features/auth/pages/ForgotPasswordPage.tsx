@@ -6,9 +6,10 @@ import Card from '@/ui/atoms/Card';
 import Input from '@/ui/atoms/Input';
 import Button from '@/ui/atoms/Button';
 import { authApi } from '@/lib/api/auth-api';
+import { getAuthApiErrorMessage } from '@/features/auth/utils/errors';
 
 const forgotPasswordSchema = z.object({
-  email: z.string().email(),
+  email: z.string().trim().email(),
 });
 
 export default function ForgotPasswordPage() {
@@ -33,10 +34,10 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const data = await authApi.forgotPassword({ email });
+      const data = await authApi.forgotPassword({ email: email.trim().toLowerCase() });
       setMessage(data.message || t('auth.checkEmailReset'));
-    } catch {
-      setError(t('auth.operationFailed'));
+    } catch (submitError) {
+      setError(getAuthApiErrorMessage(submitError, t('auth.operationFailed')));
     } finally {
       setLoading(false);
     }

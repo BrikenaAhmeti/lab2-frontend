@@ -100,6 +100,12 @@ const listResponse = {
       updatedAt: '2026-01-01T00:00:00.000Z',
     },
   ],
+  meta: {
+    page: 1,
+    limit: 10,
+    total: 2,
+    totalPages: 1,
+  },
 };
 
 function renderStaffPositionTypesPage() {
@@ -155,14 +161,6 @@ function selectById(id: string) {
   return element;
 }
 
-function setMultiSelectValues(select: HTMLSelectElement, values: string[]) {
-  for (const option of Array.from(select.options)) {
-    option.selected = values.includes(option.value);
-  }
-
-  fireEvent.change(select);
-}
-
 describe('StaffPositionTypesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -193,8 +191,39 @@ describe('StaffPositionTypesPage', () => {
 
     renderStaffPositionTypesPage();
 
-    expect(await screen.findByText('Radiology')).toBeInTheDocument();
-    expect(screen.getByText('All departments')).toBeInTheDocument();
+    expect((await screen.findAllByText('Radiology')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('All departments').length).toBeGreaterThan(0);
+  });
+
+  it('sends pagination and filter params to the backend', async () => {
+    setUserSession(['staff-position-types:read'], ['Doctor']);
+
+    renderStaffPositionTypesPage();
+
+    expect(await screen.findByText('Radiologic Technologist')).toBeInTheDocument();
+    expect(staffPositionTypesApi.list).toHaveBeenCalledWith({
+      page: 1,
+      limit: 10,
+      search: undefined,
+      departmentId: undefined,
+      isActive: undefined,
+    });
+
+    fireEvent.change(inputById('staff-position-type-search'), { target: { value: 'triage' } });
+    fireEvent.change(selectById('staff-position-type-department-filter'), {
+      target: { value: '22222222-2222-4222-8222-222222222222' },
+    });
+    fireEvent.change(selectById('staff-position-type-status-filter'), { target: { value: 'active' } });
+
+    await waitFor(() =>
+      expect(staffPositionTypesApi.list).toHaveBeenLastCalledWith({
+        page: 1,
+        limit: 10,
+        search: 'triage',
+        departmentId: '22222222-2222-4222-8222-222222222222',
+        isActive: true,
+      })
+    );
   });
 
   it('validates required name and default role fields', async () => {
@@ -205,6 +234,8 @@ describe('StaffPositionTypesPage', () => {
     expect(await screen.findByText('Radiologic Technologist')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Staff Position Type' }));
+    expect(screen.queryByRole('option', { name: 'Admin' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Super Admin' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Create staff position type' }));
 
     expect(await screen.findByText('Name is required')).toBeInTheDocument();
@@ -236,9 +267,9 @@ describe('StaffPositionTypesPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Staff Position Type' }));
     fireEvent.change(inputById('staff-position-type-name'), { target: { value: 'ER Nurse' } });
-    fireEvent.change(inputById('staff-position-type-default-role-key'), { target: { value: 'nurse' } });
+    fireEvent.change(selectById('staff-position-type-default-role-key'), { target: { value: 'nurse' } });
     fireEvent.change(inputById('staff-position-type-description'), { target: { value: 'Emergency intake support' } });
-    setMultiSelectValues(selectById('staff-position-type-departments'), ['22222222-2222-4222-8222-222222222222']);
+    fireEvent.click(screen.getByRole('button', { name: 'Emergency' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create staff position type' }));
 
     await waitFor(() =>
@@ -280,6 +311,36 @@ describe('StaffPositionTypesPage', () => {
     );
 
     expect(await screen.findByText('Staff position type updated successfully')).toBeInTheDocument();
+  });
+
+  it('keeps admin position types read-only for clinical admins', async () => {
+    setUserSession(['staff-position-types:manage:all']);
+    vi.mocked(staffPositionTypesApi.list).mockResolvedValue({
+      ...listResponse,
+      items: [
+        {
+          ...listResponse.items[0],
+          id: 'type-admin',
+          name: 'Clinical Administrator',
+          defaultRoleKey: 'admin',
+          defaultRoleName: 'Admin',
+        },
+        listResponse.items[1],
+      ],
+    });
+
+    renderStaffPositionTypesPage();
+
+    const adminRow = (await screen.findByText('Clinical Administrator')).closest('tr');
+    const nurseRow = screen.getByText('Triage Coordinator').closest('tr');
+
+    expect(adminRow).not.toBeNull();
+    expect(nurseRow).not.toBeNull();
+    expect(within(adminRow as HTMLElement).queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(within(adminRow as HTMLElement).queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+    expect(within(adminRow as HTMLElement).getByText('Read only')).toBeInTheDocument();
+    expect(within(nurseRow as HTMLElement).getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(within(nurseRow as HTMLElement).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
   it('shows a clear delete guard message for backend conflicts', async () => {

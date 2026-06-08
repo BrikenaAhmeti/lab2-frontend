@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { CalendarPlus, CheckCircle2, LogIn, UserPlus } from 'lucide-react';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { ServiceRecord } from '@/lib/api/services-api';
-import type { StaffRecord } from '@/lib/api/staff-api';
+import type { StaffDepartment, StaffRecord } from '@/lib/api/staff-api';
 import type { AppointmentType, AvailableSlot, AppointmentView } from '@/lib/api/appointments-api';
 import type { PatientRecord } from '@/lib/api/patients-api';
+import { getStaffName } from '@/features/staff/hooks/useStaff';
 import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
@@ -43,6 +44,7 @@ const publicBookingRegistrationKey = 'medsphere.publicBookingPatient';
 interface BookingWizardProps {
   mode: BookingMode;
   patientId?: string;
+  patientResolving?: boolean;
   appointmentType?: AppointmentType;
   initialPatient?: PatientRecord | null;
 }
@@ -103,7 +105,106 @@ function openPatientRegistrationFromBooking(details: typeof emptyPublicPatientDe
   window.location.assign('/register?source=appointment');
 }
 
-export default function BookingWizard({ mode, patientId, appointmentType, initialPatient = null }: BookingWizardProps) {
+function formatCalendarDate(value: string) {
+  return new Date(value).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+}
+
+function downloadAppointmentCalendar(appointment: AppointmentView) {
+  const summary = `MedSphere appointment: ${appointment.service.name}`;
+  const description = [
+    `Patient: ${appointment.patient.name}`,
+    `Department: ${appointment.department.name}`,
+    `Doctor or care provider: ${appointment.staff?.displayName ?? 'Care provider'}`,
+    appointment.notes ? `Notes: ${appointment.notes}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const contents = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//MedSphere//Appointments//EN',
+    'BEGIN:VEVENT',
+    `UID:${appointment.id}@medsphere`,
+    `DTSTAMP:${formatCalendarDate(new Date().toISOString())}`,
+    `DTSTART:${formatCalendarDate(appointment.scheduledAt)}`,
+    `DTEND:${formatCalendarDate(appointment.endAt)}`,
+    `SUMMARY:${escapeCalendarText(summary)}`,
+    `DESCRIPTION:${escapeCalendarText(description)}`,
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n');
+  const blob = new Blob([contents], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+
+  link.href = url;
+  link.download = `medsphere-appointment-${appointment.id}.ics`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function openPatientRegistrationFromBooking(details: typeof emptyPublicPatientDetails) {
+  try {
+    window.sessionStorage.setItem(publicBookingRegistrationKey, JSON.stringify(normalizePublicPatientDetails(details)));
+  } catch {
+    window.location.assign('/register?source=appointment');
+    return;
+  }
+
+  window.location.assign('/register?source=appointment');
+}
+
+function isActiveDepartmentAssignment(assignment: StaffDepartment) {
+  return (assignment.unassignedAt === undefined || assignment.unassignedAt === null) && assignment.department?.isActive !== false;
+}
+
+function getDepartmentId(assignment: StaffDepartment) {
+  return assignment.departmentId ?? assignment.department?.id ?? '';
+}
+
+function getDepartmentName(assignment: StaffDepartment) {
+  return assignment.name ?? assignment.department?.name ?? 'Department';
+}
+
+function buildDepartmentFallback(assignment: StaffDepartment): DepartmentRecord | null {
+  const id = getDepartmentId(assignment);
+
+  if (!id) return null;
+
+  return {
+    id,
+    name: getDepartmentName(assignment),
+    description: null,
+    floor: null,
+    phoneExtension: null,
+    operatingHours: null,
+    isActive: assignment.department?.isActive ?? true,
+    sortOrder: 0,
+    createdAt: '',
+    updatedAt: '',
+  };
+}
+
+function inferDepartmentFromStaff(member: StaffRecord, departments: DepartmentRecord[]) {
+  const assignments = (member.departments ?? []).filter(isActiveDepartmentAssignment);
+  const selectedAssignment = assignments.find((assignment) => assignment.isPrimary) ?? assignments[0];
+
+  if (!selectedAssignment) return null;
+
+  const departmentId = getDepartmentId(selectedAssignment);
+  return departments.find((item) => item.id === departmentId) ?? buildDepartmentFallback(selectedAssignment);
+}
+
+export default function BookingWizard({
+  mode,
+  patientId,
+  patientResolving = false,
+  appointmentType,
+  initialPatient = null,
+}: BookingWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [department, setDepartment] = useState<DepartmentRecord | null>(null);
   const [service, setService] = useState<ServiceRecord | null>(null);
@@ -150,11 +251,28 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   }, [slot]);
 
   useEffect(() => {
+    if (mode === 'patient' && initialPatient && selectedPatient?.id !== initialPatient.id) {
+      setSelectedPatient(initialPatient);
+    }
+  }, [initialPatient, mode, selectedPatient?.id]);
+
+  useEffect(() => {
     if (slot && expiresInSeconds === 0) {
       setSlot(null);
       setSlotSelectedAt(null);
     }
   }, [expiresInSeconds, slot]);
+
+  useEffect(() => {
+    if (slot && slotsQuery.data && !liveSlots.some((availableSlot) => availableSlot.start === slot.start)) {
+      setSlot(null);
+      setSlotSelectedAt(null);
+      setSlotCheckError('That doctor and time are no longer available. Please choose another slot.');
+      if (stepIndex > slotStepIndex) {
+        setStepIndex(slotStepIndex);
+      }
+    }
+  }, [liveSlots, slot, slotsQuery.data, stepIndex, slotStepIndex]);
 
   const canMoveNext = useMemo(() => {
     if (currentStep === 'Your Details') return hasValidPublicPatient;
@@ -183,14 +301,64 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   };
 
   const resetAfterService = () => {
-    setStaff(null);
     setSlot(null);
     setSlotSelectedAt(null);
+    setSlotCheckError('');
   };
 
   const resetAfterStaff = () => {
+    setService(null);
     setSlot(null);
     setSlotSelectedAt(null);
+    setSlotCheckError('');
+  };
+
+  useEffect(() => {
+    if (!staff) return;
+
+    const inferredDepartment = inferDepartmentFromStaff(staff, departmentsQuery.data ?? []);
+    if (!inferredDepartment && currentDepartmentId) {
+      setDepartment(null);
+      return;
+    }
+
+    if (inferredDepartment && inferredDepartment.id !== currentDepartmentId) {
+      setDepartment(inferredDepartment);
+    }
+  }, [currentDepartmentId, departmentsQuery.data, staff]);
+
+  const verifySelectedSlot = async () => {
+    if (!slot) return false;
+
+    setSlotCheckError('');
+    setSlotCheckLoading(true);
+
+    try {
+      const result = await slotsQuery.refetch({ throwOnError: true });
+      const checkedAt = Date.now();
+      const freshSlots = (result.data?.slots ?? []).filter(
+        (availableSlot) => new Date(availableSlot.start).getTime() > checkedAt
+      );
+      const stillAvailable = freshSlots.some(
+        (availableSlot) => availableSlot.start === slot.start && availableSlot.end === slot.end
+      );
+
+      setNow(checkedAt);
+
+      if (!stillAvailable) {
+        setSlot(null);
+        setSlotSelectedAt(null);
+        setSlotCheckError('That doctor and time are no longer available. Please choose another slot.');
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      setSlotCheckError(getApiErrorMessage(error, 'Could not check that doctor and time. Please try again.'));
+      return false;
+    } finally {
+      setSlotCheckLoading(false);
+    }
   };
 
   const submit = async () => {

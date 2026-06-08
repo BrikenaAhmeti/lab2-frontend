@@ -10,6 +10,7 @@ export type PortalKey =
 export interface PortalNavItem {
   to: string;
   label: string;
+  requiredRoles?: string[];
   requiredPermissions?: string[];
   end?: boolean;
 }
@@ -58,7 +59,6 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/admin/messages', label: 'Messages' },
           { to: '/admin/feedback', label: 'Feedback', requiredPermissions: ['feedback:read', 'feedback:read:all'] },
           { to: '/admin/contact', label: 'Contact Inbox', requiredPermissions: ['contact:read', 'contact:read:all'] },
-          { to: '/admin/users', label: 'Users', requiredPermissions: ['users:read'] },
         ],
       },
       {
@@ -91,7 +91,7 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Account',
         items: [
           { to: '/admin/profile', label: 'Profile' },
-          { to: '/admin/sessions', label: 'Sessions' },
+          { to: '/admin/sessions', label: 'Sessions', requiredRoles: ['Super Admin'] },
         ],
       },
     ],
@@ -132,7 +132,6 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/doctor/lab-reviews', label: 'Lab Reviews', requiredPermissions: ['lab_results:review'] },
           { to: '/doctor/messages', label: 'Messages' },
           { to: '/doctor/profile', label: 'Profile' },
-          { to: '/doctor/sessions', label: 'Sessions' },
         ],
       },
     ],
@@ -147,9 +146,11 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Care',
         items: [
           { to: '/nurse', label: 'Dashboard' },
+          { to: '/nurse/appointments', label: 'Appointments' },
+          { to: '/nurse/patients', label: 'Patients' },
+          { to: '/nurse/medical-records', label: 'Medical Records' },
           { to: '/nurse/messages', label: 'Messages' },
           { to: '/nurse/profile', label: 'Profile' },
-          { to: '/nurse/sessions', label: 'Sessions' },
         ],
       },
     ],
@@ -166,7 +167,6 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/lab', label: 'Dashboard' },
           { to: '/lab/messages', label: 'Messages' },
           { to: '/lab/profile', label: 'Profile' },
-          { to: '/lab/sessions', label: 'Sessions' },
         ],
       },
     ],
@@ -181,9 +181,9 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
         label: 'Pharmacy',
         items: [
           { to: '/pharmacy', label: 'Queue', requiredPermissions: ['pharmacy:read'] },
+          { to: '/pharmacy/inventory', label: 'Inventory', requiredRoles: ['Pharmacist'] },
           { to: '/pharmacy/messages', label: 'Messages' },
           { to: '/pharmacy/profile', label: 'Profile' },
-          { to: '/pharmacy/sessions', label: 'Sessions' },
         ],
       },
     ],
@@ -204,7 +204,6 @@ export const portalConfigs: Record<PortalKey, PortalConfig> = {
           { to: '/receptionist/patients', label: 'Patients', requiredPermissions: ['patients:read', 'patients:create'] },
           { to: '/receptionist/billing', label: 'Billing', requiredPermissions: ['billing:read', 'billing:read:all'] },
           { to: '/receptionist/profile', label: 'Profile' },
-          { to: '/receptionist/sessions', label: 'Sessions' },
         ],
       },
     ],

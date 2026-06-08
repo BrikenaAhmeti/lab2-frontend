@@ -60,6 +60,8 @@ vi.mock('@/lib/api/staff-api', async () => {
     staffApi: {
       ...actual.staffApi,
       publicList: vi.fn(),
+      get: vi.fn(),
+      preview: vi.fn(),
     },
   };
 });
@@ -286,6 +288,8 @@ describe('Public website', () => {
       items: [staff],
       meta: { page: 1, limit: 50, total: 1, totalPages: 1 },
     });
+    vi.mocked(staffApi.get).mockResolvedValue(staff);
+    vi.mocked(staffApi.preview).mockResolvedValue(staff);
     vi.mocked(contactApi.submit).mockResolvedValue(contactMessage);
   });
 
@@ -340,6 +344,37 @@ describe('Public website', () => {
         expect.objectContaining({ departmentId: department.id, page: 1, limit: 50 })
       )
     );
+  });
+
+  it('renders a protected staff preview from the admin preview URL', async () => {
+    const previewStaff: StaffRecord = {
+      ...staff,
+      id: 'preview-staff-1',
+      employeeCode: 'ADM-001',
+      isPublicProfile: false,
+      user: {
+        id: 'preview-user-1',
+        firstName: 'Daniel',
+        lastName: 'Okafor',
+        name: 'Daniel Okafor',
+        email: 'daniel.okafor@medsphere.local',
+      },
+      positionType: {
+        id: 'position-admin',
+        name: 'Administrator',
+      },
+    };
+    vi.mocked(staffApi.publicList).mockResolvedValue({
+      items: [],
+      meta: { page: 1, limit: 50, total: 0, totalPages: 1 },
+    });
+    vi.mocked(staffApi.preview).mockResolvedValue(previewStaff);
+
+    renderPublic(<PublicDoctorsPage />, `/doctors?staffId=${previewStaff.id}&preview=staff`);
+
+    expect(await screen.findByText('Daniel Okafor')).toBeInTheDocument();
+    expect(screen.getByText('Staff preview')).toBeInTheDocument();
+    expect(staffApi.preview).toHaveBeenCalledWith(previewStaff.id);
   });
 
   it('submits the public contact form with the backend payload', async () => {

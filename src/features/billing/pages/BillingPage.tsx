@@ -3,18 +3,26 @@ import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import ExportButton from '@/components/export/ExportButton';
 import { hasAnyPermission, hasAnyRole, hasPermission } from '@/features/auth/utils/permission';
-import { billingApi, type BillingStatus, type BillingView, type RecordPaymentPayload, type UpdateBillingPayload } from '@/lib/api/billing-api';
-import Button from '@/ui/atoms/Button';
+import {
+  billingApi,
+  type BillingStatus,
+  type BillingView,
+  type MarkBillingPaidPayload,
+  type UpdateBillingPayload,
+} from '@/lib/api/billing-api';
 import Card from '@/ui/atoms/Card';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
+import Modal from '@/ui/molecules/Modal';
+import Pagination from '@/ui/molecules/Pagination';
 import { formatCurrency } from '@/utils/formatters/currency';
 import BillingDetailPanel from '@/features/billing/components/BillingDetailPanel';
 import BillingFilters from '@/features/billing/components/BillingFilters';
 import BillingTable from '@/features/billing/components/BillingTable';
-import PaymentModal from '@/features/billing/components/PaymentModal';
+import MarkPaidModal from '@/features/billing/components/MarkPaidModal';
 import {
   dateRangeFromInput,
+  getBillingPdfFileName,
   getBillingPeriodRange,
 } from '@/features/billing/components/billingFormat';
 import {
@@ -22,7 +30,7 @@ import {
   useBillingDetail,
   useBillingList,
   useBillingStats,
-  useRecordBillingPayment,
+  useMarkBillingPaid,
   useUpdateBilling,
 } from '@/features/billing/hooks/useBillings';
 
@@ -30,13 +38,13 @@ interface BillingPageProps {
   portal: 'admin' | 'receptionist';
 }
 
-const pageSize = 10;
+const defaultPageSize = 10;
 
 function downloadBlob(blob: Blob, billing: BillingView) {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = `${billing.billingNumber}.pdf`;
+  link.download = getBillingPdfFileName(billing);
   link.click();
   window.URL.revokeObjectURL(url);
 }
@@ -57,34 +65,41 @@ function canReadBilling(permissions: string[], roles: string[]) {
   );
 }
 
+function canManageBilling(permissions: string[], roles: string[]) {
+  return hasAnyRole(roles, ['Admin', 'Super Admin', 'Receptionist']) || hasPermission(permissions, 'billing:manage', 'all');
+}
+
 export default function BillingPage({ portal }: BillingPageProps) {
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
   const roles = user?.roles ?? [];
   const canRead = canReadBilling(permissions, roles);
-  const canManage = hasPermission(permissions, 'billing:manage', 'all');
+  const canManage = canManageBilling(permissions, roles);
   const root = portal === 'admin' ? '/admin' : '/receptionist';
   const label = portal === 'admin' ? 'Admin' : 'Receptionist';
 
   const [status, setStatus] = useState<BillingStatus | 'all'>('all');
+  const [patientSearch, setPatientSearch] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(defaultPageSize);
   const [selectedId, setSelectedId] = useState('');
-  const [paymentBilling, setPaymentBilling] = useState<BillingView | null>(null);
+  const [markPaidBilling, setMarkPaidBilling] = useState<BillingView | null>(null);
   const [actionError, setActionError] = useState('');
   const [actionMessage, setActionMessage] = useState('');
-  const [paymentError, setPaymentError] = useState('');
+  const [markPaidError, setMarkPaidError] = useState('');
 
   const listParams = useMemo(
     () => ({
       page,
-      limit: pageSize,
+      limit,
+      search: patientSearch.trim() || undefined,
       status: status === 'all' ? undefined : status,
       from: dateRangeFromInput(from, 'start'),
       to: dateRangeFromInput(to, 'end'),
     }),
-    [from, page, status, to]
+    [from, limit, page, patientSearch, status, to]
   );
   const todayRange = useMemo(() => getBillingPeriodRange('today'), []);
   const weekRange = useMemo(() => getBillingPeriodRange('week'), []);
@@ -96,11 +111,10 @@ export default function BillingPage({ portal }: BillingPageProps) {
   const weekStats = useBillingStats(weekRange, canRead);
   const monthStats = useBillingStats(monthRange, canRead);
   const updateMutation = useUpdateBilling();
-  const paymentMutation = useRecordBillingPayment();
+  const markPaidMutation = useMarkBillingPaid();
 
   const rows = useMemo(() => billingsQuery.data?.items ?? [], [billingsQuery.data?.items]);
-  const totalPages = billingsQuery.data?.meta.totalPages ?? 1;
-  const currentPage = billingsQuery.data?.meta.page ?? page;
+  const paginationMeta = billingsQuery.data?.meta;
   const selectedBilling = detailQuery.data ?? rows.find((billing) => billing.id === selectedId) ?? null;
 
   useEffect(() => {
@@ -108,16 +122,17 @@ export default function BillingPage({ portal }: BillingPageProps) {
     setSelectedId('');
     setActionError('');
     setActionMessage('');
-  }, [from, status, to]);
+  }, [from, patientSearch, status, to]);
 
   useEffect(() => {
-    if (rows.length === 0) {
-      if (selectedId) setSelectedId('');
-      return;
+    if (paginationMeta && paginationMeta.totalPages > 0 && page > paginationMeta.totalPages) {
+      setPage(paginationMeta.totalPages);
     }
+  }, [page, paginationMeta]);
 
-    if (!rows.some((billing) => billing.id === selectedId)) {
-      setSelectedId(rows[0].id);
+  useEffect(() => {
+    if (selectedId && rows.length > 0 && !rows.some((billing) => billing.id === selectedId)) {
+      setSelectedId('');
     }
   }, [rows, selectedId]);
 
@@ -138,19 +153,19 @@ export default function BillingPage({ portal }: BillingPageProps) {
     }
   };
 
-  const recordPayment = async (payload: RecordPaymentPayload) => {
-    if (!paymentBilling) return;
-    setPaymentError('');
+  const markPaid = async (payload: MarkBillingPaidPayload) => {
+    if (!markPaidBilling) return;
+    setMarkPaidError('');
     setActionError('');
     setActionMessage('');
 
     try {
-      const updated = await paymentMutation.mutateAsync({ id: paymentBilling.id, payload });
+      const updated = await markPaidMutation.mutateAsync({ id: markPaidBilling.id, payload });
       setSelectedId(updated.id);
-      setPaymentBilling(null);
-      setActionMessage('Payment recorded successfully.');
+      setMarkPaidBilling(null);
+      setActionMessage('Billing marked as paid.');
     } catch (error) {
-      setPaymentError(getBillingApiErrorMessage(error, 'Payment could not be recorded'));
+      setMarkPaidError(getBillingApiErrorMessage(error, 'Billing could not be marked as paid'));
     }
   };
 
@@ -163,6 +178,12 @@ export default function BillingPage({ portal }: BillingPageProps) {
     } catch (error) {
       setActionError(getBillingApiErrorMessage(error, 'Billing statement could not be downloaded'));
     }
+  };
+
+  const updateLimit = (value: number) => {
+    setLimit(value);
+    setPage(1);
+    setSelectedId('');
   };
 
   return (
@@ -184,9 +205,11 @@ export default function BillingPage({ portal }: BillingPageProps) {
       >
         <div className="space-y-4">
           <BillingFilters
+            patientSearch={patientSearch}
             status={status}
             from={from}
             to={to}
+            onPatientSearchChange={setPatientSearch}
             onStatusChange={setStatus}
             onFromChange={setFrom}
             onToChange={setTo}
@@ -209,68 +232,78 @@ export default function BillingPage({ portal }: BillingPageProps) {
           ) : null}
 
           {!billingsQuery.isLoading && !billingsQuery.isError && rows.length > 0 ? (
-            <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_28rem]">
-              <div className="space-y-3">
-                <BillingTable
-                  rows={rows}
-                  selectedId={selectedBilling?.id ?? ''}
-                  loading={detailQuery.isFetching}
-                  onSelect={(billing) => {
-                    setSelectedId(billing.id);
-                    setActionError('');
-                    setActionMessage('');
-                  }}
-                />
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm text-muted">{`Page ${currentPage} of ${totalPages}`}</p>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      disabled={currentPage <= 1 || billingsQuery.isFetching}
-                      onClick={() => setPage((currentValue) => Math.max(1, currentValue - 1))}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="sm"
-                      disabled={currentPage >= totalPages || billingsQuery.isFetching}
-                      onClick={() => setPage((currentValue) => currentValue + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <BillingDetailPanel
-                billing={selectedBilling}
-                canManage={canManage}
-                saving={updateMutation.isPending}
-                actionError={actionError}
-                actionMessage={actionMessage}
-                onSave={saveBilling}
-                onRecordPayment={() => {
-                  setPaymentError('');
-                  setPaymentBilling(selectedBilling);
-                }}
-                onDownloadPdf={downloadPdf}
-              />
-            </div>
+            <BillingTable
+              rows={rows}
+              selectedId={selectedBilling?.id ?? ''}
+              loading={detailQuery.isFetching}
+              canManage={canManage}
+              markingId={markPaidMutation.isPending ? markPaidBilling?.id ?? '' : ''}
+              onSelect={(billing) => {
+                setSelectedId(billing.id);
+                setActionError('');
+                setActionMessage('');
+              }}
+              onMarkPaid={(billing) => {
+                setMarkPaidError('');
+                setMarkPaidBilling(billing);
+              }}
+            />
+          ) : null}
+
+          {!billingsQuery.isLoading && !billingsQuery.isError && paginationMeta ? (
+            <Pagination
+              page={page}
+              totalPages={paginationMeta.totalPages}
+              total={paginationMeta.total}
+              limit={limit}
+              loading={billingsQuery.isFetching}
+              onPageChange={setPage}
+              onLimitChange={updateLimit}
+            />
           ) : null}
         </div>
       </Card>
 
-      <PaymentModal
-        open={Boolean(paymentBilling)}
-        outstandingAmount={Number(paymentBilling?.outstandingAmount ?? 0)}
-        loading={paymentMutation.isPending}
-        errorMessage={paymentError}
-        onClose={() => setPaymentBilling(null)}
-        onSubmit={recordPayment}
+      <MarkPaidModal
+        open={Boolean(markPaidBilling)}
+        billingNumber={markPaidBilling?.billingNumber ?? ''}
+        patientName={markPaidBilling?.patient.name ?? ''}
+        outstandingAmount={Number(markPaidBilling?.outstandingAmount ?? 0)}
+        loading={markPaidMutation.isPending}
+        errorMessage={markPaidError}
+        onClose={() => setMarkPaidBilling(null)}
+        onSubmit={markPaid}
       />
+
+      <Modal
+        open={Boolean(selectedId)}
+        title="Billing statement"
+        description={selectedBilling ? `${selectedBilling.billingNumber} - ${selectedBilling.patient.name}` : 'Loading billing details'}
+        maxWidth="xl"
+        onClose={() => {
+          setSelectedId('');
+          setActionError('');
+          setActionMessage('');
+        }}
+      >
+        {detailQuery.isLoading && !selectedBilling ? (
+          <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading billing details...</div>
+        ) : (
+          <BillingDetailPanel
+            billing={selectedBilling}
+            canManage={canManage}
+            saving={updateMutation.isPending}
+            actionError={actionError}
+            actionMessage={actionMessage}
+            onSave={saveBilling}
+            onMarkPaid={() => {
+              setMarkPaidError('');
+              setMarkPaidBilling(selectedBilling);
+            }}
+            onDownloadPdf={downloadPdf}
+          />
+        )}
+      </Modal>
     </div>
   );
 }

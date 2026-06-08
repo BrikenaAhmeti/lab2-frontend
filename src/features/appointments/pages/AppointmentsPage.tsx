@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { CalendarPlus, PhoneCall } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import ExportButton from '@/components/export/ExportButton';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
@@ -12,11 +13,13 @@ import AppointmentCard from '../components/AppointmentCard';
 import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import CancelAppointmentDialog from '../components/CancelAppointmentDialog';
 import RescheduleAppointmentDialog from '../components/RescheduleAppointmentDialog';
-import { getApiErrorMessage, resolvePatientId, type BookingMode, useAppointmentList, useCancelAppointment, useRescheduleAppointment } from '../hooks/useAppointments';
+import { getApiErrorMessage, useAppointmentList, useCancelAppointment, useRescheduleAppointment } from '../hooks/useAppointments';
 import { isPastAppointment } from '../components/appointmentFormat';
 
+type AppointmentsPageMode = 'patient' | 'receptionist' | 'nurse';
+
 interface AppointmentsPageProps {
-  mode: BookingMode;
+  mode: AppointmentsPageMode;
 }
 
 function EmptyState({ label }: { label: string }) {
@@ -28,10 +31,14 @@ function EmptyState({ label }: { label: string }) {
 }
 
 export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
-  const user = useAppSelector((state) => state.auth.user);
-  const patientId = mode === 'patient' ? resolvePatientId(user) : undefined;
-  const root = mode === 'patient' ? '/patient' : '/receptionist';
-  const label = mode === 'patient' ? 'Patient' : 'Receptionist';
+  const patientSession = useResolvedPatientSession(mode === 'patient');
+  const patientId = mode === 'patient' ? patientSession.patientId : undefined;
+  const waitingForPatient = mode === 'patient' && patientSession.isResolving && !patientId;
+  const canShowAppointments = mode !== 'patient' || Boolean(patientId);
+  const root = mode === 'patient' ? '/patient' : mode === 'nurse' ? '/nurse' : '/receptionist';
+  const label = mode === 'patient' ? 'Patient' : mode === 'nurse' ? 'Nurse' : 'Receptionist';
+  const canBookAppointments = mode !== 'nurse';
+  const showScheduleActions = mode !== 'nurse';
   const [detailAppointment, setDetailAppointment] = useState<AppointmentView | null>(null);
   const [cancelAppointment, setCancelAppointment] = useState<AppointmentView | null>(null);
   const [rescheduleAppointment, setRescheduleAppointment] = useState<AppointmentView | null>(null);
@@ -46,7 +53,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
     }),
     [patientId]
   );
-  const appointmentsQuery = useAppointmentList(params, mode === 'receptionist' || Boolean(patientId));
+  const appointmentsQuery = useAppointmentList(params, mode !== 'patient' || Boolean(patientId));
   const cancelMutation = useCancelAppointment();
   const rescheduleMutation = useRescheduleAppointment();
   const appointments = appointmentsQuery.data?.items ?? [];
@@ -82,7 +89,13 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
 
       <Card
         title={mode === 'patient' ? 'My Appointments' : 'Appointments'}
-        subtitle={mode === 'patient' ? 'Upcoming and past appointment history' : 'Facility appointment list'}
+        subtitle={
+          mode === 'patient'
+            ? 'Upcoming and past appointment history'
+            : mode === 'nurse'
+              ? 'View facility appointments and patient visit details'
+              : 'Facility appointment list'
+        }
         actions={
           <div className="flex flex-wrap justify-end gap-2">
             {mode !== 'patient' ? <ExportButton entity="appointments" /> : null}
@@ -109,11 +122,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         }
       >
         <div className="space-y-5">
-          {mode === 'patient' && !patientId ? (
-            <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" />
-          ) : null}
-
-          {appointmentsQuery.isLoading ? (
+          {waitingForPatient || appointmentsQuery.isLoading ? (
             <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading appointments...</div>
           ) : null}
 
@@ -124,7 +133,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
             />
           ) : null}
 
-          {!appointmentsQuery.isLoading && !appointmentsQuery.isError ? (
+          {!waitingForPatient && canShowAppointments && !appointmentsQuery.isLoading && !appointmentsQuery.isError ? (
             <>
               <section className="space-y-3">
                 <h2 className="text-base font-semibold text-foreground">Upcoming</h2>
@@ -136,6 +145,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
+                        showScheduleActions={showScheduleActions}
                         onCancel={(nextAppointment) => {
                           setCancelAppointment(nextAppointment);
                           setActionError('');
@@ -161,6 +171,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
                       <AppointmentCard
                         key={appointment.id}
                         appointment={appointment}
+                        showScheduleActions={showScheduleActions}
                         onCancel={(nextAppointment) => {
                           setCancelAppointment(nextAppointment);
                           setActionError('');
@@ -198,6 +209,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         appointment={rescheduleAppointment}
         loading={rescheduleMutation.isPending}
         error={actionError}
+        publicAccess={mode === 'patient'}
         onClose={closeReschedule}
         onConfirm={async (slot) => {
           if (!rescheduleAppointment) return;

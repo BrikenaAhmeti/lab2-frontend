@@ -1,6 +1,6 @@
-import { type FormEvent, useMemo, useState } from 'react';
+import { type FormEvent, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { z } from 'zod';
 import Card from '@/ui/atoms/Card';
 import Button from '@/ui/atoms/Button';
@@ -27,6 +27,7 @@ interface VerifyEmailLocationState {
 export default function VerifyEmailPage() {
   const { t } = useTranslation('common');
   const location = useLocation();
+  const navigate = useNavigate();
   const [params] = useSearchParams();
   const locationState = location.state as VerifyEmailLocationState | null;
   const stateEmail = locationState?.email ?? '';
@@ -36,10 +37,39 @@ export default function VerifyEmailPage() {
   const [email, setEmail] = useState(initialEmail);
   const [code, setCode] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const [status, setStatus] = useState<VerificationStatus>('idle');
+  const [status, setStatus] = useState<VerificationStatus>(token ? 'loading' : 'idle');
   const [error, setError] = useState('');
+  const verifyErrorFallback = t('auth.verifyInvalidOrExpired');
 
   const validation = useMemo(() => verificationSchema.safeParse({ email, code }), [email, code]);
+
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    let active = true;
+    setStatus('loading');
+    setError('');
+
+    patientRegistrationService
+      .verifyEmail({ token })
+      .then(() => {
+        if (active) {
+          navigate('/login?verified=1', { replace: true, state: { verified: true } });
+        }
+      })
+      .catch((verifyError) => {
+        if (active) {
+          setStatus('error');
+          setError(getAuthApiErrorMessage(verifyError, verifyErrorFallback));
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [navigate, token, verifyErrorFallback]);
 
   const fieldError = (field: 'email' | 'code') => {
     if (!submitted || validation.success) return '';
@@ -75,6 +105,37 @@ export default function VerifyEmailPage() {
       setError(getAuthApiErrorMessage(verifyError, t('auth.verifyInvalidOrExpired')));
     }
   };
+
+  if (token) {
+    return (
+      <AuthPageShell
+        compact
+        eyebrow={t('auth.portalAccess')}
+        title={t('auth.verifyTitle')}
+        subtitle={t('auth.verifyLinkSubtitle')}
+      >
+        <div className="space-y-4">
+          {status === 'error' ? (
+            <>
+              <p className="rounded-lg border border-danger/15 bg-danger/10 px-3 py-2.5 text-sm text-danger">
+                {error || t('auth.verifyLinkFailed')}
+              </p>
+              <Link to="/login" className="block">
+                <Button type="button" className="w-full">
+                  {t('auth.backToLogin')}
+                </Button>
+              </Link>
+            </>
+          ) : (
+            <div className="rounded-lg border border-cobalt-100 bg-cobalt-50/80 p-5 text-center">
+              <span className="mx-auto block h-8 w-8 animate-spin rounded-full border-2 border-cobalt-600 border-t-transparent" />
+              <p className="mt-4 text-sm font-semibold text-cobalt-950">{t('auth.verifyingEmailLink')}</p>
+            </div>
+          )}
+        </div>
+      </AuthPageShell>
+    );
+  }
 
   return (
     <div className="grid min-h-screen place-items-center px-4">

@@ -22,7 +22,7 @@ export const appointmentQueryKey = {
   all: ['appointments'] as const,
   departments: ['appointments', 'departments'] as const,
   services: (departmentId: string) => ['appointments', 'services', departmentId] as const,
-  staff: (departmentId: string) => ['appointments', 'staff', departmentId] as const,
+  staff: (departmentId?: string) => ['appointments', 'staff', departmentId || 'all'] as const,
   slots: (staffId: string, serviceId: string, date: string) =>
     ['appointments', 'slots', staffId, serviceId, date] as const,
   list: (params: AppointmentListParams) => [...appointmentQueryKey.all, 'list', params] as const,
@@ -69,7 +69,6 @@ export function useAppointmentStaff(departmentId: string, publicAccess = false) 
       );
       return response.items;
     },
-    enabled: Boolean(departmentId),
     retry: false,
   });
 }
@@ -186,7 +185,7 @@ export function useCancelAppointment() {
 }
 
 export function resolvePatientId(user: AuthUser | null | undefined) {
-  return user?.patientId ?? user?.patientProfileId ?? user?.profileId ?? user?.id ?? '';
+  return resolveSessionPatientId(user);
 }
 
 export function buildAppointmentPayload(input: {

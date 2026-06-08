@@ -4,6 +4,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import ForgotPasswordPage from '@/features/auth/pages/ForgotPasswordPage';
 import PatientRegistrationPage from '@/features/auth/pages/PatientRegistrationPage';
 import ResendVerificationPage from '@/features/auth/pages/ResendVerificationPage';
+import ResetPasswordPage from '@/features/auth/pages/ResetPasswordPage';
 import VerifyEmailPage from '@/features/auth/pages/VerifyEmailPage';
 import { authApi } from '@/lib/api/auth-api';
 
@@ -18,6 +19,7 @@ vi.mock('@/lib/api/auth-api', () => ({
     forgotPassword: vi.fn(),
     register: vi.fn(),
     resendVerification: vi.fn(),
+    resetPassword: vi.fn(),
     verifyEmail: vi.fn(),
   },
 }));
@@ -48,6 +50,55 @@ describe('email-based auth flows', () => {
     expect(screen.queryByRole('button', { name: 'auth.copyToken' })).not.toBeInTheDocument();
   });
 
+  it('shows the backend message when forgot password email is missing', async () => {
+    vi.mocked(authApi.forgotPassword).mockRejectedValue({
+      isAxiosError: true,
+      message: 'Request failed with status code 404',
+      response: {
+        status: 404,
+        data: {
+          message: 'Email is missing from our records.',
+        },
+      },
+    });
+
+    render(
+      <MemoryRouter>
+        <ForgotPasswordPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText('auth.email'), { target: { value: 'missing@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.sendResetLink' }));
+
+    expect(await screen.findByText('Email is missing from our records.')).toBeInTheDocument();
+  });
+
+  it('resets password with the emailed query token', async () => {
+    vi.mocked(authApi.resetPassword).mockResolvedValue({
+      success: true,
+      message: '',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/reset-password?token=raw-reset-token']}>
+        <ResetPasswordPage />
+      </MemoryRouter>
+    );
+
+    fireEvent.change(document.getElementById('reset-password')!, { target: { value: 'AnotherStrong123!' } });
+    fireEvent.change(document.getElementById('confirm-password')!, { target: { value: 'AnotherStrong123!' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.resetPassword' }));
+
+    await waitFor(() => {
+      expect(authApi.resetPassword).toHaveBeenCalledWith({
+        token: 'raw-reset-token',
+        newPassword: 'AnotherStrong123!',
+      });
+    });
+    expect(await screen.findByText('auth.resetSuccess')).toBeInTheDocument();
+  });
+
   it('shows email-based resend verification messaging and no developer token UI', async () => {
     vi.mocked(authApi.resendVerification).mockResolvedValue({
       success: true,
@@ -68,7 +119,7 @@ describe('email-based auth flows', () => {
     expect(screen.queryByText('auth.developerToken')).not.toBeInTheDocument();
   });
 
-  it('registers a patient without logging in and opens code verification', async () => {
+  it('registers a patient without logging in and asks them to use the emailed link', async () => {
     vi.mocked(authApi.register).mockResolvedValue({
       success: true,
       message: '',
@@ -78,7 +129,6 @@ describe('email-based auth flows', () => {
       <MemoryRouter initialEntries={['/register']}>
         <Routes>
           <Route path="/register" element={<PatientRegistrationPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
         </Routes>
       </MemoryRouter>
     );
@@ -93,7 +143,7 @@ describe('email-based auth flows', () => {
     fireEvent.change(screen.getByLabelText('auth.personalNumber'), { target: { value: '1234567890' } });
     fireEvent.change(screen.getByLabelText('auth.password'), { target: { value: 'UserPassword123!' } });
     fireEvent.change(screen.getByLabelText('auth.confirmPassword'), { target: { value: 'UserPassword123!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'auth.createPatientAccount' }));
+    fireEvent.click(screen.getByRole('button', { name: 'auth.registerAsPatient' }));
 
     await waitFor(() => {
       expect(authApi.register).toHaveBeenCalledWith({
@@ -108,7 +158,40 @@ describe('email-based auth flows', () => {
         gender: 'female',
       });
     });
-    expect(await screen.findByLabelText('auth.verificationCode')).toBeInTheDocument();
+    expect(await screen.findByText('auth.registrationCheckEmailLink')).toBeInTheDocument();
+  });
+
+  it('carries the personal number into legacy code verification so existing history can be linked', async () => {
+    vi.mocked(authApi.verifyEmail).mockResolvedValue({
+      success: true,
+      message: '',
+    });
+    window.sessionStorage.setItem(
+      'medsphere.patientRegistrationIdentity',
+      JSON.stringify({ email: 'arta@example.com', personalNumber: '1234567890' })
+    );
+
+    render(
+      <MemoryRouter initialEntries={['/verify-email?email=arta%40example.com']}>
+        <Routes>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/login" element={<div>login-confirmed</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByLabelText('auth.verificationCode'), { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'auth.verifyCode' }));
+
+    await waitFor(() => {
+      expect(authApi.verifyEmail).toHaveBeenCalledWith({
+        email: 'arta@example.com',
+        code: '123456',
+        personalNumber: '1234567890',
+      });
+    });
+    expect(window.sessionStorage.getItem('medsphere.patientRegistrationIdentity')).toBeNull();
+    expect(await screen.findByText('login-confirmed')).toBeInTheDocument();
   });
 
   it('carries the personal number into email verification so existing history can be linked', async () => {
@@ -161,7 +244,6 @@ describe('email-based auth flows', () => {
       <MemoryRouter initialEntries={['/register']}>
         <Routes>
           <Route path="/register" element={<PatientRegistrationPage />} />
-          <Route path="/verify-email" element={<VerifyEmailPage />} />
         </Routes>
       </MemoryRouter>
     );
@@ -172,7 +254,7 @@ describe('email-based auth flows', () => {
     fireEvent.change(screen.getByLabelText('auth.personalNumber'), { target: { value: '1234567890' } });
     fireEvent.change(screen.getByLabelText('auth.password'), { target: { value: 'UserPassword123!' } });
     fireEvent.change(screen.getByLabelText('auth.confirmPassword'), { target: { value: 'UserPassword123!' } });
-    fireEvent.click(screen.getByRole('button', { name: 'auth.createPatientAccount' }));
+    fireEvent.click(screen.getByRole('button', { name: 'auth.registerAsPatient' }));
 
     await waitFor(() => {
       expect(authApi.register).toHaveBeenCalledWith(expect.objectContaining({
@@ -185,7 +267,28 @@ describe('email-based auth flows', () => {
     });
   });
 
-  it('verifies the email code and links back to login', async () => {
+  it('verifies the emailed token link and redirects to login confirmation', async () => {
+    vi.mocked(authApi.verifyEmail).mockResolvedValue({
+      success: true,
+      message: '',
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/verify-email?token=raw-token']}>
+        <Routes>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/login" element={<div>login-confirmed</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(authApi.verifyEmail).toHaveBeenCalledWith({ token: 'raw-token' });
+    });
+    expect(await screen.findByText('login-confirmed')).toBeInTheDocument();
+  });
+
+  it('verifies the email code and redirects to login confirmation', async () => {
     vi.mocked(authApi.verifyEmail).mockResolvedValue({
       success: true,
       message: '',
@@ -193,7 +296,10 @@ describe('email-based auth flows', () => {
 
     render(
       <MemoryRouter initialEntries={['/verify-email?email=arta%40example.com']}>
-        <VerifyEmailPage />
+        <Routes>
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/login" element={<div>login-confirmed</div>} />
+        </Routes>
       </MemoryRouter>
     );
 
@@ -206,8 +312,7 @@ describe('email-based auth flows', () => {
         code: '123456',
       });
     });
-    expect(await screen.findByText('auth.emailVerifiedCanLogin')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'auth.backToLogin' })).toBeInTheDocument();
+    expect(await screen.findByText('login-confirmed')).toBeInTheDocument();
   });
 
   it('requires exactly six digits for email verification', async () => {

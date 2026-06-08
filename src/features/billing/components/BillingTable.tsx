@@ -1,18 +1,22 @@
 import { memo } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import Button from '@/ui/atoms/Button';
 import { formatCurrency } from '@/utils/formatters/currency';
 import type { BillingView } from '@/lib/api/billing-api';
 import BillingStatusBadge from './BillingStatusBadge';
-import { formatBillingDate } from './billingFormat';
+import { canPayBilling, formatBillingDate } from './billingFormat';
 
 interface BillingTableProps {
   rows: BillingView[];
   selectedId: string;
   loading: boolean;
+  canManage: boolean;
+  markingId: string;
   onSelect: (billing: BillingView) => void;
+  onMarkPaid: (billing: BillingView) => void;
 }
 
-function BillingTable({ rows, selectedId, loading, onSelect }: BillingTableProps) {
+function BillingTable({ rows, selectedId, loading, canManage, markingId, onSelect, onMarkPaid }: BillingTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-border">
       <table className="min-w-full text-left text-sm">
@@ -40,15 +44,28 @@ function BillingTable({ rows, selectedId, loading, onSelect }: BillingTableProps
               <td className="px-4 py-3">{formatBillingDate(billing.issuedAt)}</td>
               <td className="px-4 py-3">{formatCurrency(Number(billing.outstandingAmount))}</td>
               <td className="px-4 py-3">
-                <Button
-                  type="button"
-                  size="sm"
-                  variant={selectedId === billing.id ? 'primary' : 'secondary'}
-                  disabled={loading}
-                  onClick={() => onSelect(billing)}
-                >
-                  View
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  {canManage && canPayBilling(billing) ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      leftIcon={<CheckCircle2 size={14} />}
+                      loading={markingId === billing.id}
+                      onClick={() => onMarkPaid(billing)}
+                    >
+                      Mark Paid
+                    </Button>
+                  ) : null}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={selectedId === billing.id ? 'primary' : 'secondary'}
+                    disabled={loading}
+                    onClick={() => onSelect(billing)}
+                  >
+                    View
+                  </Button>
+                </div>
               </td>
             </tr>
           ))}

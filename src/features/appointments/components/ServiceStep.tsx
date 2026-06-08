@@ -11,7 +11,7 @@ interface ServiceStepProps {
 
 export default function ServiceStep({ services, selectedId, loading, error, onSelect }: ServiceStepProps) {
   if (loading) {
-    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading services...</div>;
+    return <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading clinical services...</div>;
   }
 
   if (error) {
@@ -21,7 +21,7 @@ export default function ServiceStep({ services, selectedId, loading, error, onSe
   if (services.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-surface/60 px-4 py-10 text-center text-sm text-muted">
-        No active services are available for this department.
+        No active clinical services are available for this department.
       </div>
     );
   }
@@ -40,7 +40,7 @@ export default function ServiceStep({ services, selectedId, loading, error, onSe
           <span className="font-semibold text-foreground">{service.name}</span>
           {service.description ? <span className="mt-1 block text-sm text-muted">{service.description}</span> : null}
           <span className="mt-3 block text-xs text-muted">
-            {`${service.defaultDurationMinutes} min | EUR ${Number(service.defaultPrice).toFixed(2)}`}
+            {`${service.defaultDurationMinutes} min | Estimated fee EUR ${Number(service.defaultPrice).toFixed(2)}`}
           </span>
         </button>
       ))}

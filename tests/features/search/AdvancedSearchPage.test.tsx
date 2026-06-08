@@ -24,6 +24,7 @@ const patient: PatientSearchItem = {
   userId: 'user-1',
   firstName: 'Arta',
   lastName: 'Krasniqi',
+  personalNumber: '1234567890',
   email: 'arta@example.com',
   phone: '+38344111222',
   dateOfBirth: '1995-04-10T00:00:00.000Z',
@@ -125,6 +126,7 @@ describe('AdvancedSearchPage', () => {
     renderSearch('/admin/search/patients?q=arta&page=2&bloodType=A_POSITIVE&sortBy=lastName&sortOrder=asc');
 
     expect(await screen.findByText('Arta Krasniqi')).toBeInTheDocument();
+    expect(screen.getByText('1234567890')).toBeInTheDocument();
     expect(screen.getByLabelText('Search')).toHaveValue('arta');
 
     expect(advancedSearchApi.search).toHaveBeenCalledWith(

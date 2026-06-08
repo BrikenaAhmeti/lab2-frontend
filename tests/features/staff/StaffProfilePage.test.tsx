@@ -137,6 +137,12 @@ describe('StaffProfilePage', () => {
     expect(screen.getByTestId('location')).toHaveTextContent('?tab=exceptions');
   });
 
+  it('links back to the staff directory', async () => {
+    renderProfile('/admin/staff/staff-1?tab=info');
+
+    expect(await screen.findByRole('link', { name: 'Back to staff' })).toHaveAttribute('href', '/admin/staff');
+  });
+
   it('shows the future appointment count before deactivation', async () => {
     renderProfile('/admin/staff/staff-1?tab=info');
 
@@ -147,5 +153,28 @@ describe('StaffProfilePage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Deactivate' }).at(-1)!);
 
     await waitFor(() => expect(staffApi.deactivate).toHaveBeenCalledWith('staff-1'));
+  });
+
+  it('keeps admin-type staff records read-only for clinical admins', async () => {
+    vi.mocked(staffApi.get).mockResolvedValue({
+      ...staff,
+      id: 'staff-admin',
+      user: {
+        ...staff.user,
+        email: 'clinic.admin@example.com',
+      },
+      positionType: {
+        id: 'type-admin',
+        name: 'Clinical Admin',
+        defaultRoleKey: 'admin',
+        defaultRoleName: 'Admin',
+      },
+    });
+
+    renderProfile('/admin/staff/staff-admin?tab=schedule');
+
+    expect(await screen.findByText('Weekly schedule')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save schedule' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Deactivate' })).not.toBeInTheDocument();
   });
 });

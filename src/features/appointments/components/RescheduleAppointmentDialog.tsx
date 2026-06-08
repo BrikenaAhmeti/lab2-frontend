@@ -4,12 +4,14 @@ import type { AppointmentView, AvailableSlot } from '@/lib/api/appointments-api'
 import { getApiErrorMessage, useAvailableSlots } from '../hooks/useAppointments';
 import SlotPicker from './SlotPicker';
 import { getTodayInputValue } from './appointmentFormat';
+import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 
 interface RescheduleAppointmentDialogProps {
   appointment: AppointmentView | null;
   loading: boolean;
   error?: string;
+  publicAccess?: boolean;
   onClose: () => void;
   onConfirm: (slot: AvailableSlot) => void;
 }
@@ -18,6 +20,7 @@ export default function RescheduleAppointmentDialog({
   appointment,
   loading,
   error,
+  publicAccess = false,
   onClose,
   onConfirm,
 }: RescheduleAppointmentDialogProps) {
@@ -27,7 +30,8 @@ export default function RescheduleAppointmentDialog({
     appointment?.staffProfileId ?? '',
     appointment?.serviceCatalogId ?? '',
     date,
-    Boolean(appointment)
+    Boolean(appointment),
+    publicAccess
   );
 
   if (!appointment) return null;
@@ -38,19 +42,18 @@ export default function RescheduleAppointmentDialog({
         <h2 className="text-lg font-semibold text-foreground">Reschedule appointment</h2>
         <p className="mt-1 text-sm text-muted">{`${appointment.service.name} for ${appointment.patient.name}`}</p>
 
-        <label className="mt-4 block space-y-1.5">
-          <span className="text-sm font-medium text-foreground">Date</span>
-          <input
-            type="date"
-            min={getTodayInputValue()}
-            value={date}
-            onChange={(event) => {
-              setDate(event.target.value);
-              setSlot(null);
-            }}
-            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
-          />
-        </label>
+        <CalendarDatePicker
+          id="reschedule-appointment-date"
+          label="Date"
+          value={date}
+          min={getTodayInputValue()}
+          required
+          className="mt-4 sm:w-64"
+          onChange={(value) => {
+            setDate(value);
+            setSlot(null);
+          }}
+        />
 
         <div className="mt-4">
           <SlotPicker

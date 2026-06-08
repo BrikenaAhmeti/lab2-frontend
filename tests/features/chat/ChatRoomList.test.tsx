@@ -47,6 +47,35 @@ describe('ChatRoomList', () => {
     );
   });
 
+  it('uses the participant lookup when a room only has user ids', () => {
+    render(
+      <MemoryRouter>
+        <ChatRoomList
+          rooms={[{ ...room, participants: ['user-1', 'doctor-1'] }]}
+          activeRoomId="room-1"
+          currentUserId="user-1"
+          basePath="/patient/messages"
+          participantLookup={
+            new Map([
+              [
+                'doctor-1',
+                {
+                  id: 'doctor-1',
+                  name: 'Dr Mira Kelmendi',
+                  email: 'mira@medsphere.test',
+                  roleLabel: 'Doctor',
+                },
+              ],
+            ])
+          }
+        />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Dr Mira Kelmendi')).toBeInTheDocument();
+    expect(screen.queryByText('User doctor-')).not.toBeInTheDocument();
+  });
+
   it('renders the empty state', () => {
     render(
       <MemoryRouter>

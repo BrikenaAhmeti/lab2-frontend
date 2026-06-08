@@ -6,12 +6,13 @@ import LanguageSwitch from '@/ui/molecules/LanguageSwitch';
 import { useAppSelector } from '@/app/hooks';
 import { clearPersistedSession } from '@/features/auth/useAuthBootstrap';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { to: '/dashboard', labelKey: 'auth.navDashboard' },
   { to: '/dashboard/profile', labelKey: 'auth.navProfile' },
-  { to: '/dashboard/sessions', labelKey: 'auth.navSessions' },
+  { to: '/dashboard/sessions', labelKey: 'auth.navSessions', requiresSuperAdmin: true },
   { to: '/dashboard/departments', labelKey: 'auth.navDepartments' },
   { to: '/dashboard/inventory', labelKey: 'auth.navInventory', requiresInventory: true },
   { to: '/dashboard/admin/organization/services', labelKey: 'auth.navServices', requiresOrganizationAdmin: true },
@@ -20,7 +21,6 @@ const navItems = [
     labelKey: 'auth.navStaffPositionTypes',
     requiresOrganizationAdmin: true,
   },
-  { to: '/dashboard/users', labelKey: 'auth.navUsers', requiresUserAdmin: true },
   { to: '/dashboard/doctor', labelKey: 'auth.navDoctor' },
   { to: '/dashboard/nurse', labelKey: 'auth.navNurse' },
   { to: '/dashboard/lab', labelKey: 'auth.navLab' },
@@ -34,11 +34,8 @@ export default function AppLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  const roles = user?.roles ?? [];
+  const roles = getUserRoleNames(user);
   const permissions = user?.permissions ?? [];
-  const canManageUsers =
-    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
-    hasAnyPermission(permissions, ['users:create', 'users:read'], 'any');
   const canAccessOrganizationSetup =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
     hasAnyPermission(
@@ -54,11 +51,11 @@ export default function AppLayout() {
       'any'
     );
   const canAccessInventory =
-    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
-    hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
+    hasAnyRole(roles, ['Admin', 'Super Admin', 'Pharmacist']) ||
+    hasAnyPermission(permissions, ['inventory:read', 'inventory:manage', 'inventory:manage:all'], 'any');
   const visibleNavItems = navItems.filter((item) => {
-    if (item.requiresUserAdmin) {
-      return canManageUsers;
+    if (item.requiresSuperAdmin) {
+      return hasAnyRole(roles, ['Super Admin']);
     }
 
     if (item.requiresOrganizationAdmin) {

@@ -1,20 +1,20 @@
-import { useAppSelector } from '@/app/hooks';
+import { useLocation } from 'react-router-dom';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import type { AppointmentType } from '@/lib/api/appointments-api';
 import type { PatientRecord } from '@/lib/api/patients-api';
 import Breadcrumbs from '@/ui/molecules/Breadcrumbs';
 import BookingWizard from '../components/BookingWizard';
-import { resolvePatientId, type BookingMode } from '../hooks/useAppointments';
-import { useLocation } from 'react-router-dom';
+import { type BookingMode } from '../hooks/useAppointments';
 
 interface BookAppointmentPageProps {
   mode: BookingMode;
 }
 
 export default function BookAppointmentPage({ mode }: BookAppointmentPageProps) {
-  const user = useAppSelector((state) => state.auth.user);
   const location = useLocation();
   const state = location.state as { appointmentType?: AppointmentType; patient?: PatientRecord } | null;
-  const patientId = mode === 'patient' ? resolvePatientId(user) : undefined;
+  const patientSession = useResolvedPatientSession(mode === 'patient');
+  const patientId = mode === 'patient' ? patientSession.patientId : undefined;
   const root = mode === 'patient' ? '/patient' : '/receptionist';
   const label = mode === 'patient' ? 'Patient' : 'Receptionist';
 
@@ -24,8 +24,9 @@ export default function BookAppointmentPage({ mode }: BookAppointmentPageProps) 
       <BookingWizard
         mode={mode}
         patientId={patientId}
+        patientResolving={mode === 'patient' && patientSession.isResolving && !patientId}
         appointmentType={state?.appointmentType}
-        initialPatient={mode === 'receptionist' ? state?.patient : null}
+        initialPatient={mode === 'receptionist' ? state?.patient : patientSession.patient}
       />
     </div>
   );
