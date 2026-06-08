@@ -24,6 +24,7 @@ export default function BookAppointmentPage({ mode }: BookAppointmentPageProps) 
       <BookingWizard
         mode={mode}
         patientId={patientId}
+        patientResolving={mode === 'patient' && patientSession.isResolving && !patientId}
         appointmentType={state?.appointmentType}
         initialPatient={mode === 'receptionist' ? state?.patient : patientSession.patient}
       />

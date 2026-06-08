@@ -9,7 +9,6 @@ import type { BookingMode } from '../hooks/useAppointments';
 import type { PublicPatientDetails } from './PublicPatientDetailsStep';
 import PatientSelector from './PatientSelector';
 import { formatAppointmentDate } from './appointmentFormat';
-import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 
 interface ConfirmStepProps {
   mode: BookingMode;
@@ -18,6 +17,7 @@ interface ConfirmStepProps {
   staff: StaffRecord | null;
   slot: AvailableSlot | null;
   patientId?: string;
+  patientResolving?: boolean;
   selectedPatient: PatientRecord | null;
   publicPatientDetails?: PublicPatientDetails;
   notes: string;
@@ -32,6 +32,7 @@ export default function ConfirmStep({
   staff,
   slot,
   patientId,
+  patientResolving = false,
   selectedPatient,
   publicPatientDetails,
   notes,
@@ -46,9 +47,11 @@ export default function ConfirmStep({
       ? publicPatientName
       : selectedPatient
         ? getPatientName(selectedPatient)
-        : patientId
-          ? 'Your profile'
-          : '';
+        : patientResolving
+          ? 'Loading your profile'
+          : patientId
+            ? 'Your profile'
+            : '';
 
   return (
     <div className="space-y-4">
@@ -56,8 +59,8 @@ export default function ConfirmStep({
         <PatientSelector selectedPatient={selectedPatient} onSelect={onPatientSelect} />
       ) : null}
 
-      {mode === 'patient' && !patientId ? (
-        <FeedbackMessage type="error" message="Patient profile could not be resolved from your session." />
+      {mode === 'patient' && patientResolving ? (
+        <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading your patient profile...</div>
       ) : null}
 
       <dl className="grid gap-3 rounded-xl border border-border bg-surface/60 p-4 text-sm md:grid-cols-2">

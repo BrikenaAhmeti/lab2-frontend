@@ -12,7 +12,7 @@ describe('portalConfigs', () => {
     ]);
   });
 
-  it('wires the admin staff management links required by MS-10', () => {
+  it('wires the admin staff management links required', () => {
     const staffManagement = portalConfigs.admin.navGroups.find((group) => group.label === 'Staff Management');
 
     expect(staffManagement?.items).toEqual([
@@ -21,7 +21,7 @@ describe('portalConfigs', () => {
     ]);
   });
 
-  it('wires the admin inventory link required by MS-28', () => {
+  it('wires the admin inventory link required', () => {
     const workspace = portalConfigs.admin.navGroups.find((group) => group.label === 'Workspace');
 
     expect(workspace?.items).toEqual(expect.arrayContaining([
@@ -51,7 +51,7 @@ describe('portalConfigs', () => {
     ]);
   });
 
-  it('wires the patient portal links required by MS-55', () => {
+  it('wires the patient portal links required', () => {
     const care = portalConfigs.patient.navGroups.find((group) => group.label === 'Care');
 
     expect(care?.items).toEqual([

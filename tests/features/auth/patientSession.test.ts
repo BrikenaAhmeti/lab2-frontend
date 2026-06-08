@@ -24,6 +24,38 @@ describe('patient session utilities', () => {
     ).toBe('patient-profile-1');
   });
 
+  it('supports backend patient id aliases and nested patient profiles', () => {
+    expect(
+      resolveSessionPatientId({
+        id: 'user-1',
+        patient_id: 'patient-snake-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+      })
+    ).toBe('patient-snake-1');
+
+    expect(
+      resolveSessionPatientId({
+        id: 'user-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+        patientProfile: { id: 'patient-nested-1' },
+      })
+    ).toBe('patient-nested-1');
+
+    expect(
+      resolveSessionPatientId({
+        id: 'user-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+        profile: { patient_id: 'patient-profile-nested-1' },
+      })
+    ).toBe('patient-profile-nested-1');
+  });
+
   it('uses profileId only for patient sessions', () => {
     expect(
       resolveSessionPatientId({

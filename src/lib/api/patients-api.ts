@@ -5,6 +5,41 @@ function client(instance?: AxiosInstance) {
   return instance ?? coreApiClient;
 }
 
+type PatientRecordEnvelope = {
+  data?: unknown;
+  patient?: unknown;
+  profile?: unknown;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;
+}
+
+function hasPatientId(value: unknown): value is PatientRecord {
+  const record = asRecord(value);
+  return typeof record?.id === 'string' && record.id.trim().length > 0;
+}
+
+export function normalizePatientRecordResponse(payload: unknown): PatientRecord {
+  const envelope = asRecord(payload) as PatientRecordEnvelope | null;
+  const dataEnvelope = asRecord(envelope?.data) as PatientRecordEnvelope | null;
+  const candidates = [
+    payload,
+    envelope?.patient,
+    envelope?.profile,
+    envelope?.data,
+    dataEnvelope?.patient,
+    dataEnvelope?.profile,
+  ];
+  const patient = candidates.find(hasPatientId);
+
+  if (!patient) {
+    throw new Error('Patient profile response did not include a patient id');
+  }
+
+  return patient;
+}
+
 export type BloodType =
   | 'A_POSITIVE'
   | 'A_NEGATIVE'
@@ -96,7 +131,7 @@ export interface PatientTimelineItem {
 
 export const patientsApi = {
   me(instance?: AxiosInstance) {
-    return client(instance).get<PatientRecord>('/api/patients/me').then((response) => response.data);
+    return client(instance).get<unknown>('/api/patients/me').then((response) => normalizePatientRecordResponse(response.data));
   },
   list(params: PatientListParams, instance?: AxiosInstance) {
     return client(instance).get<PatientListResponse>('/api/patients', { params }).then((response) => response.data);

@@ -30,7 +30,7 @@ export function usePatientDetail(id: string) {
 export function usePatientSelfProfile(patientId: string) {
   return useQuery({
     queryKey: patientQueryKey.detail(patientId),
-    queryFn: () => patientsApi.get(patientId),
+    queryFn: () => patientsApi.me(),
     enabled: Boolean(patientId),
     retry: false,
   });

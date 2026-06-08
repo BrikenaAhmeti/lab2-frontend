@@ -1,8 +1,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
-import { useAppSelector } from '@/app/hooks';
 import { PdfDocumentPanel, PdfInfoGrid, PdfSection } from '@/components/pdf/PdfDocumentPanel';
-import { resolvePatientId } from '@/features/appointments/hooks/useAppointments';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import { getConsultationErrorMessage, useMedicalRecords } from '@/features/consultation/hooks/useConsultation';
 import type { MedicalRecordView } from '@/lib/api/medical-records-api';
 import Badge from '@/ui/atoms/Badge';
@@ -15,8 +14,9 @@ import { downloadElementPdf } from '../components/patientPdfExport';
 import { formatPatientPortalDate, getMedicalRecordPdfFileName } from '../components/patientPortalFormat';
 
 export default function PatientMedicalRecordsPage() {
-  const user = useAppSelector((state) => state.auth.user);
-  const patientId = resolvePatientId(user);
+  const patientSession = useResolvedPatientSession();
+  const patientId = patientSession.patientId;
+  const waitingForPatient = patientSession.isResolving && !patientId;
   const params = useMemo(() => ({ page: 1, limit: 50, patientId }), [patientId]);
   const recordsQuery = useMedicalRecords(params, Boolean(patientId));
   const records = (recordsQuery.data?.items ?? []).filter((record) => record.isFinalized);
@@ -47,11 +47,9 @@ export default function PatientMedicalRecordsPage() {
     <div className="space-y-4">
       <Breadcrumbs items={[{ label: 'Patient', to: '/patient' }, { label: 'Medical Records' }]} />
 
-      {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
-
       <Card title="Medical Records" subtitle="Finalized consultation PDFs with MedSphere document previews">
         <div className="space-y-3">
-          {recordsQuery.isLoading ? <PatientPortalLoadingState>Loading medical records...</PatientPortalLoadingState> : null}
+          {waitingForPatient || recordsQuery.isLoading ? <PatientPortalLoadingState>Loading medical records...</PatientPortalLoadingState> : null}
           {recordsQuery.isError ? (
             <FeedbackMessage
               type="error"
@@ -59,7 +57,7 @@ export default function PatientMedicalRecordsPage() {
             />
           ) : null}
           {downloadError ? <FeedbackMessage type="error" message={downloadError} /> : null}
-          {!recordsQuery.isLoading && !recordsQuery.isError && records.length === 0 ? (
+          {!waitingForPatient && Boolean(patientId) && !recordsQuery.isLoading && !recordsQuery.isError && records.length === 0 ? (
             <PatientPortalEmptyState>No finalized medical records yet.</PatientPortalEmptyState>
           ) : null}
 

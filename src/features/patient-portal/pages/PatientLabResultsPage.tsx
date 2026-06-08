@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
-import { useAppSelector } from '@/app/hooks';
-import { resolvePatientId } from '@/features/appointments/hooks/useAppointments';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import LabOrderStatusBadge from '@/features/lab/components/LabOrderStatusBadge';
 import ResultsTable from '@/features/lab/components/ResultsTable';
 import { formatLabDateTime } from '@/features/lab/components/labFormat';
@@ -13,8 +12,9 @@ import PatientLabInterpretationPanel from '../components/PatientLabInterpretatio
 import { PatientPortalEmptyState, PatientPortalLoadingState } from '../components/PatientPortalStates';
 
 export default function PatientLabResultsPage() {
-  const user = useAppSelector((state) => state.auth.user);
-  const patientId = resolvePatientId(user);
+  const patientSession = useResolvedPatientSession();
+  const patientId = patientSession.patientId;
+  const waitingForPatient = patientSession.isResolving && !patientId;
   const params = useMemo(() => ({ page: 1, limit: 50, patientId }), [patientId]);
   const labOrdersQuery = useLabOrders(params, Boolean(patientId));
   const labOrders = labOrdersQuery.data?.items ?? [];
@@ -23,18 +23,16 @@ export default function PatientLabResultsPage() {
     <div className="space-y-4">
       <Breadcrumbs items={[{ label: 'Patient', to: '/patient' }, { label: 'Lab Results' }]} />
 
-      {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
-
       <Card title="Lab Results" subtitle="Read-only lab orders, result values, flags, and patient explanations">
         <div className="space-y-3">
-          {labOrdersQuery.isLoading ? <PatientPortalLoadingState>Loading lab results...</PatientPortalLoadingState> : null}
+          {waitingForPatient || labOrdersQuery.isLoading ? <PatientPortalLoadingState>Loading lab results...</PatientPortalLoadingState> : null}
           {labOrdersQuery.isError ? (
             <FeedbackMessage
               type="error"
               message={getLabApiErrorMessage(labOrdersQuery.error, 'Lab results could not be loaded')}
             />
           ) : null}
-          {!labOrdersQuery.isLoading && !labOrdersQuery.isError && labOrders.length === 0 ? (
+          {!waitingForPatient && Boolean(patientId) && !labOrdersQuery.isLoading && !labOrdersQuery.isError && labOrders.length === 0 ? (
             <PatientPortalEmptyState>No lab results yet.</PatientPortalEmptyState>
           ) : null}
 

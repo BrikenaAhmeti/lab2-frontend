@@ -7,18 +7,42 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import authReducer from '@/features/auth/authSlice';
 import type { AuthState } from '@/features/auth/authSlice';
 import BookAppointmentPage from '@/features/appointments/pages/BookAppointmentPage';
+import { authApi } from '@/lib/api/auth-api';
 import { patientsApi } from '@/lib/api/patients-api';
 import type { PatientRecord } from '@/lib/api/patients-api';
 
 vi.mock('@/features/appointments/components/BookingWizard', () => ({
-  default: ({ mode, patientId, initialPatient }: { mode: string; patientId?: string; initialPatient?: PatientRecord | null }) => (
+  default: ({
+    mode,
+    patientId,
+    patientResolving,
+    initialPatient,
+  }: {
+    mode: string;
+    patientId?: string;
+    patientResolving?: boolean;
+    initialPatient?: PatientRecord | null;
+  }) => (
     <div>
       <span data-testid="booking-mode">{mode}</span>
       <span data-testid="booking-patient-id">{patientId ?? ''}</span>
+      <span data-testid="booking-patient-resolving">{patientResolving ? 'yes' : 'no'}</span>
       <span data-testid="booking-initial-patient">{initialPatient?.id ?? ''}</span>
     </div>
   ),
 }));
+
+vi.mock('@/lib/api/auth-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/auth-api')>('@/lib/api/auth-api');
+
+  return {
+    ...actual,
+    authApi: {
+      ...actual.authApi,
+      me: vi.fn(),
+    },
+  };
+});
 
 vi.mock('@/lib/api/patients-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/patients-api')>('@/lib/api/patients-api');
@@ -52,6 +76,16 @@ const patient: PatientRecord = {
   createdAt: '2026-05-19T00:00:00.000Z',
   updatedAt: '2026-05-19T00:00:00.000Z',
 };
+
+function encodeJwtPayload(payload: Record<string, unknown>) {
+  const encoded = globalThis
+    .btoa(JSON.stringify(payload))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+  return `header.${encoded}.signature`;
+}
 
 function renderPage(mode: 'patient' | 'receptionist', auth: Partial<AuthState>) {
   const queryClient = new QueryClient({
@@ -94,6 +128,12 @@ function renderPage(mode: 'patient' | 'receptionist', auth: Partial<AuthState>) 
 describe('BookAppointmentPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(authApi.me).mockResolvedValue({
+      id: 'user-patient-1',
+      email: 'arta@example.com',
+      roles: ['Patient'],
+      permissions: [],
+    });
     vi.mocked(patientsApi.me).mockResolvedValue(patient);
   });
 
@@ -109,6 +149,57 @@ describe('BookAppointmentPage', () => {
     });
 
     expect(screen.getByTestId('booking-patient-id')).toHaveTextContent('patient-from-session');
+    expect(authApi.me).not.toHaveBeenCalled();
+    expect(patientsApi.me).not.toHaveBeenCalled();
+  });
+
+  it('uses patient ids from access token claims before calling backend profile endpoints', () => {
+    renderPage('patient', {
+      accessToken: encodeJwtPayload({
+        sub: 'user-patient-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+        patientProfileId: 'patient-from-token',
+      }),
+      user: {
+        id: 'user-patient-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+      },
+    });
+
+    expect(screen.getByTestId('booking-patient-id')).toHaveTextContent('patient-from-token');
+    expect(authApi.me).not.toHaveBeenCalled();
+    expect(patientsApi.me).not.toHaveBeenCalled();
+  });
+
+  it('uses the fresh auth backend session user when it includes a patient profile id', async () => {
+    vi.mocked(authApi.me).mockResolvedValueOnce({
+      id: 'user-patient-1',
+      email: 'arta@example.com',
+      roles: ['Patient'],
+      permissions: [],
+      patientProfileId: 'patient-from-auth',
+    });
+
+    const store = renderPage('patient', {
+      user: {
+        id: 'user-patient-1',
+        email: 'arta@example.com',
+        roles: ['Patient'],
+        permissions: [],
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('booking-patient-id')).toHaveTextContent('patient-from-auth');
+    });
+
+    expect(store.getState().auth.user?.patientId).toBe('patient-from-auth');
+    expect(store.getState().auth.user?.patientProfileId).toBe('patient-from-auth');
+    expect(authApi.me).toHaveBeenCalledTimes(1);
     expect(patientsApi.me).not.toHaveBeenCalled();
   });
 
@@ -128,6 +219,7 @@ describe('BookAppointmentPage', () => {
 
     expect(screen.getByTestId('booking-initial-patient')).toHaveTextContent('patient-1');
     expect(store.getState().auth.user?.patientId).toBe('patient-1');
+    expect(authApi.me).toHaveBeenCalledTimes(1);
     expect(patientsApi.me).toHaveBeenCalledTimes(1);
   });
 
@@ -143,6 +235,7 @@ describe('BookAppointmentPage', () => {
 
     expect(screen.getByTestId('booking-mode')).toHaveTextContent('receptionist');
     expect(screen.getByTestId('booking-patient-id')).toHaveTextContent('');
+    expect(authApi.me).not.toHaveBeenCalled();
     expect(patientsApi.me).not.toHaveBeenCalled();
   });
 });

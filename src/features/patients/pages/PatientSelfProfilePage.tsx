@@ -13,8 +13,11 @@ export default function PatientSelfProfilePage() {
     <div className="space-y-4">
       <Breadcrumbs items={[{ label: 'Patient', to: '/patient' }, { label: 'Profile' }]} />
 
+      {patientSession.isResolving && !patientId ? <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading your profile...</div> : null}
       {!patientId && !patientSession.isResolving ? (
-        <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" />
+        <div className="rounded-xl border border-border bg-surface/60 p-4 text-sm text-muted">
+          We are syncing your patient profile with the care system.
+        </div>
       ) : null}
       {patientId && patientQuery.isLoading ? <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading your profile...</div> : null}
       {patientId && patientQuery.isError ? <FeedbackMessage type="error" message={getApiErrorMessage(patientQuery.error, 'Your patient profile could not be loaded')} /> : null}

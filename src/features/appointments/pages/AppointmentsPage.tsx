@@ -32,6 +32,8 @@ function EmptyState({ label }: { label: string }) {
 export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
   const patientSession = useResolvedPatientSession(mode === 'patient');
   const patientId = mode === 'patient' ? patientSession.patientId : undefined;
+  const waitingForPatient = mode === 'patient' && patientSession.isResolving && !patientId;
+  const canShowAppointments = mode !== 'patient' || Boolean(patientId);
   const root = mode === 'patient' ? '/patient' : mode === 'nurse' ? '/nurse' : '/receptionist';
   const label = mode === 'patient' ? 'Patient' : mode === 'nurse' ? 'Nurse' : 'Receptionist';
   const canBookAppointments = mode !== 'nurse';
@@ -123,11 +125,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         }
       >
         <div className="space-y-5">
-          {mode === 'patient' && !patientId && !patientSession.isResolving ? (
-            <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" />
-          ) : null}
-
-          {appointmentsQuery.isLoading ? (
+          {waitingForPatient || appointmentsQuery.isLoading ? (
             <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading appointments...</div>
           ) : null}
 
@@ -138,7 +136,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
             />
           ) : null}
 
-          {!appointmentsQuery.isLoading && !appointmentsQuery.isError ? (
+          {!waitingForPatient && canShowAppointments && !appointmentsQuery.isLoading && !appointmentsQuery.isError ? (
             <>
               <section className="space-y-3">
                 <h2 className="text-base font-semibold text-foreground">Upcoming</h2>
@@ -214,6 +212,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         appointment={rescheduleAppointment}
         loading={rescheduleMutation.isPending}
         error={actionError}
+        publicAccess={mode === 'patient'}
         onClose={closeReschedule}
         onConfirm={async (slot) => {
           if (!rescheduleAppointment) return;

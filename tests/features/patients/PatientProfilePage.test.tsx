@@ -1,15 +1,28 @@
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import PatientProfilePage from '@/features/patients/pages/PatientProfilePage';
 import PatientSelfProfilePage from '@/features/patients/pages/PatientSelfProfilePage';
 import { store } from '@/app/store';
 import { clearSession, setSession } from '@/features/auth/authSlice';
+import { authApi } from '@/lib/api/auth-api';
 import { patientsApi, type PatientRecord } from '@/lib/api/patients-api';
 import { appointmentsApi, type AppointmentView } from '@/lib/api/appointments-api';
 import { medicalRecordsApi, type MedicalRecordView } from '@/lib/api/medical-records-api';
+
+vi.mock('@/lib/api/auth-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/auth-api')>('@/lib/api/auth-api');
+
+  return {
+    ...actual,
+    authApi: {
+      ...actual.authApi,
+      me: vi.fn(),
+    },
+  };
+});
 
 vi.mock('@/lib/api/patients-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/patients-api')>('@/lib/api/patients-api');
@@ -18,6 +31,7 @@ vi.mock('@/lib/api/patients-api', async () => {
     ...actual,
     patientsApi: {
       list: vi.fn(),
+      me: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -227,6 +241,13 @@ function setPatientSessionWithoutPatientId() {
 describe('Patient profile pages', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(authApi.me).mockResolvedValue({
+      id: 'user-1',
+      email: 'arta@example.com',
+      roles: ['Patient'],
+      permissions: [],
+    });
+    vi.mocked(patientsApi.me).mockResolvedValue(patient);
     vi.mocked(patientsApi.get).mockResolvedValue(patient);
     vi.mocked(patientsApi.timeline).mockResolvedValue([
       {
@@ -336,17 +357,17 @@ describe('Patient profile pages', () => {
     expect(screen.getByText('Dental pain visit')).toBeInTheDocument();
     expect(await screen.findByText('Stable exam')).toBeInTheDocument();
     expect(screen.queryByText(JSON.stringify(patient.medicalNotes))).not.toBeInTheDocument();
-    expect(patientsApi.get).toHaveBeenCalledWith('patient-1');
+    expect(patientsApi.me).toHaveBeenCalled();
     expect(medicalRecordsApi.list).toHaveBeenCalledWith({ page: 1, limit: 5, patientId: 'patient-1' });
   });
 
-  it('does not request patient self-view when the session has no patient profile id', async () => {
+  it('resolves patient self-view from the backend when the session has no patient profile id', async () => {
     setPatientSessionWithoutPatientId();
 
     render(
       <Provider store={store}>
         <QueryClientProvider client={queryClient()}>
-          <MemoryRouter initialEntries={['/patient/profile']}>
+          <MemoryRouter initialEntries={['/patient/profile?tab=medical']}>
             <Routes>
               <Route path="/patient/profile" element={<PatientSelfProfilePage />} />
             </Routes>
@@ -355,8 +376,10 @@ describe('Patient profile pages', () => {
       </Provider>
     );
 
-    expect(await screen.findByText('Patient profile could not be resolved from your session')).toBeInTheDocument();
-    expect(patientsApi.get).not.toHaveBeenCalled();
-    expect(medicalRecordsApi.list).not.toHaveBeenCalled();
+    expect(await screen.findByText('Staff-entered medical fields are shown read-only.')).toBeInTheDocument();
+    expect(patientsApi.me).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(medicalRecordsApi.list).toHaveBeenCalledWith({ page: 1, limit: 5, patientId: 'patient-1' });
+    });
   });
 });

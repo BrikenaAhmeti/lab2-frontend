@@ -29,6 +29,7 @@ function MetricCard({ label, value, tone }: { label: string; value: string; tone
 export default function PatientDashboardPage() {
   const patientSession = useResolvedPatientSession();
   const patientId = patientSession.patientId;
+  const waitingForPatient = patientSession.isResolving && !patientId;
   const upcomingParams = useMemo(
     () => ({ page: 1, limit: 3, patientId, from: new Date().toISOString() }),
     [patientId]
@@ -44,14 +45,10 @@ export default function PatientDashboardPage() {
     <div className="space-y-6">
       <PatientFeedbackPrompt patientId={patientId} enabled={Boolean(patientId)} />
 
-      {!patientId && !patientSession.isResolving ? (
-        <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" />
-      ) : null}
-
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           label="Upcoming Appointments"
-          value={upcomingQuery.isLoading ? '-' : String(upcomingAppointments.length)}
+          value={waitingForPatient || upcomingQuery.isLoading ? '-' : String(upcomingAppointments.length)}
           tone="info"
         />
         <MetricCard
@@ -93,13 +90,13 @@ export default function PatientDashboardPage() {
 
       <Card title="Upcoming Appointments" subtitle="Your next scheduled visits">
         <div className="space-y-3">
-          {upcomingQuery.isLoading ? (
+          {waitingForPatient || upcomingQuery.isLoading ? (
             <div className="rounded-xl border border-border p-4 text-sm text-muted">Loading appointments...</div>
           ) : null}
           {upcomingQuery.isError ? (
             <FeedbackMessage type="error" message="Upcoming appointments could not be loaded" />
           ) : null}
-          {!upcomingQuery.isLoading && !upcomingQuery.isError && upcomingAppointments.length === 0 ? (
+          {!waitingForPatient && Boolean(patientId) && !upcomingQuery.isLoading && !upcomingQuery.isError && upcomingAppointments.length === 0 ? (
             <div className="rounded-xl border border-border bg-surface/60 px-4 py-8 text-sm text-muted">
               No upcoming appointments.
             </div>

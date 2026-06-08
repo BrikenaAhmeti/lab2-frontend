@@ -11,6 +11,7 @@ interface RescheduleAppointmentDialogProps {
   appointment: AppointmentView | null;
   loading: boolean;
   error?: string;
+  publicAccess?: boolean;
   onClose: () => void;
   onConfirm: (slot: AvailableSlot) => void;
 }
@@ -19,6 +20,7 @@ export default function RescheduleAppointmentDialog({
   appointment,
   loading,
   error,
+  publicAccess = false,
   onClose,
   onConfirm,
 }: RescheduleAppointmentDialogProps) {
@@ -28,7 +30,8 @@ export default function RescheduleAppointmentDialog({
     appointment?.staffProfileId ?? '',
     appointment?.serviceCatalogId ?? '',
     date,
-    Boolean(appointment)
+    Boolean(appointment),
+    publicAccess
   );
 
   if (!appointment) return null;

@@ -445,7 +445,7 @@ describe('BookingWizard', () => {
     await moveToConfirmStep();
 
     expect(screen.getByRole('button', { name: 'Confirm appointment' })).toBeDisabled();
-    expect(screen.getByText('Patient profile could not be resolved from your session.')).toBeInTheDocument();
+    expect(screen.queryByText('Patient profile could not be resolved from your session.')).not.toBeInTheDocument();
   });
 
   it('lets receptionists select a patient and posts the authenticated booking payload', async () => {

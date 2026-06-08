@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Download } from 'lucide-react';
-import { useAppSelector } from '@/app/hooks';
 import { PdfDocumentPanel, PdfInfoGrid, PdfSection } from '@/components/pdf/PdfDocumentPanel';
-import { resolvePatientId } from '@/features/appointments/hooks/useAppointments';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import { getConsultationErrorMessage, usePrescriptions } from '@/features/consultation/hooks/useConsultation';
 import { prescriptionsApi, type PrescriptionView } from '@/lib/api/prescriptions-api';
 import Badge from '@/ui/atoms/Badge';
@@ -24,8 +23,9 @@ function fileName(prescription: PrescriptionView) {
 }
 
 export default function PatientPrescriptionsPage() {
-  const user = useAppSelector((state) => state.auth.user);
-  const patientId = resolvePatientId(user);
+  const patientSession = useResolvedPatientSession();
+  const patientId = patientSession.patientId;
+  const waitingForPatient = patientSession.isResolving && !patientId;
   const params = useMemo(() => ({ page: 1, limit: 50, patientId }), [patientId]);
   const prescriptionsQuery = usePrescriptions(params, Boolean(patientId));
   const prescriptions = prescriptionsQuery.data?.items ?? [];
@@ -50,11 +50,9 @@ export default function PatientPrescriptionsPage() {
     <div className="space-y-4">
       <Breadcrumbs items={[{ label: 'Patient', to: '/patient' }, { label: 'Prescriptions' }]} />
 
-      {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
-
       <Card title="Prescriptions" subtitle="Read-only medication history with MedSphere prescription PDFs">
         <div className="space-y-3">
-          {prescriptionsQuery.isLoading ? <PatientPortalLoadingState>Loading prescriptions...</PatientPortalLoadingState> : null}
+          {waitingForPatient || prescriptionsQuery.isLoading ? <PatientPortalLoadingState>Loading prescriptions...</PatientPortalLoadingState> : null}
           {prescriptionsQuery.isError ? (
             <FeedbackMessage
               type="error"
@@ -62,7 +60,7 @@ export default function PatientPrescriptionsPage() {
             />
           ) : null}
           {downloadError ? <FeedbackMessage type="error" message={downloadError} /> : null}
-          {!prescriptionsQuery.isLoading && !prescriptionsQuery.isError && prescriptions.length === 0 ? (
+          {!waitingForPatient && Boolean(patientId) && !prescriptionsQuery.isLoading && !prescriptionsQuery.isError && prescriptions.length === 0 ? (
             <PatientPortalEmptyState>No prescriptions yet.</PatientPortalEmptyState>
           ) : null}
 

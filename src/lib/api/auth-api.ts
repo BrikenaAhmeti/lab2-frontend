@@ -34,6 +34,12 @@ export interface AuthUserDto {
   patientId?: string;
   patientProfileId?: string;
   profileId?: string;
+  patient_id?: string;
+  patient_profile_id?: string;
+  profile_id?: string;
+  patient?: { id?: string | null; patientId?: string | null; patient_id?: string | null } | null;
+  patientProfile?: { id?: string | null; patientId?: string | null; patient_id?: string | null } | null;
+  profile?: { id?: string | null; patientId?: string | null; patient_id?: string | null; type?: string | null } | null;
 }
 
 export interface AuthResponse {

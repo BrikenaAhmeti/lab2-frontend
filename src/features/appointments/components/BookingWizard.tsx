@@ -43,6 +43,7 @@ const publicBookingRegistrationKey = 'medsphere.publicBookingPatient';
 interface BookingWizardProps {
   mode: BookingMode;
   patientId?: string;
+  patientResolving?: boolean;
   appointmentType?: AppointmentType;
   initialPatient?: PatientRecord | null;
 }
@@ -144,7 +145,13 @@ function inferDepartmentFromStaff(member: StaffRecord, departments: DepartmentRe
   return departments.find((item) => item.id === departmentId) ?? buildDepartmentFallback(selectedAssignment);
 }
 
-export default function BookingWizard({ mode, patientId, appointmentType, initialPatient = null }: BookingWizardProps) {
+export default function BookingWizard({
+  mode,
+  patientId,
+  patientResolving = false,
+  appointmentType,
+  initialPatient = null,
+}: BookingWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [department, setDepartment] = useState<DepartmentRecord | null>(null);
   const [service, setService] = useState<ServiceRecord | null>(null);
@@ -188,12 +195,14 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   const bookMutation = useBookAppointment();
   const publicBookMutation = usePublicBookAppointment();
   const actionLoading = bookMutation.isPending || publicBookMutation.isPending;
+  const currentDepartmentId = department?.id;
   const liveSlots = useMemo(
     () => (slotsQuery.data?.slots ?? []).filter((availableSlot) => new Date(availableSlot.start).getTime() > now),
     [now, slotsQuery.data?.slots]
   );
 
   const activePatientId = mode === 'receptionist' ? selectedPatient?.id : mode === 'patient' ? patientId : undefined;
+  const isPatientResolving = mode === 'patient' && patientResolving && !activePatientId;
   const expiresInSeconds = useMemo(() => {
     if (!slot || !slotSelectedAt) return null;
     return Math.max(0, 300 - Math.floor((now - slotSelectedAt) / 1000));
@@ -264,15 +273,15 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
     if (!staff) return;
 
     const inferredDepartment = inferDepartmentFromStaff(staff, departmentsQuery.data ?? []);
-    if (!inferredDepartment && department) {
+    if (!inferredDepartment && currentDepartmentId) {
       setDepartment(null);
       return;
     }
 
-    if (inferredDepartment && inferredDepartment.id !== department?.id) {
+    if (inferredDepartment && inferredDepartment.id !== currentDepartmentId) {
       setDepartment(inferredDepartment);
     }
-  }, [department?.id, departmentsQuery.data, staff]);
+  }, [currentDepartmentId, departmentsQuery.data, staff]);
 
   const verifySelectedSlot = async () => {
     if (!slot) return false;
@@ -616,6 +625,7 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
               staff={staff}
               slot={slot}
               patientId={activePatientId}
+              patientResolving={isPatientResolving}
               selectedPatient={selectedPatient}
               publicPatientDetails={publicPatientDetails}
               notes={notes}
