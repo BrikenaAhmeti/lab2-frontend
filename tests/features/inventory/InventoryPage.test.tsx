@@ -125,7 +125,10 @@ const alertsResponse: InventoryAlertsResponse = {
   expiringSoon: [],
 };
 
-function renderInventoryPage(permissions: string[]) {
+function renderInventoryPage(
+  permissions: string[],
+  options: { roles?: string[]; role?: string; route?: string; portal?: 'admin' | 'pharmacy' } = {}
+) {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -142,7 +145,8 @@ function renderInventoryPage(permissions: string[]) {
         user: {
           id: 'admin-user',
           email: 'admin@medsphere.local',
-          roles: ['Admin'],
+          roles: options.roles ?? ['Admin'],
+          role: options.role,
           permissions,
         },
       },
@@ -152,8 +156,8 @@ function renderInventoryPage(permissions: string[]) {
   return render(
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/admin/inventory']}>
-          <InventoryPage />
+        <MemoryRouter initialEntries={[options.route ?? '/admin/inventory']}>
+          <InventoryPage portal={options.portal} />
         </MemoryRouter>
       </QueryClientProvider>
     </Provider>
@@ -193,6 +197,21 @@ describe('InventoryPage', () => {
     renderInventoryPage([]);
 
     expect(screen.getByText('auth.forbiddenTitle')).toBeInTheDocument();
+  });
+
+  it('lets pharmacists manage inventory from the pharmacy portal', async () => {
+    renderInventoryPage(['pharmacy:read', 'pharmacy:dispense'], {
+      roles: ['Pharmacist'],
+      route: '/pharmacy/inventory',
+      portal: 'pharmacy',
+    });
+
+    expect(await screen.findByText('Aspirin 81 mg')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Pharmacy' })).toHaveAttribute('href', '/pharmacy');
+    expect(screen.getByRole('button', { name: 'Add Item' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Stock' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Deactivate' })).toBeInTheDocument();
   });
 
   it('shows inventory items with stock status and backend query params', async () => {

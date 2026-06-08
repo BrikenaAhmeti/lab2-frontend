@@ -6,6 +6,7 @@ import LanguageSwitch from '@/ui/molecules/LanguageSwitch';
 import { useAppSelector } from '@/app/hooks';
 import { clearPersistedSession } from '@/features/auth/useAuthBootstrap';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
 import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
@@ -33,7 +34,7 @@ export default function AppLayout() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.auth.user);
-  const roles = user?.roles ?? [];
+  const roles = getUserRoleNames(user);
   const permissions = user?.permissions ?? [];
   const canAccessOrganizationSetup =
     hasAnyRole(roles, ['Admin', 'Super Admin']) ||
@@ -50,8 +51,8 @@ export default function AppLayout() {
       'any'
     );
   const canAccessInventory =
-    hasAnyRole(roles, ['Admin', 'Super Admin']) ||
-    hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
+    hasAnyRole(roles, ['Admin', 'Super Admin', 'Pharmacist']) ||
+    hasAnyPermission(permissions, ['inventory:read', 'inventory:manage', 'inventory:manage:all'], 'any');
   const visibleNavItems = navItems.filter((item) => {
     if (item.requiresSuperAdmin) {
       return hasAnyRole(roles, ['Super Admin']);

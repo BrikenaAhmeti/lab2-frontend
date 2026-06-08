@@ -79,4 +79,19 @@ describe('portalConfigs', () => {
       expect.objectContaining({ label: 'Profile', to: '/nurse/profile' }),
     ]);
   });
+
+  it('wires pharmacist inventory management into the pharmacy portal', () => {
+    const pharmacy = portalConfigs.pharmacy.navGroups.find((group) => group.label === 'Pharmacy');
+
+    expect(pharmacy?.items).toEqual([
+      expect.objectContaining({ label: 'Queue', to: '/pharmacy' }),
+      expect.objectContaining({
+        label: 'Inventory',
+        to: '/pharmacy/inventory',
+        requiredRoles: ['Pharmacist'],
+      }),
+      expect.objectContaining({ label: 'Messages', to: '/pharmacy/messages' }),
+      expect.objectContaining({ label: 'Profile', to: '/pharmacy/profile' }),
+    ]);
+  });
 });

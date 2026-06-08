@@ -4,6 +4,7 @@ import Unauthorized from '@/components/common/Unauthorized';
 import PrivateRoute from '@/components/guards/PrivateRoute';
 import RouteErrorBoundary from '@/components/common/RouteErrorBoundary';
 import RoleGuard from '@/features/auth/guards/RoleGuard';
+import InventoryDashboardRedirect from './InventoryDashboardRedirect';
 import RoleRedirect from './RoleRedirect';
 
 const LoginPage = lazy(() => import('@/features/auth/pages/LoginPage'));
@@ -316,7 +317,11 @@ export const router = createBrowserRouter([
             {lazyRoute(<PharmacyLayout />)}
           </RoleGuard>
         ),
-        children: portalRoutes(<PharmacyDashboardPage />),
+        children: [
+          ...portalRoutes(<PharmacyDashboardPage />),
+          { path: 'inventory', element: lazyRoute(<InventoryPage portal="pharmacy" />) },
+          { path: 'inventory/items/:id', element: <Navigate to="/pharmacy/inventory" replace /> },
+        ],
       },
       {
         path: '/receptionist',
@@ -345,7 +350,7 @@ export const router = createBrowserRouter([
       { path: '/dashboard/staff', element: <Navigate to="/admin/staff" replace /> },
       { path: '/dashboard/staff/schedules', element: <Navigate to="/admin/staff/schedules" replace /> },
       { path: '/dashboard/patients', element: <Navigate to="/admin/patients" replace /> },
-      { path: '/dashboard/inventory', element: <Navigate to="/admin/inventory" replace /> },
+      { path: '/dashboard/inventory', element: <InventoryDashboardRedirect /> },
       { path: '/dashboard/billing', element: <Navigate to="/admin/billing" replace /> },
       { path: '/dashboard/reports', element: <Navigate to="/admin/reports" replace /> },
       { path: '/dashboard/feedback', element: <Navigate to="/admin/feedback" replace /> },

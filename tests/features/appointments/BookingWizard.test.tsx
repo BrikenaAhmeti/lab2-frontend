@@ -7,6 +7,7 @@ import { departmentsApi, type DepartmentRecord } from '@/lib/api/departments-api
 import { servicesApi, type ServiceRecord } from '@/lib/api/services-api';
 import { staffApi, type StaffRecord } from '@/lib/api/staff-api';
 import { appointmentsApi, type AppointmentView, type AvailableSlotsResponse } from '@/lib/api/appointments-api';
+import { patientsApi, type PatientRecord } from '@/lib/api/patients-api';
 
 vi.mock('@/lib/api/departments-api', async () => {
   const actual = await vi.importActual<typeof import('@/lib/api/departments-api')>('@/lib/api/departments-api');
@@ -76,6 +77,22 @@ vi.mock('@/lib/api/appointments-api', async () => {
       updateStatus: vi.fn(),
       availableSlots: vi.fn(),
       publicAvailableSlots: vi.fn(),
+    },
+  };
+});
+
+vi.mock('@/lib/api/patients-api', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/api/patients-api')>('@/lib/api/patients-api');
+
+  return {
+    ...actual,
+    patientsApi: {
+      me: vi.fn(),
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      timeline: vi.fn(),
     },
   };
 });
@@ -192,6 +209,27 @@ const appointment: AppointmentView = {
   },
 };
 
+const patient: PatientRecord = {
+  id: 'patient-1',
+  userId: 'user-patient-1',
+  firstName: 'Arta',
+  lastName: 'Krasniqi',
+  email: 'arta@example.com',
+  phone: '+38344111222',
+  dateOfBirth: '1995-03-12',
+  gender: 'female',
+  bloodType: null,
+  personalNumber: '1234567890',
+  address: null,
+  emergencyContact: null,
+  emergencyPhone: null,
+  allergies: null,
+  medicalNotes: null,
+  isActive: true,
+  createdAt: '2026-05-19T00:00:00.000Z',
+  updatedAt: '2026-05-19T00:00:00.000Z',
+};
+
 function renderWizard(patientId?: string) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -218,6 +256,21 @@ function renderPublicWizard() {
   return render(
     <QueryClientProvider client={queryClient}>
       <BookingWizard mode="public" />
+    </QueryClientProvider>
+  );
+}
+
+function renderReceptionistWizard() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BookingWizard mode="receptionist" />
     </QueryClientProvider>
   );
 }
@@ -286,6 +339,10 @@ describe('BookingWizard', () => {
     vi.mocked(staffApi.publicList).mockResolvedValue({
       items: [staff],
       meta: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+    vi.mocked(patientsApi.list).mockResolvedValue({
+      items: [patient],
+      meta: { page: 1, limit: 8, total: 1, totalPages: 1 },
     });
     vi.mocked(appointmentsApi.availableSlots).mockResolvedValue(slots);
     vi.mocked(appointmentsApi.publicAvailableSlots).mockResolvedValue(slots);
@@ -389,6 +446,26 @@ describe('BookingWizard', () => {
 
     expect(screen.getByRole('button', { name: 'Confirm appointment' })).toBeDisabled();
     expect(screen.getByText('Patient profile could not be resolved from your session.')).toBeInTheDocument();
+  });
+
+  it('lets receptionists select a patient and posts the authenticated booking payload', async () => {
+    renderReceptionistWizard();
+    await moveToConfirmStep();
+
+    fireEvent.click(await screen.findByRole('button', { name: /arta krasniqi/i }));
+    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'Front desk booking' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm appointment' }));
+
+    await waitFor(() => {
+      expect(appointmentsApi.create).toHaveBeenCalledWith({
+        patientId: 'patient-1',
+        serviceCatalogId: 'service-1',
+        staffProfileId: 'staff-1',
+        scheduledAt: '2030-05-20T09:00:00.000Z',
+        notes: 'Front desk booking',
+      });
+    });
+    expect(await screen.findByText('Appointment booked')).toBeInTheDocument();
   });
 
   it('collects public patient details and posts the unauthenticated booking payload', async () => {

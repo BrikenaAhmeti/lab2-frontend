@@ -206,6 +206,12 @@ export default function BookingWizard({ mode, patientId, appointmentType, initia
   }, [slot]);
 
   useEffect(() => {
+    if (mode === 'patient' && initialPatient && selectedPatient?.id !== initialPatient.id) {
+      setSelectedPatient(initialPatient);
+    }
+  }, [initialPatient, mode, selectedPatient?.id]);
+
+  useEffect(() => {
     if (slot && expiresInSeconds === 0) {
       setSlot(null);
       setSlotSelectedAt(null);

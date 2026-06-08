@@ -4,7 +4,8 @@ import { Plus } from 'lucide-react';
 import { useAppSelector } from '@/app/hooks';
 import Forbidden from '@/components/common/Forbidden';
 import ExportButton from '@/components/export/ExportButton';
-import { hasAnyPermission } from '@/features/auth/utils/permission';
+import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
 import InventoryAlertsPanel from '@/features/inventory/components/InventoryAlertsPanel';
 import InventoryCategoriesPanel from '@/features/inventory/components/InventoryCategoriesPanel';
 import InventoryFilters from '@/features/inventory/components/InventoryFilters';
@@ -39,7 +40,12 @@ import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import Pagination from '@/ui/molecules/Pagination';
 
 type InventoryTab = 'items' | 'categories' | 'alerts';
+type InventoryPortal = 'admin' | 'pharmacy';
 type FeedbackState = { type: 'success' | 'error'; message: string } | null;
+
+interface InventoryPageProps {
+  portal?: InventoryPortal;
+}
 
 const defaultPageSize = 10;
 const tabs: Array<{ id: InventoryTab; label: string }> = [
@@ -48,10 +54,14 @@ const tabs: Array<{ id: InventoryTab; label: string }> = [
   { id: 'alerts', label: 'Alerts' },
 ];
 
-export default function InventoryPage() {
-  const permissions = useAppSelector((state) => state.auth.user?.permissions ?? []);
-  const canRead = hasAnyPermission(permissions, ['inventory:read', 'inventory:manage:all'], 'any');
-  const canManage = hasAnyPermission(permissions, ['inventory:manage:all'], 'any');
+export default function InventoryPage({ portal = 'admin' }: InventoryPageProps) {
+  const user = useAppSelector((state) => state.auth.user);
+  const permissions = user?.permissions ?? [];
+  const roles = getUserRoleNames(user);
+  const isPharmacist = hasAnyRole(roles, ['Pharmacist']);
+  const canRead =
+    isPharmacist || hasAnyPermission(permissions, ['inventory:read', 'inventory:manage', 'inventory:manage:all'], 'any');
+  const canManage = isPharmacist || hasAnyPermission(permissions, ['inventory:manage', 'inventory:manage:all'], 'any');
 
   const [activeTab, setActiveTab] = useState<InventoryTab>('items');
   const [search, setSearch] = useState('');
@@ -217,7 +227,12 @@ export default function InventoryPage() {
 
   return (
     <div className="space-y-4">
-      <Breadcrumbs items={[{ label: 'Admin', to: '/admin' }, { label: 'Inventory' }]} />
+      <Breadcrumbs
+        items={[
+          portal === 'pharmacy' ? { label: 'Pharmacy', to: '/pharmacy' } : { label: 'Admin', to: '/admin' },
+          { label: 'Inventory' },
+        ]}
+      />
 
       <Card
         title="Inventory"

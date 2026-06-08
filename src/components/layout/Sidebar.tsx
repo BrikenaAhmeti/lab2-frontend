@@ -29,6 +29,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { closeSidebar } from '@/features/ui/uiSlice';
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
+import { getUserRoleNames } from '@/features/auth/utils/roles';
 import ChatNavUnreadBadge from '@/features/chat/components/ChatNavUnreadBadge';
 import { useThemeMode } from '@/hooks/useThemeMode';
 import type { PortalConfig, PortalNavItem } from '@/layouts/portalConfig';
@@ -115,7 +116,7 @@ export default function Sidebar({ portal }: { portal: PortalConfig }) {
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
   const user = useAppSelector((state) => state.auth.user);
   const permissions = user?.permissions ?? [];
-  const roles = user?.roles ?? [];
+  const roles = getUserRoleNames(user);
 
   const content = (
     <div className="flex h-full flex-col bg-[#06264a] text-slate-100">

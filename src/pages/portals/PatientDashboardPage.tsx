@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { CalendarPlus, ClipboardList, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useAppSelector } from '@/app/hooks';
 import AppointmentStatusBadge from '@/features/appointments/components/AppointmentStatusBadge';
 import { formatAppointmentDate } from '@/features/appointments/components/appointmentFormat';
-import { resolvePatientId, useAppointmentList } from '@/features/appointments/hooks/useAppointments';
+import { useAppointmentList } from '@/features/appointments/hooks/useAppointments';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import { useChatUnreadCount } from '@/features/chat/useChat';
 import PatientFeedbackPrompt from '@/features/feedback/components/PatientFeedbackPrompt';
 import { usePendingFeedbackAppointments } from '@/features/feedback/hooks/useFeedback';
@@ -27,8 +27,8 @@ function MetricCard({ label, value, tone }: { label: string; value: string; tone
 }
 
 export default function PatientDashboardPage() {
-  const user = useAppSelector((state) => state.auth.user);
-  const patientId = resolvePatientId(user);
+  const patientSession = useResolvedPatientSession();
+  const patientId = patientSession.patientId;
   const upcomingParams = useMemo(
     () => ({ page: 1, limit: 3, patientId, from: new Date().toISOString() }),
     [patientId]
@@ -44,7 +44,9 @@ export default function PatientDashboardPage() {
     <div className="space-y-6">
       <PatientFeedbackPrompt patientId={patientId} enabled={Boolean(patientId)} />
 
-      {!patientId ? <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" /> : null}
+      {!patientId && !patientSession.isResolving ? (
+        <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" />
+      ) : null}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard

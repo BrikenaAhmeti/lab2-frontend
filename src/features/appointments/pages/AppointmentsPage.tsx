@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarPlus, PhoneCall } from 'lucide-react';
-import { useAppSelector } from '@/app/hooks';
 import ExportButton from '@/components/export/ExportButton';
+import { useResolvedPatientSession } from '@/features/auth/hooks/useResolvedPatientSession';
 import type { AppointmentView } from '@/lib/api/appointments-api';
 import Button from '@/ui/atoms/Button';
 import Card from '@/ui/atoms/Card';
@@ -12,7 +12,7 @@ import AppointmentCard from '../components/AppointmentCard';
 import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import CancelAppointmentDialog from '../components/CancelAppointmentDialog';
 import RescheduleAppointmentDialog from '../components/RescheduleAppointmentDialog';
-import { getApiErrorMessage, resolvePatientId, useAppointmentList, useCancelAppointment, useRescheduleAppointment } from '../hooks/useAppointments';
+import { getApiErrorMessage, useAppointmentList, useCancelAppointment, useRescheduleAppointment } from '../hooks/useAppointments';
 import { isPastAppointment } from '../components/appointmentFormat';
 
 type AppointmentsPageMode = 'patient' | 'receptionist' | 'nurse';
@@ -30,8 +30,8 @@ function EmptyState({ label }: { label: string }) {
 }
 
 export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
-  const user = useAppSelector((state) => state.auth.user);
-  const patientId = mode === 'patient' ? resolvePatientId(user) : undefined;
+  const patientSession = useResolvedPatientSession(mode === 'patient');
+  const patientId = mode === 'patient' ? patientSession.patientId : undefined;
   const root = mode === 'patient' ? '/patient' : mode === 'nurse' ? '/nurse' : '/receptionist';
   const label = mode === 'patient' ? 'Patient' : mode === 'nurse' ? 'Nurse' : 'Receptionist';
   const canBookAppointments = mode !== 'nurse';
@@ -123,7 +123,7 @@ export default function AppointmentsPage({ mode }: AppointmentsPageProps) {
         }
       >
         <div className="space-y-5">
-          {mode === 'patient' && !patientId ? (
+          {mode === 'patient' && !patientId && !patientSession.isResolving ? (
             <FeedbackMessage type="error" message="Patient profile could not be resolved from your session" />
           ) : null}
 

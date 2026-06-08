@@ -95,6 +95,9 @@ export interface PatientTimelineItem {
 }
 
 export const patientsApi = {
+  me(instance?: AxiosInstance) {
+    return client(instance).get<PatientRecord>('/api/patients/me').then((response) => response.data);
+  },
   list(params: PatientListParams, instance?: AxiosInstance) {
     return client(instance).get<PatientListResponse>('/api/patients', { params }).then((response) => response.data);
   },
