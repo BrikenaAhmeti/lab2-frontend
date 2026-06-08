@@ -29,6 +29,18 @@ describe('chat contact rules', () => {
     ]);
   });
 
+  it('allows lab technicians to start chats with clinic staff, not patients', () => {
+    expect(allowedChatParticipantRoles({ roles: ['Lab Technician'] })).toEqual([
+      'doctor',
+      'nurse',
+      'receptionist',
+      'staff',
+      'lab_technician',
+      'pharmacist',
+      'department_head',
+    ]);
+  });
+
   it('maps backend role keys to chat participant roles', () => {
     expect(chatRoleFromValue('doctor')).toBe('doctor');
     expect(chatRoleFromValue('reception')).toBe('receptionist');

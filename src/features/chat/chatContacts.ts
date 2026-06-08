@@ -41,6 +41,16 @@ const rolePriority: Record<ChatParticipantRole, number> = {
   super_admin: 10,
 };
 
+const clinicStaffChatRoles = [
+  'doctor',
+  'nurse',
+  'receptionist',
+  'staff',
+  'lab_technician',
+  'pharmacist',
+  'department_head',
+] satisfies ChatParticipantRole[];
+
 export function chatRoleLabel(role: ChatParticipantRole) {
   return roleLabels[role];
 }
@@ -112,7 +122,11 @@ export function allowedChatParticipantRoles(user?: Pick<AuthUser, 'roles' | 'rol
     ['doctor', 'receptionist'].forEach((role) => allowed.add(role as ChatParticipantRole));
   }
 
-  if (currentRoles.includes('Lab Technician') || currentRoles.includes('Pharmacist')) {
+  if (currentRoles.includes('Lab Technician')) {
+    clinicStaffChatRoles.forEach((role) => allowed.add(role));
+  }
+
+  if (currentRoles.includes('Pharmacist')) {
     ['doctor', 'nurse', 'receptionist', 'staff'].forEach((role) =>
       allowed.add(role as ChatParticipantRole)
     );
@@ -230,8 +244,10 @@ export async function loadChatContacts({
   const allowed = new Set(allowedRoles);
   const needsStaff = allowedRoles.some((role) => role !== 'patient');
   const needsPatients = allowed.has('patient');
-  const currentIsPatient = userRoleNames(currentUser).some((role) => normalizeRoleName(role) === 'Patient');
-  const staffList = currentIsPatient ? staffApi.publicList : staffApi.list;
+  const currentRoles = userRoleNames(currentUser).map(normalizeRoleName);
+  const currentIsPatient = currentRoles.includes('Patient');
+  const currentIsLabTechnician = currentRoles.includes('Lab Technician');
+  const staffList = currentIsPatient || currentIsLabTechnician ? staffApi.publicList : staffApi.list;
 
   const tasks: Array<Promise<ChatContact[]>> = [];
 
