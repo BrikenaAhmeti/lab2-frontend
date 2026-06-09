@@ -1,17 +1,18 @@
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { AvailableSlot } from '@/lib/api/appointments-api';
-import CalendarDatePicker from '@/ui/molecules/CalendarDatePicker';
 import SlotPicker from './SlotPicker';
-import { getTodayInputValue } from './appointmentFormat';
 
 interface SlotStepProps {
   date: string;
   slots: AvailableSlot[];
+  occupiedSlots: AvailableSlot[];
   selectedSlot: AvailableSlot | null;
   expiresInSeconds: number | null;
   loading: boolean;
   error?: string;
+  minDate: string;
+  maxDate: string;
   onDateChange: (date: string) => void;
   onSlotSelect: (slot: AvailableSlot) => void;
 }
@@ -53,14 +54,16 @@ const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export default function SlotStep({
   date,
   slots,
+  occupiedSlots,
   selectedSlot,
   expiresInSeconds,
   loading,
   error,
+  minDate,
+  maxDate,
   onDateChange,
   onSlotSelect,
 }: SlotStepProps) {
-  const today = getTodayInputValue();
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const parsedDate = parseDateInput(date);
     return new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1);
@@ -69,12 +72,17 @@ export default function SlotStep({
   const selectedDateLabel = useMemo(
     () =>
       new Intl.DateTimeFormat(undefined, {
-        weekday: 'long',
         month: 'short',
         day: 'numeric',
         year: 'numeric',
-      }).format(parseDateInput(date)),
-    [date]
+      }).format(parseDateInput(minDate)) +
+      ' - ' +
+      new Intl.DateTimeFormat(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      }).format(parseDateInput(maxDate)),
+    [maxDate, minDate]
   );
   const monthLabel = useMemo(
     () =>
@@ -87,7 +95,7 @@ export default function SlotStep({
 
   const selectDate = (nextDate: Date) => {
     const nextValue = formatDateInput(nextDate);
-    if (nextValue < today) return;
+    if (nextValue < minDate || nextValue > maxDate) return;
     onDateChange(nextValue);
   };
 
@@ -152,7 +160,7 @@ export default function SlotStep({
 
             const value = formatDateInput(calendarDate);
             const isSelected = value === date;
-            const isDisabled = value < today;
+            const isDisabled = value < minDate || value > maxDate;
 
             return (
               <button
@@ -177,7 +185,8 @@ export default function SlotStep({
           <span className="text-sm font-medium text-foreground">Date</span>
           <input
             type="date"
-            min={today}
+            min={minDate}
+            max={maxDate}
             value={date}
             onChange={(event) => handleDateInput(event.target.value)}
             className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64"
@@ -188,13 +197,14 @@ export default function SlotStep({
       <section className="rounded-xl border border-border bg-background p-4" aria-labelledby="available-times-title">
         <div className="mb-4">
           <h3 id="available-times-title" className="font-semibold text-foreground">
-            Available times
+            Available times for the next 3 weeks
           </h3>
           <p className="text-sm text-muted">{selectedDateLabel}</p>
         </div>
 
         <SlotPicker
           slots={slots}
+          occupiedSlots={occupiedSlots}
           selectedStart={selectedSlot?.start}
           loading={loading}
           error={error}

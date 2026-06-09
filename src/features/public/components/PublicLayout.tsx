@@ -3,7 +3,6 @@ import clsx from 'clsx';
 import { useEffect, useState, type ReactNode } from 'react';
 import {
   Building2,
-  CalendarPlus,
   ClipboardList,
   Home,
   Info,
@@ -98,14 +97,6 @@ export default function PublicLayout({ children, siteSettings }: PublicLayoutPro
               <LogIn className="h-4 w-4 shrink-0" aria-hidden="true" />
               <span>Portal</span>
             </Link>
-            <Link
-              className="flex items-center gap-3 rounded-lg bg-cobalt-900 px-3.5 py-2.5 font-semibold text-white shadow-soft transition hover:bg-cobalt-800"
-              to="/book-appointment"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <CalendarPlus className="h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>Book</span>
-            </Link>
           </div>
           <div className="hidden items-center gap-0.5 text-sm lg:flex xl:gap-1">
             {links.map((link) => {
@@ -130,10 +121,6 @@ export default function PublicLayout({ children, siteSettings }: PublicLayoutPro
             <Link className="inline-flex items-center gap-2 rounded-lg px-2.5 py-2 font-medium text-primary transition hover:bg-primary/10 xl:px-3" to="/login">
               <LogIn className="h-4 w-4" aria-hidden="true" />
               <span>Portal</span>
-            </Link>
-            <Link className="inline-flex items-center gap-2 rounded-lg bg-cobalt-900 px-3 py-2 font-semibold text-white shadow-soft transition hover:bg-cobalt-800 xl:px-3.5" to="/book-appointment">
-              <CalendarPlus className="h-4 w-4" aria-hidden="true" />
-              <span>Book</span>
             </Link>
           </div>
         </nav>
@@ -167,7 +154,6 @@ export default function PublicLayout({ children, siteSettings }: PublicLayoutPro
           <div>
             <h2 className="text-sm font-semibold text-white">Access</h2>
             <div className="mt-4 grid gap-2 text-sm text-white/70">
-              <Link to="/book-appointment" className="hover:text-white">Book appointment</Link>
               <Link to="/register" className="hover:text-white">Patient registration</Link>
               <Link to="/login" className="hover:text-white">Secure portal</Link>
               <Link to="/about" className="hover:text-white">About {siteSettings.facilityName}</Link>

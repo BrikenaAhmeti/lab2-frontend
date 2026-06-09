@@ -35,7 +35,6 @@ export default function AuthPageShell({ eyebrow, title, subtitle, children, comp
   const { t } = useTranslation('common');
   const currentLanguage = (i18n.language || 'en').slice(0, 2).toLowerCase();
   const backToWebsiteLabel = t('auth.backToWebsite', { defaultValue: 'Back to website' });
-  const bookAppointmentLabel = t('auth.bookAppointment', { defaultValue: 'Book appointment' });
 
   return (
     <main className="min-h-screen bg-white text-foreground">
@@ -107,13 +106,6 @@ export default function AuthPageShell({ eyebrow, title, subtitle, children, comp
                   >
                     <Home size={16} aria-hidden="true" />
                     {backToWebsiteLabel}
-                  </Link>
-                  <Link
-                    to="/book-appointment"
-                    className="inline-flex h-10 items-center gap-2 rounded-lg border border-cobalt-100 bg-cobalt-50 px-3 text-cobalt-700 transition hover:border-cobalt-200 hover:bg-cobalt-100"
-                  >
-                    <CalendarCheck size={16} aria-hidden="true" />
-                    {bookAppointmentLabel}
                   </Link>
                 </div>
                 <label

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { departmentsApi } from '@/lib/api/departments-api';
 import { servicesApi } from '@/lib/api/services-api';
@@ -8,8 +8,6 @@ import {
   type AppointmentListParams,
   type AppointmentType,
   type BookAppointmentPayload,
-  type PublicAppointmentPatientPayload,
-  type PublicBookAppointmentPayload,
   type RescheduleAppointmentPayload,
   type UpdateAppointmentStatusPayload,
 } from '@/lib/api/appointments-api';
@@ -17,7 +15,7 @@ import type { AuthUser } from '@/features/auth/authSlice';
 import { resolveSessionPatientId } from '@/features/auth/utils/patientSession';
 import { publicCoreApiClient } from '@/lib/api/axios';
 
-export type BookingMode = 'patient' | 'receptionist' | 'public';
+export type BookingMode = 'patient' | 'receptionist';
 
 export const appointmentQueryKey = {
   all: ['appointments'] as const,
@@ -93,6 +91,36 @@ export function useAvailableSlots(staffId: string, serviceId: string, date: stri
   });
 }
 
+export function useAvailableSlotsRange(
+  staffId: string,
+  serviceId: string,
+  dates: string[],
+  enabled: boolean,
+  publicAccess = false
+) {
+  return useQueries({
+    queries: dates.map((date) => ({
+      queryKey: publicAccess
+        ? [...appointmentQueryKey.slots(staffId, serviceId, date), 'public']
+        : appointmentQueryKey.slots(staffId, serviceId, date),
+      queryFn: () =>
+        publicAccess
+          ? appointmentsApi.publicAvailableSlots(staffId, { date, serviceId }, publicCoreApiClient)
+          : appointmentsApi.availableSlots(staffId, { date, serviceId }),
+      enabled: enabled && Boolean(staffId && serviceId && date),
+      refetchInterval: enabled ? 30000 : false,
+      retry: false,
+    })),
+    combine: (results) => ({
+      data: results.map((result) => result.data).filter(Boolean),
+      isLoading: results.some((result) => result.isLoading),
+      isError: results.some((result) => result.isError),
+      error: results.find((result) => result.error)?.error,
+      refetch: async () => Promise.all(results.map((result) => result.refetch({ throwOnError: true }))),
+    }),
+  });
+}
+
 export function useAppointmentList(params: AppointmentListParams, enabled = true) {
   return useQuery({
     queryKey: appointmentQueryKey.list(params),
@@ -126,19 +154,6 @@ export function useBookAppointment() {
 
   return useMutation({
     mutationFn: (payload: BookAppointmentPayload) => appointmentsApi.create(payload),
-    onSuccess: async (appointment) => {
-      await queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
-      queryClient.setQueryData(appointmentQueryKey.detail(appointment.id), appointment);
-    },
-    retry: false,
-  });
-}
-
-export function usePublicBookAppointment() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (payload: PublicBookAppointmentPayload) => appointmentsApi.publicCreate(payload),
     onSuccess: async (appointment) => {
       await queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
       queryClient.setQueryData(appointmentQueryKey.detail(appointment.id), appointment);
@@ -205,26 +220,6 @@ export function buildAppointmentPayload(input: {
 
   return {
     patientId: input.patientId,
-    serviceCatalogId: input.serviceCatalogId,
-    staffProfileId: input.staffProfileId,
-    scheduledAt: input.scheduledAt,
-    ...(input.appointmentType ? { appointmentType: input.appointmentType } : {}),
-    ...(notes ? { notes } : {}),
-  };
-}
-
-export function buildPublicAppointmentPayload(input: {
-  patient: PublicAppointmentPatientPayload;
-  serviceCatalogId: string;
-  staffProfileId: string;
-  scheduledAt: string;
-  appointmentType?: AppointmentType;
-  notes?: string;
-}): PublicBookAppointmentPayload {
-  const notes = input.notes?.trim();
-
-  return {
-    patient: input.patient,
     serviceCatalogId: input.serviceCatalogId,
     staffProfileId: input.staffProfileId,
     scheduledAt: input.scheduledAt,

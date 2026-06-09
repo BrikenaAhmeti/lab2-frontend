@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarPlus, CheckCircle2, LogIn, UserPlus } from 'lucide-react';
+import { CalendarPlus, CheckCircle2 } from 'lucide-react';
 import type { DepartmentRecord } from '@/lib/api/departments-api';
 import type { ServiceRecord } from '@/lib/api/services-api';
 import type { StaffDepartment, StaffRecord } from '@/lib/api/staff-api';
@@ -10,35 +10,27 @@ import Button from '@/ui/atoms/Button';
 import FeedbackMessage from '@/ui/molecules/FeedbackMessage';
 import {
   buildAppointmentPayload,
-  buildPublicAppointmentPayload,
   canConfirmBooking,
   getApiErrorMessage,
   type BookingMode,
   useAppointmentDepartments,
   useAppointmentServices,
   useAppointmentStaff,
-  useAvailableSlots,
+  useAvailableSlotsRange,
   useBookAppointment,
-  usePublicBookAppointment,
 } from '../hooks/useAppointments';
 import AppointmentStatusBadge from './AppointmentStatusBadge';
 import ConfirmStep from './ConfirmStep';
-import PublicPatientDetailsStep, {
-  emptyPublicPatientDetails,
-  normalizePublicPatientDetails,
-  validatePublicPatientDetails,
-} from './PublicPatientDetailsStep';
 import ServiceStep from './ServiceStep';
 import SlotStep from './SlotStep';
 import StaffStep from './StaffStep';
 import VoiceBookingPanel from './VoiceBookingPanel';
-import { formatAppointmentDate, getTodayInputValue } from './appointmentFormat';
+import { formatAppointmentDate, getDateInputValueFromToday } from './appointmentFormat';
 
-type BookingStep = 'Your Details' | 'Clinical Service' | 'Care Provider' | 'Slot' | 'Confirm';
+type BookingStep = 'Clinical Service' | 'Care Provider' | 'Slot' | 'Confirm';
 
 const portalSteps: BookingStep[] = ['Care Provider', 'Clinical Service', 'Slot', 'Confirm'];
-const publicSteps: BookingStep[] = ['Care Provider', 'Clinical Service', 'Slot', 'Your Details', 'Confirm'];
-const publicBookingRegistrationKey = 'medsphere.publicBookingPatient';
+const bookingWindowDays = 21;
 
 interface BookingWizardProps {
   mode: BookingMode;
@@ -93,17 +85,6 @@ function downloadAppointmentCalendar(appointment: AppointmentView) {
   URL.revokeObjectURL(url);
 }
 
-function openPatientRegistrationFromBooking(details: typeof emptyPublicPatientDetails) {
-  try {
-    window.sessionStorage.setItem(publicBookingRegistrationKey, JSON.stringify(normalizePublicPatientDetails(details)));
-  } catch {
-    window.location.assign('/register?source=appointment');
-    return;
-  }
-
-  window.location.assign('/register?source=appointment');
-}
-
 function isActiveDepartmentAssignment(assignment: StaffDepartment) {
   return (assignment.unassignedAt === undefined || assignment.unassignedAt === null) && assignment.department?.isActive !== false;
 }
@@ -156,7 +137,7 @@ export default function BookingWizard({
   const [department, setDepartment] = useState<DepartmentRecord | null>(null);
   const [service, setService] = useState<ServiceRecord | null>(null);
   const [staff, setStaff] = useState<StaffRecord | null>(null);
-  const [date, setDate] = useState(getTodayInputValue());
+  const [date, setDate] = useState(getDateInputValueFromToday(1));
   const [slot, setSlot] = useState<AvailableSlot | null>(null);
   const [slotSelectedAt, setSlotSelectedAt] = useState<number | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(initialPatient);
@@ -167,38 +148,43 @@ export default function BookingWizard({
   const [slotCheckError, setSlotCheckError] = useState('');
   const [slotCheckLoading, setSlotCheckLoading] = useState(false);
   const [calendarError, setCalendarError] = useState('');
-  const [publicPatientDetails, setPublicPatientDetails] = useState(emptyPublicPatientDetails);
-  const [publicPatientSubmitted, setPublicPatientSubmitted] = useState(false);
 
-  const isPublic = mode === 'public';
   const usesPublicBookingCatalog = mode !== 'receptionist';
-  const steps = isPublic ? publicSteps : portalSteps;
+  const steps = portalSteps;
   const currentStep = steps[stepIndex] ?? steps[0];
   const slotStepIndex = steps.indexOf('Slot');
-  const publicPatientErrors = useMemo(
-    () => validatePublicPatientDetails(publicPatientDetails),
-    [publicPatientDetails]
-  );
-  const hasValidPublicPatient = Object.keys(publicPatientErrors).length === 0;
 
   const departmentsQuery = useAppointmentDepartments(usesPublicBookingCatalog);
   const servicesQuery = useAppointmentServices(department?.id ?? '', usesPublicBookingCatalog);
   const staffQuery = useAppointmentStaff(undefined, usesPublicBookingCatalog);
   const shouldKeepSlotsFresh = slotStepIndex >= 0 && stepIndex >= slotStepIndex;
-  const slotsQuery = useAvailableSlots(
+  const bookingDates = useMemo(
+    () => Array.from({ length: bookingWindowDays }, (_, index) => getDateInputValueFromToday(index + 1)),
+    []
+  );
+  const slotsQuery = useAvailableSlotsRange(
     staff?.id ?? '',
     service?.id ?? '',
-    date,
+    bookingDates,
     shouldKeepSlotsFresh,
     usesPublicBookingCatalog
   );
   const bookMutation = useBookAppointment();
-  const publicBookMutation = usePublicBookAppointment();
-  const actionLoading = bookMutation.isPending || publicBookMutation.isPending;
+  const actionLoading = bookMutation.isPending;
   const currentDepartmentId = department?.id;
   const liveSlots = useMemo(
-    () => (slotsQuery.data?.slots ?? []).filter((availableSlot) => new Date(availableSlot.start).getTime() > now),
-    [now, slotsQuery.data?.slots]
+    () =>
+      (slotsQuery.data ?? [])
+        .flatMap((day) => day?.slots ?? [])
+        .filter((availableSlot) => new Date(availableSlot.start).getTime() > now),
+    [now, slotsQuery.data]
+  );
+  const occupiedSlots = useMemo(
+    () =>
+      (slotsQuery.data ?? [])
+        .flatMap((day) => day?.occupiedSlots ?? [])
+        .filter((occupiedSlot) => new Date(occupiedSlot.start).getTime() > now),
+    [now, slotsQuery.data]
   );
 
   const activePatientId = mode === 'receptionist' ? selectedPatient?.id : mode === 'patient' ? patientId : undefined;
@@ -239,14 +225,9 @@ export default function BookingWizard({
   }, [liveSlots, slot, slotsQuery.data, stepIndex, slotStepIndex]);
 
   const canMoveNext = useMemo(() => {
-    if (currentStep === 'Your Details') return hasValidPublicPatient;
     if (currentStep === 'Clinical Service') return Boolean(service);
     if (currentStep === 'Care Provider') return Boolean(staff && department);
     if (currentStep === 'Slot') return Boolean(slot);
-
-    if (isPublic) {
-      return Boolean(hasValidPublicPatient && service?.id && staff?.id && slot?.start);
-    }
 
     return canConfirmBooking({
       patientId: activePatientId,
@@ -254,7 +235,7 @@ export default function BookingWizard({
       staffProfileId: staff?.id,
       scheduledAt: slot?.start,
     });
-  }, [activePatientId, currentStep, department, hasValidPublicPatient, isPublic, service, staff, slot]);
+  }, [activePatientId, currentStep, department, service, staff, slot]);
 
   const resetAfterService = () => {
     setSlot(null);
@@ -290,11 +271,11 @@ export default function BookingWizard({
     setSlotCheckLoading(true);
 
     try {
-      const result = await slotsQuery.refetch({ throwOnError: true });
+      const result = await slotsQuery.refetch();
       const checkedAt = Date.now();
-      const freshSlots = (result.data?.slots ?? []).filter(
-        (availableSlot) => new Date(availableSlot.start).getTime() > checkedAt
-      );
+      const freshSlots = result
+        .flatMap((queryResult) => queryResult.data?.slots ?? [])
+        .filter((availableSlot) => new Date(availableSlot.start).getTime() > checkedAt);
       const stillAvailable = freshSlots.some(
         (availableSlot) => availableSlot.start === slot.start && availableSlot.end === slot.end
       );
@@ -320,9 +301,6 @@ export default function BookingWizard({
   const submit = async () => {
     if (!service || !staff || !slot) return;
     setSubmitError('');
-    setPublicPatientSubmitted(true);
-
-    if (mode === 'public' && !hasValidPublicPatient) return;
 
     try {
       const slotIsStillAvailable = await verifySelectedSlot();
@@ -333,30 +311,18 @@ export default function BookingWizard({
         return;
       }
 
-      const appointment =
-        mode === 'public'
-          ? await publicBookMutation.mutateAsync(
-              buildPublicAppointmentPayload({
-                patient: normalizePublicPatientDetails(publicPatientDetails),
-                serviceCatalogId: service.id,
-                staffProfileId: staff.id,
-                scheduledAt: slot.start,
-                appointmentType,
-                notes,
-              })
-            )
-          : activePatientId
-            ? await bookMutation.mutateAsync(
-                buildAppointmentPayload({
-                  patientId: activePatientId,
-                  serviceCatalogId: service.id,
-                  staffProfileId: staff.id,
-                  scheduledAt: slot.start,
-                  appointmentType,
-                  notes,
-                })
-              )
-            : null;
+      const appointment = activePatientId
+        ? await bookMutation.mutateAsync(
+            buildAppointmentPayload({
+              patientId: activePatientId,
+              serviceCatalogId: service.id,
+              staffProfileId: staff.id,
+              scheduledAt: slot.start,
+              appointmentType,
+              notes,
+            })
+          )
+        : null;
 
       if (!appointment) return;
       setBookedAppointment(appointment);
@@ -371,7 +337,7 @@ export default function BookingWizard({
     setDepartment(null);
     setService(null);
     setStaff(null);
-    setDate(getTodayInputValue());
+    setDate(getDateInputValueFromToday(1));
     setSlot(null);
     setSlotSelectedAt(null);
     setSelectedPatient(null);
@@ -381,31 +347,9 @@ export default function BookingWizard({
     setSlotCheckError('');
     setSlotCheckLoading(false);
     setCalendarError('');
-    setPublicPatientDetails(emptyPublicPatientDetails);
-    setPublicPatientSubmitted(false);
-  };
-
-  const handlePublicPatientChange = (field: keyof typeof publicPatientDetails, value: string) => {
-    setPublicPatientDetails((current) => ({ ...current, [field]: value }));
   };
 
   const goNext = async () => {
-    if (currentStep === 'Your Details') {
-      setPublicPatientSubmitted(true);
-      if (!hasValidPublicPatient) return;
-
-      if (isPublic) {
-        if (!slot) {
-          setSlotCheckError('Please choose an available doctor and time before adding patient details.');
-          setStepIndex(slotStepIndex);
-          return;
-        }
-
-        const slotIsStillAvailable = await verifySelectedSlot();
-        if (!slotIsStillAvailable) return;
-      }
-    }
-
     if (currentStep === 'Slot') {
       const slotIsStillAvailable = await verifySelectedSlot();
       if (!slotIsStillAvailable) return;
@@ -478,33 +422,6 @@ export default function BookingWizard({
 
             {calendarError ? <FeedbackMessage type="error" message={calendarError} /> : null}
 
-            {isPublic ? (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-                <h4 className="text-sm font-semibold text-foreground">Manage this appointment</h4>
-                <p className="mt-1 text-sm text-muted">
-                  Create an account with the same personal number to link this appointment to your patient profile after email verification.
-                </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    leftIcon={<UserPlus className="h-4 w-4" aria-hidden="true" />}
-                    onClick={() => openPatientRegistrationFromBooking(publicPatientDetails)}
-                  >
-                    Create account
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    leftIcon={<LogIn className="h-4 w-4" aria-hidden="true" />}
-                    onClick={() => window.location.assign('/login')}
-                  >
-                    Sign in
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -543,7 +460,7 @@ export default function BookingWizard({
         </div>
 
         <div className="space-y-5">
-          <nav className={`grid gap-2 ${isPublic ? 'sm:grid-cols-5' : 'sm:grid-cols-4'}`} aria-label="Booking steps">
+          <nav className="grid gap-2 sm:grid-cols-4" aria-label="Booking steps">
             {steps.map((step, index) => (
               <button
                 key={step}
@@ -558,14 +475,6 @@ export default function BookingWizard({
               </button>
             ))}
           </nav>
-
-          {currentStep === 'Your Details' ? (
-            <PublicPatientDetailsStep
-              details={publicPatientDetails}
-              submitted={publicPatientSubmitted}
-              onChange={handlePublicPatientChange}
-            />
-          ) : null}
 
           {currentStep === 'Clinical Service' ? (
             <ServiceStep
@@ -598,10 +507,13 @@ export default function BookingWizard({
             <SlotStep
               date={date}
               slots={liveSlots}
+              occupiedSlots={occupiedSlots}
               selectedSlot={slot}
               expiresInSeconds={expiresInSeconds}
               loading={slotsQuery.isLoading}
               error={slotsQuery.isError ? getApiErrorMessage(slotsQuery.error, 'Slots could not be loaded') : undefined}
+              minDate={bookingDates[0]}
+              maxDate={bookingDates[bookingDates.length - 1]}
               onDateChange={(nextDate) => {
                 setDate(nextDate);
                 setSlot(null);
@@ -627,7 +539,6 @@ export default function BookingWizard({
               patientId={activePatientId}
               patientResolving={isPatientResolving}
               selectedPatient={selectedPatient}
-              publicPatientDetails={publicPatientDetails}
               notes={notes}
               onPatientSelect={setSelectedPatient}
               onNotesChange={setNotes}
@@ -647,12 +558,6 @@ export default function BookingWizard({
             />
           ) : null}
           {slotCheckError ? <FeedbackMessage type="error" message={slotCheckError} /> : null}
-          {currentStep === 'Your Details' && slot && !slotCheckError ? (
-            <FeedbackMessage
-              type="success"
-              message={`The backend has this doctor and ${slot.startTime} slot available. Add patient details to continue.`}
-            />
-          ) : null}
           {submitError ? <FeedbackMessage type="error" message={submitError} /> : null}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -667,7 +572,7 @@ export default function BookingWizard({
             {stepIndex < steps.length - 1 ? (
               <Button
                 type="button"
-                disabled={slotCheckLoading || (currentStep !== 'Your Details' && !canMoveNext)}
+                disabled={slotCheckLoading || !canMoveNext}
                 loading={slotCheckLoading && currentStep === 'Slot'}
                 onClick={goNext}
               >

@@ -199,10 +199,10 @@ export function PublicHomeStaticSections() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                to="/book-appointment"
+                to="/register"
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-cobalt-900 shadow-soft transition hover:bg-white/90"
               >
-                Book appointment
+                Create patient account
                 <ArrowRight aria-hidden="true" className="h-4 w-4" />
               </Link>
               <Link

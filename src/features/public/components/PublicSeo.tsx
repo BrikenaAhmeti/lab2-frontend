@@ -12,7 +12,6 @@ const publicPageDescriptions: Record<string, string> = {
   departments: 'Browse MedSphere departments and care areas, then move from the right department to matching clinical services, doctors, and appointment options.',
   doctors: 'Find published MedSphere doctor profiles by specialty, department, and care focus before choosing the right appointment path.',
   services: 'Explore MedSphere clinical services by department, review visit details, and prepare for appointment booking with the right care team.',
-  'book-appointment': 'Book a patient appointment with MedSphere by choosing a doctor or care provider, selecting a clinical service, and confirming an available visit time.',
   contact: 'Contact the MedSphere team for questions about appointments, patient registration, care routing, departments, and public healthcare services.',
 };
 

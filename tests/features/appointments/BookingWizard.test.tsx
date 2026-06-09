@@ -72,7 +72,6 @@ vi.mock('@/lib/api/appointments-api', async () => {
       list: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
-      publicCreate: vi.fn(),
       reschedule: vi.fn(),
       updateStatus: vi.fn(),
       availableSlots: vi.fn(),
@@ -245,21 +244,6 @@ function renderWizard(patientId?: string) {
   );
 }
 
-function renderPublicWizard() {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <BookingWizard mode="public" />
-    </QueryClientProvider>
-  );
-}
-
 function renderReceptionistWizard() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -284,34 +268,6 @@ async function moveToConfirmStep() {
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
   fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  await screen.findByLabelText('Notes');
-}
-
-async function movePublicToConfirmStep() {
-  expect(await screen.findByText('Department: Cardiology')).toBeInTheDocument();
-  fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  fireEvent.click(await screen.findByRole('button', { name: '09:00' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-
-  await screen.findByLabelText(/first name/i);
-
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByText('Please complete the required patient details before confirming the appointment.')).toBeInTheDocument();
-
-  fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: 'Arta' } });
-  fireEvent.change(screen.getByLabelText(/last name/i), { target: { value: 'Krasniqi' } });
-  fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'arta@example.com' } });
-  fireEvent.change(screen.getByLabelText(/phone number/i), { target: { value: '+38344111222' } });
-  fireEvent.change(screen.getByLabelText(/personal number/i), { target: { value: '1234567890' } });
-  fireEvent.change(screen.getByLabelText(/date of birth/i), { target: { value: '1995-03-12' } });
-  fireEvent.change(screen.getByLabelText(/gender/i), { target: { value: 'female' } });
   fireEvent.click(screen.getByRole('button', { name: 'Next' }));
 
   await screen.findByLabelText('Notes');
@@ -347,7 +303,6 @@ describe('BookingWizard', () => {
     vi.mocked(appointmentsApi.availableSlots).mockResolvedValue(slots);
     vi.mocked(appointmentsApi.publicAvailableSlots).mockResolvedValue(slots);
     vi.mocked(appointmentsApi.create).mockResolvedValue(appointment);
-    vi.mocked(appointmentsApi.publicCreate).mockResolvedValue(appointment);
   });
 
   it('moves through the booking steps and posts the backend payload shape', async () => {
@@ -468,30 +423,4 @@ describe('BookingWizard', () => {
     expect(await screen.findByText('Appointment booked')).toBeInTheDocument();
   });
 
-  it('collects public patient details and posts the unauthenticated booking payload', async () => {
-    renderPublicWizard();
-    await movePublicToConfirmStep();
-
-    fireEvent.change(screen.getByLabelText('Notes'), { target: { value: 'New patient website request' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm appointment' }));
-
-    await waitFor(() => {
-      expect(appointmentsApi.publicCreate).toHaveBeenCalledWith({
-        patient: {
-          firstName: 'Arta',
-          lastName: 'Krasniqi',
-          email: 'arta@example.com',
-          phone: '+38344111222',
-          personalNumber: '1234567890',
-          dateOfBirth: '1995-03-12',
-          gender: 'female',
-        },
-        serviceCatalogId: 'service-1',
-        staffProfileId: 'staff-1',
-        scheduledAt: '2030-05-20T09:00:00.000Z',
-        notes: 'New patient website request',
-      });
-    });
-    expect(await screen.findByText('Appointment booked')).toBeInTheDocument();
-  });
 });

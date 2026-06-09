@@ -19,7 +19,6 @@ vi.mock('@/lib/api/appointments-api', async () => {
       list: vi.fn(),
       get: vi.fn(),
       create: vi.fn(),
-      publicCreate: vi.fn(),
       reschedule: vi.fn(),
       updateStatus: vi.fn(),
       availableSlots: vi.fn(),
