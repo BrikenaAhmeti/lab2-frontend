@@ -5,8 +5,11 @@ import { servicesApi } from '@/lib/api/services-api';
 import { staffApi } from '@/lib/api/staff-api';
 import {
   appointmentsApi,
+  type AvailableSlot,
+  type AvailableSlotsResponse,
   type AppointmentListParams,
   type AppointmentType,
+  type AppointmentView,
   type BookAppointmentPayload,
   type RescheduleAppointmentPayload,
   type UpdateAppointmentStatusPayload,
@@ -149,12 +152,82 @@ export function useAppointmentDetail(id: string) {
   });
 }
 
+function timeFromIso(value: string) {
+  return value.slice(11, 16);
+}
+
+function addMinutesIso(value: string, minutes: number) {
+  return new Date(new Date(value).getTime() + minutes * 60 * 1000).toISOString();
+}
+
+function slotFromAppointment(appointment: AppointmentView): AvailableSlot {
+  return {
+    start: appointment.scheduledAt,
+    end: appointment.endAt,
+    startTime: timeFromIso(appointment.scheduledAt),
+    endTime: timeFromIso(appointment.endAt),
+    durationMinutes: appointment.durationMinutes,
+  };
+}
+
+function slotFromBookingPayload(payload: BookAppointmentPayload): AvailableSlot {
+  const end = addMinutesIso(payload.scheduledAt, 30);
+
+  return {
+    start: payload.scheduledAt,
+    end,
+    startTime: timeFromIso(payload.scheduledAt),
+    endTime: timeFromIso(end),
+    durationMinutes: 30,
+  };
+}
+
+function moveSlotToOccupied(cache: AvailableSlotsResponse | undefined, slot: AvailableSlot) {
+  if (!cache) return cache;
+
+  return {
+    ...cache,
+    slots: cache.slots.filter((availableSlot) => availableSlot.start !== slot.start),
+    occupiedSlots: [
+      ...(cache.occupiedSlots ?? []).filter((occupiedSlot) => occupiedSlot.start !== slot.start),
+      slot,
+    ].sort((left, right) => new Date(left.start).getTime() - new Date(right.start).getTime()),
+  };
+}
+
 export function useBookAppointment() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (payload: BookAppointmentPayload) => appointmentsApi.create(payload),
+    onMutate: async (payload) => {
+      const date = payload.scheduledAt.slice(0, 10);
+      const queryKey = appointmentQueryKey.slots(payload.staffProfileId, payload.serviceCatalogId, date);
+      const previousSlots = queryClient.getQueriesData<AvailableSlotsResponse>({ queryKey });
+      const optimisticSlot = slotFromBookingPayload(payload);
+
+      queryClient.setQueriesData<AvailableSlotsResponse>({ queryKey }, (cached) =>
+        moveSlotToOccupied(cached, optimisticSlot)
+      );
+
+      return { previousSlots };
+    },
+    onError: (_error, _payload, context) => {
+      context?.previousSlots.forEach(([queryKey, data]) => {
+        queryClient.setQueryData(queryKey, data);
+      });
+    },
     onSuccess: async (appointment) => {
+      if (appointment.staffProfileId) {
+        const date = appointment.scheduledAt.slice(0, 10);
+        const queryKey = appointmentQueryKey.slots(appointment.staffProfileId, appointment.serviceCatalogId, date);
+        const bookedSlot = slotFromAppointment(appointment);
+
+        queryClient.setQueriesData<AvailableSlotsResponse>({ queryKey }, (cached) =>
+          moveSlotToOccupied(cached, bookedSlot)
+        );
+      }
+
       await queryClient.invalidateQueries({ queryKey: appointmentQueryKey.all });
       queryClient.setQueryData(appointmentQueryKey.detail(appointment.id), appointment);
     },

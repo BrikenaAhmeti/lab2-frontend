@@ -42,6 +42,36 @@ export function getDateInputValueFromToday(offsetDays: number) {
   return formatDateInputValue(date);
 }
 
+export function isWeekendDateInput(value: string) {
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const weekday = date.getDay();
+
+  return weekday === 0 || weekday === 6;
+}
+
+export function getBookableDateInputValues(count: number, startOffsetDays = 1) {
+  const dates: string[] = [];
+  const date = new Date();
+  date.setDate(date.getDate() + startOffsetDays);
+
+  while (dates.length < count) {
+    const value = formatDateInputValue(date);
+
+    if (!isWeekendDateInput(value)) {
+      dates.push(value);
+    }
+
+    date.setDate(date.getDate() + 1);
+  }
+
+  return dates;
+}
+
+export function getNextBookableDateInputValue(startOffsetDays = 1) {
+  return getBookableDateInputValues(1, startOffsetDays)[0];
+}
+
 function formatDateInputValue(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');

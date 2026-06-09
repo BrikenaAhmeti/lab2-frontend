@@ -25,7 +25,7 @@ import ServiceStep from './ServiceStep';
 import SlotStep from './SlotStep';
 import StaffStep from './StaffStep';
 import VoiceBookingPanel from './VoiceBookingPanel';
-import { formatAppointmentDate, getDateInputValueFromToday } from './appointmentFormat';
+import { formatAppointmentDate, getBookableDateInputValues, getNextBookableDateInputValue } from './appointmentFormat';
 
 type BookingStep = 'Clinical Service' | 'Care Provider' | 'Slot' | 'Confirm';
 
@@ -126,6 +126,20 @@ function inferDepartmentFromStaff(member: StaffRecord, departments: DepartmentRe
   return departments.find((item) => item.id === departmentId) ?? buildDepartmentFallback(selectedAssignment);
 }
 
+function uniqueSlots(slots: AvailableSlot[]) {
+  const byRange = new Map<string, AvailableSlot>();
+
+  for (const availableSlot of slots) {
+    byRange.set(`${availableSlot.start}-${availableSlot.end}`, availableSlot);
+  }
+
+  return [...byRange.values()];
+}
+
+function slotTimeKey(slot: AvailableSlot) {
+  return `${slot.start.slice(0, 10)}-${slot.startTime}`;
+}
+
 export default function BookingWizard({
   mode,
   patientId,
@@ -137,7 +151,7 @@ export default function BookingWizard({
   const [department, setDepartment] = useState<DepartmentRecord | null>(null);
   const [service, setService] = useState<ServiceRecord | null>(null);
   const [staff, setStaff] = useState<StaffRecord | null>(null);
-  const [date, setDate] = useState(getDateInputValueFromToday(1));
+  const [date, setDate] = useState(getNextBookableDateInputValue(1));
   const [slot, setSlot] = useState<AvailableSlot | null>(null);
   const [slotSelectedAt, setSlotSelectedAt] = useState<number | null>(null);
   const [selectedPatient, setSelectedPatient] = useState<PatientRecord | null>(initialPatient);
@@ -159,7 +173,7 @@ export default function BookingWizard({
   const staffQuery = useAppointmentStaff(undefined, usesPublicBookingCatalog);
   const shouldKeepSlotsFresh = slotStepIndex >= 0 && stepIndex >= slotStepIndex;
   const bookingDates = useMemo(
-    () => Array.from({ length: bookingWindowDays }, (_, index) => getDateInputValueFromToday(index + 1)),
+    () => getBookableDateInputValues(bookingWindowDays, 1),
     []
   );
   const slotsQuery = useAvailableSlotsRange(
@@ -172,20 +186,25 @@ export default function BookingWizard({
   const bookMutation = useBookAppointment();
   const actionLoading = bookMutation.isPending;
   const currentDepartmentId = department?.id;
-  const liveSlots = useMemo(
-    () =>
-      (slotsQuery.data ?? [])
-        .flatMap((day) => day?.slots ?? [])
-        .filter((availableSlot) => new Date(availableSlot.start).getTime() > now),
-    [now, slotsQuery.data]
-  );
   const occupiedSlots = useMemo(
     () =>
-      (slotsQuery.data ?? [])
-        .flatMap((day) => day?.occupiedSlots ?? [])
-        .filter((occupiedSlot) => new Date(occupiedSlot.start).getTime() > now),
+      uniqueSlots(
+        (slotsQuery.data ?? [])
+          .flatMap((day) => day?.occupiedSlots ?? [])
+          .filter((occupiedSlot) => new Date(occupiedSlot.start).getTime() > now)
+      ),
     [now, slotsQuery.data]
   );
+  const liveSlots = useMemo(() => {
+    const occupiedStartTimes = new Set(occupiedSlots.map(slotTimeKey));
+
+    return uniqueSlots(
+      (slotsQuery.data ?? [])
+        .flatMap((day) => day?.slots ?? [])
+        .filter((availableSlot) => new Date(availableSlot.start).getTime() > now)
+        .filter((availableSlot) => !occupiedStartTimes.has(slotTimeKey(availableSlot)))
+    );
+  }, [now, occupiedSlots, slotsQuery.data]);
 
   const activePatientId = mode === 'receptionist' ? selectedPatient?.id : mode === 'patient' ? patientId : undefined;
   const isPatientResolving = mode === 'patient' && patientResolving && !activePatientId;
@@ -214,6 +233,7 @@ export default function BookingWizard({
   }, [expiresInSeconds, slot]);
 
   useEffect(() => {
+    if (actionLoading) return;
     if (slot && slotsQuery.data && !liveSlots.some((availableSlot) => availableSlot.start === slot.start)) {
       setSlot(null);
       setSlotSelectedAt(null);
@@ -222,7 +242,7 @@ export default function BookingWizard({
         setStepIndex(slotStepIndex);
       }
     }
-  }, [liveSlots, slot, slotsQuery.data, stepIndex, slotStepIndex]);
+  }, [actionLoading, liveSlots, slot, slotsQuery.data, stepIndex, slotStepIndex]);
 
   const canMoveNext = useMemo(() => {
     if (currentStep === 'Clinical Service') return Boolean(service);
@@ -337,7 +357,7 @@ export default function BookingWizard({
     setDepartment(null);
     setService(null);
     setStaff(null);
-    setDate(getDateInputValueFromToday(1));
+    setDate(getNextBookableDateInputValue(1));
     setSlot(null);
     setSlotSelectedAt(null);
     setSelectedPatient(null);

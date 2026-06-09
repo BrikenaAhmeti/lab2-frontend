@@ -29,6 +29,24 @@ function groupSlots(slots: DisplaySlot[]) {
   }, {});
 }
 
+function slotIdentity(slot: AvailableSlot) {
+  return `${slot.start.slice(0, 10)}-${slot.startTime}`;
+}
+
+function buildDisplaySlots(slots: AvailableSlot[], occupiedSlots: AvailableSlot[]) {
+  const byStartTime = new Map<string, DisplaySlot>();
+
+  for (const slot of slots) {
+    byStartTime.set(slotIdentity(slot), { ...slot, status: 'available' });
+  }
+
+  for (const slot of occupiedSlots) {
+    byStartTime.set(slotIdentity(slot), { ...slot, status: 'occupied' });
+  }
+
+  return [...byStartTime.values()].sort((left, right) => new Date(left.start).getTime() - new Date(right.start).getTime());
+}
+
 export default function SlotPicker({
   slots,
   occupiedSlots = [],
@@ -46,10 +64,7 @@ export default function SlotPicker({
     return <FeedbackMessage type="error" message={error} />;
   }
 
-  const displaySlots = [
-    ...slots.map((slot): DisplaySlot => ({ ...slot, status: 'available' })),
-    ...occupiedSlots.map((slot): DisplaySlot => ({ ...slot, status: 'occupied' })),
-  ].sort((left, right) => new Date(left.start).getTime() - new Date(right.start).getTime());
+  const displaySlots = buildDisplaySlots(slots, occupiedSlots);
   const groupedSlots = groupSlots(displaySlots);
   const dates = Object.keys(groupedSlots).sort();
 

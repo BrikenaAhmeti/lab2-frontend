@@ -360,6 +360,26 @@ describe('BookingWizard', () => {
     expect(appointmentsApi.availableSlots).not.toHaveBeenCalled();
   });
 
+  it('shows already booked slots as unavailable when slot data is reloaded', async () => {
+    vi.mocked(appointmentsApi.publicAvailableSlots).mockResolvedValue({
+      ...slots,
+      occupiedSlots: slots.slots,
+    });
+
+    renderWizard('patient-1');
+
+    fireEvent.click(await screen.findByRole('button', { name: /dr\. rivera/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    fireEvent.click(await screen.findByRole('button', { name: /general consultation/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+
+    const bookedLabel = await screen.findByText('Booked');
+    const bookedSlot = bookedLabel.closest('button');
+
+    expect(bookedSlot).toBeDisabled();
+    expect(screen.queryByRole('button', { name: /^09:00$/ })).not.toBeInTheDocument();
+  });
+
   it('builds Vapi assistant overrides with selected booking context', () => {
     const overrides = buildVapiAssistantOverrides({
       mode: 'patient',

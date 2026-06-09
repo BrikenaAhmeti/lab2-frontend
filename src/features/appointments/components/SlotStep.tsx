@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { AvailableSlot } from '@/lib/api/appointments-api';
 import SlotPicker from './SlotPicker';
+import { isWeekendDateInput } from './appointmentFormat';
 
 interface SlotStepProps {
   date: string;
@@ -51,6 +52,31 @@ function getCalendarDays(monthDate: Date) {
 
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+function clampToBookableDate(value: string, minDate: string, maxDate: string) {
+  let nextValue = value;
+
+  if (nextValue < minDate) nextValue = minDate;
+  if (nextValue > maxDate) nextValue = maxDate;
+
+  const nextDate = parseDateInput(nextValue);
+
+  while (formatDateInput(nextDate) <= maxDate && isWeekendDateInput(formatDateInput(nextDate))) {
+    nextDate.setDate(nextDate.getDate() + 1);
+  }
+
+  if (formatDateInput(nextDate) <= maxDate) {
+    return formatDateInput(nextDate);
+  }
+
+  const previousDate = parseDateInput(nextValue);
+
+  while (formatDateInput(previousDate) >= minDate && isWeekendDateInput(formatDateInput(previousDate))) {
+    previousDate.setDate(previousDate.getDate() - 1);
+  }
+
+  return formatDateInput(previousDate) >= minDate ? formatDateInput(previousDate) : minDate;
+}
+
 export default function SlotStep({
   date,
   slots,
@@ -95,7 +121,7 @@ export default function SlotStep({
 
   const selectDate = (nextDate: Date) => {
     const nextValue = formatDateInput(nextDate);
-    if (nextValue < minDate || nextValue > maxDate) return;
+    if (nextValue < minDate || nextValue > maxDate || isWeekendDateInput(nextValue)) return;
     onDateChange(nextValue);
   };
 
@@ -104,8 +130,9 @@ export default function SlotStep({
   };
 
   const handleDateInput = (nextValue: string) => {
-    onDateChange(nextValue);
-    const parsedDate = parseDateInput(nextValue);
+    const bookableDate = clampToBookableDate(nextValue, minDate, maxDate);
+    onDateChange(bookableDate);
+    const parsedDate = parseDateInput(bookableDate);
     setVisibleMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
   };
 
@@ -160,7 +187,7 @@ export default function SlotStep({
 
             const value = formatDateInput(calendarDate);
             const isSelected = value === date;
-            const isDisabled = value < minDate || value > maxDate;
+            const isDisabled = value < minDate || value > maxDate || isWeekendDateInput(value);
 
             return (
               <button
