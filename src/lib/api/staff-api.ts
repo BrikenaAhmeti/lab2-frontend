@@ -132,6 +132,37 @@ export interface StaffSchedule {
   endTime: string;
   breakStartTime?: string | null;
   breakEndTime?: string | null;
+  departmentId?: string | null;
+  slotDurationMinutes?: number | null;
+}
+
+interface StaffScheduleApiDay {
+  dayOfWeek: number;
+  isActive: boolean;
+  departmentId: string | null;
+  startTime: string | null;
+  endTime: string | null;
+  slotDurationMinutes: number | null;
+  breakStart: string | null;
+  breakEnd: string | null;
+}
+
+interface StaffScheduleApiResponse {
+  staffProfileId: string;
+  days: StaffScheduleApiDay[];
+}
+
+function fromApiSchedule(day: StaffScheduleApiDay): StaffSchedule {
+  return {
+    dayOfWeek: day.dayOfWeek,
+    isWorking: day.isActive,
+    startTime: day.startTime ?? '09:00',
+    endTime: day.endTime ?? '17:00',
+    breakStartTime: day.isActive ? (day.breakStart ?? '12:00') : day.breakStart,
+    breakEndTime: day.isActive ? (day.breakEnd ?? '13:00') : day.breakEnd,
+    departmentId: day.departmentId,
+    slotDurationMinutes: day.slotDurationMinutes,
+  };
 }
 
 export interface ScheduleException {
@@ -189,10 +220,25 @@ export const staffApi = {
       .then((response) => response.data);
   },
   schedules(staffId: string, instance?: AxiosInstance) {
-    return client(instance).get<StaffSchedule[]>(`/api/staff/${staffId}/schedules`).then((response) => response.data);
+    return client(instance)
+      .get<StaffScheduleApiResponse>(`/api/staff/${staffId}/schedules`)
+      .then((response) => response.data.days.map(fromApiSchedule));
   },
-  saveSchedules(staffId: string, schedules: StaffSchedule[], instance?: AxiosInstance) {
-    return client(instance).put<StaffSchedule[]>(`/api/staff/${staffId}/schedules`, { schedules }).then((response) => response.data);
+  saveSchedules(staffId: string, schedules: StaffSchedule[], departmentId: string, instance?: AxiosInstance) {
+    const days: StaffScheduleApiDay[] = schedules.map((schedule) => ({
+      dayOfWeek: schedule.dayOfWeek,
+      isActive: schedule.isWorking,
+      departmentId: schedule.isWorking ? (schedule.departmentId ?? departmentId) : null,
+      startTime: schedule.isWorking ? schedule.startTime : null,
+      endTime: schedule.isWorking ? schedule.endTime : null,
+      slotDurationMinutes: schedule.isWorking ? (schedule.slotDurationMinutes ?? 30) : null,
+      breakStart: schedule.isWorking ? (schedule.breakStartTime ?? null) : null,
+      breakEnd: schedule.isWorking ? (schedule.breakEndTime ?? null) : null,
+    }));
+
+    return client(instance)
+      .put<StaffScheduleApiResponse>(`/api/staff/${staffId}/schedules`, { days })
+      .then((response) => response.data.days.map(fromApiSchedule));
   },
   exceptions(staffId: string, instance?: AxiosInstance) {
     return client(instance)

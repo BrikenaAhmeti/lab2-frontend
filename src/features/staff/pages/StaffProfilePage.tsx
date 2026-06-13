@@ -7,6 +7,7 @@ import { canManageProtectedAdminTargets, isProtectedStaffRecord } from '@/featur
 import { hasAnyPermission, hasAnyRole } from '@/features/auth/utils/permission';
 import {
   getApiErrorMessage,
+  getStaffDepartmentId,
   getStaffDepartmentName,
   getStaffEmail,
   getStaffName,
@@ -73,6 +74,7 @@ export default function StaffProfilePage() {
   const staffName = staff ? getStaffName(staff) : '';
   const staffStatus = staff ? getStaffStatus(staff) : '';
   const primaryDepartment = staff?.departments?.find((department) => department.isPrimary) ?? staff?.departments?.[0];
+  const primaryDepartmentId = primaryDepartment ? getStaffDepartmentId(primaryDepartment) : null;
   const primaryDepartmentName = primaryDepartment ? getStaffDepartmentName(primaryDepartment) : null;
   const canEditStaff = Boolean(
     staff && canManage && (canManageProtectedAdmins || !isProtectedStaffRecord(staff))
@@ -177,7 +179,16 @@ export default function StaffProfilePage() {
           {feedback ? <FeedbackMessage type="success" message={feedback} /> : null}
           {activeTab === 'info' ? <StaffInfoPanel staff={staff} /> : null}
           {activeTab === 'departments' ? <StaffDepartmentsPanel staff={staff} editable={canEditStaff} /> : null}
-          {activeTab === 'schedule' ? <StaffSchedulePanel staffId={staff.id} editable={canEditStaff} /> : null}
+          {activeTab === 'schedule' && primaryDepartmentId ? (
+            <StaffSchedulePanel
+              staffId={staff.id}
+              departmentId={primaryDepartmentId}
+              editable={canEditStaff}
+            />
+          ) : null}
+          {activeTab === 'schedule' && !primaryDepartmentId ? (
+            <FeedbackMessage type="error" message="Assign a department before configuring the schedule" />
+          ) : null}
           {activeTab === 'exceptions' ? <StaffExceptionsPanel staffId={staff.id} editable={canEditStaff} /> : null}
         </div>
       ) : null}

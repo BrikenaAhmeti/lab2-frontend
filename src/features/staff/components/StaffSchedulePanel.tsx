@@ -15,9 +15,17 @@ const defaultSchedules: StaffSchedule[] = dayLabels.map((_, dayOfWeek) => ({
   breakEndTime: '13:00',
 }));
 
-export default function StaffSchedulePanel({ staffId, editable = true }: { staffId: string; editable?: boolean }) {
+export default function StaffSchedulePanel({
+  staffId,
+  departmentId,
+  editable = true,
+}: {
+  staffId: string;
+  departmentId: string;
+  editable?: boolean;
+}) {
   const schedulesQuery = useStaffSchedules(staffId);
-  const saveMutation = useSaveStaffSchedules(staffId);
+  const saveMutation = useSaveStaffSchedules(staffId, departmentId);
   const [schedules, setSchedules] = useState(defaultSchedules);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 

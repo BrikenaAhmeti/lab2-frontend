@@ -121,11 +121,11 @@ export function useStaffSchedules(staffId: string) {
   });
 }
 
-export function useSaveStaffSchedules(staffId: string) {
+export function useSaveStaffSchedules(staffId: string, departmentId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (schedules: StaffSchedule[]) => staffApi.saveSchedules(staffId, schedules),
+    mutationFn: (schedules: StaffSchedule[]) => staffApi.saveSchedules(staffId, schedules, departmentId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: staffQueryKey.schedules(staffId) });
     },
